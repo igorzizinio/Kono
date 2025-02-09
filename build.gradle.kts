@@ -1,15 +1,18 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import org.jetbrains.kotlin.config.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "2.0.21"
+    kotlin("jvm") version "2.1.10"
     id("com.github.johnrengelman.shadow") version "8.1.1"
     application
 }
 
 group = "me.igorunderplayer"
 version = "1.0-SNAPSHOT"
+
+java {
+    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
+}
 
 repositories {
     mavenCentral()
@@ -43,6 +46,7 @@ dependencies {
     implementation("io.ktor:ktor-server-freemarker:2.3.7")
 }
 
+
 tasks {
     test {
         useJUnitPlatform()
@@ -58,11 +62,10 @@ tasks {
 
     withType<KotlinCompile> {
         compilerOptions {
-            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_19)
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
         }
     }
 }
-
 
 
 application {
