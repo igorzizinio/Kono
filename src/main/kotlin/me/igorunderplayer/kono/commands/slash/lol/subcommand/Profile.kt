@@ -1,5 +1,6 @@
 package me.igorunderplayer.kono.commands.slash.lol.subcommand
 
+import dev.kord.common.Color
 import dev.kord.core.behavior.interaction.response.respond
 import dev.kord.core.event.interaction.ChatInputCommandInteractionCreateEvent
 import dev.kord.rest.builder.interaction.SubCommandBuilder
@@ -7,6 +8,7 @@ import dev.kord.rest.builder.interaction.string
 import dev.kord.rest.builder.message.embed
 import me.igorunderplayer.kono.Kono
 import me.igorunderplayer.kono.commands.KonoSlashSubCommand
+import me.igorunderplayer.kono.common.Colors
 import me.igorunderplayer.kono.utils.formatNumber
 import me.igorunderplayer.kono.utils.regionFromLeagueShard
 import no.stelar7.api.r4j.basic.constants.api.regions.LeagueShard
@@ -71,8 +73,9 @@ class Profile: KonoSlashSubCommand {
 
         response.respond {
             embed {
+                color = Color(Colors.RED)
                 author {
-                    name = "${summoner.name} - ${summoner.platform}"
+                    name = "${account.name}#${account.tag} - ${summoner.platform}"
                     icon = "http://ddragon.leagueoflegends.com/cdn/${Kono.riot.dDragonAPI.versions[0]}/img/profileicon/${summonerIcon.image.full}"
                 }
 

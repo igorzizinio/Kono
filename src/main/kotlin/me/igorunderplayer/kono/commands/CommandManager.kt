@@ -29,7 +29,7 @@ class CommandManager(private val kord: Kord)  {
         registerCommand(Help())
 
         registerCommand(Profile())
-        registerCommand(Rank())
+        registerCommand(BorderGradient())
         registerCommand(Clear())
 
         registerCommand(LoLChampion())
@@ -39,6 +39,7 @@ class CommandManager(private val kord: Kord)  {
         // Register slash commands
 
         registerSlashCommand(me.igorunderplayer.kono.commands.slash.testing.Info())
+        registerSlashCommand(me.igorunderplayer.kono.commands.slash.testing.Avatar())
         registerSlashCommand(me.igorunderplayer.kono.commands.slash.lol.LoLCommands())
         registerSlashCommand(me.igorunderplayer.kono.commands.slash.image.ImageCommands())
     }

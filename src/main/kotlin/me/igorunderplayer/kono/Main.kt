@@ -13,12 +13,7 @@ object Launcher {
                 Kono().start()
             }
 
-            val serverJob = GlobalScope.launch(Dispatchers.IO) {
-                Server().start()
-            }
-
             botJob.join()
-            serverJob.join()
         }
     }
 }

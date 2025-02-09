@@ -2,16 +2,14 @@ package me.igorunderplayer.kono
 
 import com.mongodb.ConnectionString
 import com.mongodb.MongoClientSettings
-import me.igorunderplayer.kono.entities.GuildDB
+import com.mongodb.kotlin.client.coroutine.MongoClient
+import com.mongodb.kotlin.client.coroutine.MongoCollection
 import me.igorunderplayer.kono.entities.UserDB
-import org.litote.kmongo.coroutine.CoroutineCollection
-import org.litote.kmongo.coroutine.coroutine
-import org.litote.kmongo.reactivestreams.KMongo
 
 class Database {
 
-    lateinit var usersCollection: CoroutineCollection<UserDB>
-    lateinit var guildsCollection: CoroutineCollection<GuildDB>
+    lateinit var usersCollection: MongoCollection<UserDB>
+
 
     private val connectionString = ConnectionString(Config.mongoUri)
 
@@ -20,11 +18,11 @@ class Database {
         .retryWrites(true)
         .build()
 
-    private val client = KMongo.createClient(settings)
-    private val db = client.getDatabase("kono-bot").coroutine
+    private val client = MongoClient.create(settings)
+    private val db = client.getDatabase("kono-bot")
 
     fun start() {
-        usersCollection = db.getCollection("users")
-        guildsCollection = db.getCollection("guilds")
+        usersCollection = db.getCollection<UserDB>("users")
+
     }
 }

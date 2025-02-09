@@ -1,6 +1,6 @@
 # Config
 config.properties
-
+.env
 
 /l4j8cache
 

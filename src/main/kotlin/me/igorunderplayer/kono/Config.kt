@@ -22,7 +22,7 @@ class Config {
             properties.setProperty("TOKEN", System.getenv("TOKEN"))
             properties.setProperty("MONGO_URI", System.getenv("MONGO_URI"))
             properties.setProperty("RIOT_API_KEY", System.getenv("RIOT_API_KEY"))
-            properties.setProperty("PORT", System.getenv("PORT"))
+            properties.setProperty("PORT", System.getenv("PORT") ?: 8080.toString())
         }
 
         return this

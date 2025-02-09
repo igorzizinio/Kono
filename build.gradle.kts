@@ -1,8 +1,9 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.jetbrains.kotlin.config.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.9.0"
+    kotlin("jvm") version "2.0.21"
     id("com.github.johnrengelman.shadow") version "8.1.1"
     application
 }
@@ -24,17 +25,17 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
 
     // Discord
-    implementation("dev.kord:kord-core:0.13.1")
+    implementation("dev.kord:kord-core:0.15.0")
 
     // Logging
     implementation("ch.qos.logback:logback-core:1.4.14")
     implementation("ch.qos.logback:logback-classic:1.4.14")
 
     // Mongo
-    implementation("org.litote.kmongo:kmongo-coroutine:4.11.0")
+    implementation("org.mongodb:mongodb-driver-kotlin-coroutine:5.3.0")
 
     // Riot
-    implementation("com.github.stelar7:R4J:2.4.6")
+    implementation("com.github.stelar7:R4J:2.5.5")
 
     // Ktor
     implementation("io.ktor:ktor-server-core-jvm:2.3.7")
@@ -56,7 +57,9 @@ tasks {
     }
 
     withType<KotlinCompile> {
-        kotlinOptions.jvmTarget = JavaVersion.VERSION_19.toString()
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_19)
+        }
     }
 }
 
