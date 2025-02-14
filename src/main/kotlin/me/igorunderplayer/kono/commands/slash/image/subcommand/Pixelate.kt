@@ -64,6 +64,8 @@ class Pixelate: KonoSlashSubCommand {
                 content = "\uD83D\uDC7E pixels"
                 addFile("image.png", ChannelProvider { ByteReadChannel(imageByteArray) })
             }
+
+            img.flush()
         }
     }
 

@@ -5,11 +5,14 @@ import dev.kord.core.entity.Emoji
 import dev.kord.gateway.ALL
 import dev.kord.gateway.Intents
 import dev.kord.gateway.PrivilegedIntent
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import me.igorunderplayer.kono.commands.CommandManager
 import me.igorunderplayer.kono.events.EventManager
 import no.stelar7.api.r4j.basic.APICredentials
 import no.stelar7.api.r4j.impl.R4J
 import org.slf4j.LoggerFactory
+
 
 class Kono {
     companion object {
@@ -17,6 +20,8 @@ class Kono {
         lateinit var events: EventManager
         lateinit var commands: CommandManager
         lateinit var db: Database
+
+        lateinit var startupAt: Instant
 
         lateinit var riot: R4J
         lateinit var emojis: List<Emoji>
@@ -46,6 +51,9 @@ class Kono {
         )
 
         logger.info("Starting up!")
+
+        startupAt = Clock.System.now()
+
 
         events = EventManager(kord)
         events.start()

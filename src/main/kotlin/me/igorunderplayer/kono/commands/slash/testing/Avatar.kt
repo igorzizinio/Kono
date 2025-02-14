@@ -29,7 +29,7 @@ class Avatar: KonoSlashCommand {
 
     override suspend fun run(event: ChatInputCommandInteractionCreateEvent) {
         val response = event.interaction.deferPublicResponse()
-        val user = event.interaction.command.users.get("usuario") ?: event.interaction.user
+        val user = event.interaction.command.users["usuario"] ?: event.interaction.user
 
         val avatar = user.avatar
 
