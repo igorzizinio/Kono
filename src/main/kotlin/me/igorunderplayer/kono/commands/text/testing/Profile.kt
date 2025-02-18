@@ -17,6 +17,7 @@ import java.awt.RenderingHints
 import java.awt.geom.Ellipse2D
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
+import java.net.URI
 import java.net.URL
 import javax.imageio.ImageIO
 
@@ -75,13 +76,13 @@ class Profile : BaseCommand(
         g2.drawString("XP: ??/???", 152, 134)
 
         // Draw avatar
-        val avatar = URL((user.avatar ?: user.defaultAvatar).cdnUrl.toUrl {
+        val avatar = (user.avatar ?: user.defaultAvatar).cdnUrl.toUrl {
             format = Image.Format.PNG
             size = Image.Size.Size128
-        })
+        }
 
         val avatarImage = withContext(Dispatchers.IO) {
-            ImageIO.read(avatar)
+            ImageIO.read(URI(avatar).toURL())
         }
 
         // Border
