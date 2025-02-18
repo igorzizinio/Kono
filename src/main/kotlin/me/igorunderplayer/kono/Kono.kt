@@ -21,7 +21,6 @@ class Kono {
         lateinit var kord: Kord
         lateinit var events: EventManager
         lateinit var commands: CommandManager
-        lateinit var db: DatabaseP
 
         lateinit var databaseManager: DatabaseManager
 
@@ -37,10 +36,6 @@ class Kono {
 
     @OptIn(PrivilegedIntent::class)
     suspend fun start() {
-        db = DatabaseP()
-        db.start()
-
-
         databaseManager = DatabaseManager()
         databaseManager.start(Config.databaseUrl, Config.databaseUser, Config.databasePassword)
 

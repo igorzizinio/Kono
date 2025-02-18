@@ -34,8 +34,6 @@ dependencies {
     implementation("ch.qos.logback:logback-core:1.4.14")
     implementation("ch.qos.logback:logback-classic:1.4.14")
 
-    // Mongo
-    implementation("org.mongodb:mongodb-driver-kotlin-coroutine:5.3.0")
 
     // Riot
     implementation("com.github.stelar7:R4J:2.5.5")

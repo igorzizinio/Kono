@@ -35,6 +35,8 @@ class CommandManager(private val kord: Kord)  {
         registerCommand(LoLChampion())
         registerCommand(LoLMatches())
 
+        registerCommand(TestDB())
+
 
         // Register slash commands
 

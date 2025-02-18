@@ -13,6 +13,10 @@ class UserService(private val userRepository: UserRepository) {
         return userRepository.getUserByDiscordId(discordId)
     }
 
+    suspend fun getOrCreateUserByDiscordId(discordId: Long): User? {
+        return getUserByDiscordId(discordId) ?: createUser(discordId)
+    }
+
     suspend fun createUser(discordId: Long, money: Int = 0): User? {
         return userRepository.createUser(discordId, money)
     }

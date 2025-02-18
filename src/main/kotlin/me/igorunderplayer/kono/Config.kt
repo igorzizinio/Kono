@@ -9,9 +9,7 @@ class Config {
     companion object {
         private val properties = Properties()
         val token: String get() = properties.getProperty("TOKEN")
-        val mongoUri: String get() = properties.getProperty("MONGO_URI")
         val riotApiKey: String get() = properties.getProperty("RIOT_API_KEY")
-        val port: Int get() = properties.getProperty("PORT").toInt()
 
         val databaseUrl: String get() = properties.getProperty("DATABASE_URL")
         val databaseUser: String get() = properties.getProperty("DATABASE_USER")
@@ -24,9 +22,7 @@ class Config {
             FileInputStream(file).use { properties.load(it) }
         } catch (_: Exception) {
             properties.setProperty("TOKEN", System.getenv("TOKEN"))
-            properties.setProperty("MONGO_URI", System.getenv("MONGO_URI"))
             properties.setProperty("RIOT_API_KEY", System.getenv("RIOT_API_KEY"))
-            properties.setProperty("PORT", System.getenv("PORT") ?: 8080.toString())
 
             properties.setProperty("DATABASE_URL", System.getenv("DATABASE_URL"))
             properties.setProperty("DATABASE_USER", System.getenv("DATABASE_USER"))

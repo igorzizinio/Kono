@@ -11,7 +11,6 @@ import me.igorunderplayer.kono.Kono
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandCategory
 import me.igorunderplayer.kono.utils.getMentionedUser
-import me.igorunderplayer.kono.utils.getOrCreateDBUser
 import java.awt.Color
 import java.awt.Font
 import java.awt.RenderingHints
@@ -43,10 +42,7 @@ class Profile : BaseCommand(
             return
         }
 
-        val dbUser = getOrCreateDBUser(
-            Kono.db.usersCollection,
-            user.id.toString()
-        )
+        val dbUser = Kono.services.userService.getOrCreateUserByDiscordId(user.id.value.toLong())
 
         if (dbUser == null) {
             event.message.reply {
@@ -74,7 +70,7 @@ class Profile : BaseCommand(
         g2.font = subInfoFont
         g2.paint = Color.LIGHT_GRAY
         g2.drawString('#' + user.username, 152 + stringWidth + 4, 46)
-        g2.drawString("${dbUser.koins} Koins", 152, 78)
+        g2.drawString("${dbUser.money} Koins", 152, 78)
         g2.drawString("Level: ??", 152, 106)
         g2.drawString("XP: ??/???", 152, 134)
 
