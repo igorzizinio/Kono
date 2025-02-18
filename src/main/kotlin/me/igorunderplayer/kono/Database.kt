@@ -6,7 +6,7 @@ import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.mongodb.kotlin.client.coroutine.MongoCollection
 import me.igorunderplayer.kono.entities.UserDB
 
-class Database {
+class DatabaseP {
 
     lateinit var usersCollection: MongoCollection<UserDB>
 

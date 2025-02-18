@@ -1,0 +1,17 @@
+services:
+  kono:
+    build: .
+    depends_on:
+      - postgres
+    env_file:
+      - .env
+
+  postgres:
+    restart: always
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: kono
+      POSTGRES_PASSWORD: 85438
+      POSTGRES_DB: konodb
+    ports:
+      - '2504:5432'

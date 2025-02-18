@@ -44,6 +44,10 @@ dependencies {
     implementation("io.ktor:ktor-server-core-jvm:2.3.7")
     implementation("io.ktor:ktor-server-netty-jvm:2.3.7")
     implementation("io.ktor:ktor-server-freemarker:2.3.7")
+
+    // Ktorm
+    implementation("org.ktorm:ktorm-core:4.1.1")
+    implementation("org.postgresql:postgresql:42.7.5")
 }
 
 

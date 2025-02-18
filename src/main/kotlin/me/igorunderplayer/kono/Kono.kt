@@ -8,7 +8,9 @@ import dev.kord.gateway.PrivilegedIntent
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import me.igorunderplayer.kono.commands.CommandManager
+import me.igorunderplayer.kono.data.DatabaseManager
 import me.igorunderplayer.kono.events.EventManager
+import me.igorunderplayer.kono.services.ServiceManager
 import no.stelar7.api.r4j.basic.APICredentials
 import no.stelar7.api.r4j.impl.R4J
 import org.slf4j.LoggerFactory
@@ -19,7 +21,11 @@ class Kono {
         lateinit var kord: Kord
         lateinit var events: EventManager
         lateinit var commands: CommandManager
-        lateinit var db: Database
+        lateinit var db: DatabaseP
+
+        lateinit var databaseManager: DatabaseManager
+
+        lateinit var services: ServiceManager
 
         lateinit var startupAt: Instant
 
@@ -31,8 +37,14 @@ class Kono {
 
     @OptIn(PrivilegedIntent::class)
     suspend fun start() {
-        db = Database()
+        db = DatabaseP()
         db.start()
+
+
+        databaseManager = DatabaseManager()
+        databaseManager.start(Config.databaseUrl, Config.databaseUser, Config.databasePassword)
+
+        services = ServiceManager(databaseManager)
 
         kord = Kord(Config.token)
 
