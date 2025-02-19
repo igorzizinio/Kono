@@ -7,7 +7,6 @@ import dev.kord.rest.builder.message.embed
 import me.igorunderplayer.kono.Kono
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandCategory
-import me.igorunderplayer.kono.utils.regionFromLeagueShard
 import no.stelar7.api.r4j.basic.constants.api.regions.LeagueShard
 import no.stelar7.api.r4j.basic.constants.api.regions.RegionShard
 
@@ -41,9 +40,9 @@ class LoLMatches : BaseCommand(
             queryTag = region
         }
 
-        val account = Kono.riot.accountAPI.getAccountByTag(regionFromLeagueShard(LeagueShard.fromString(region).get()), queryName, queryTag)
-
-        val summoner = Kono.riot.loLAPI.summonerAPI.getSummonerByPUUID(LeagueShard.fromString(region).get(), account.puuid)
+        val leagueShard = LeagueShard.fromString(region).get()
+        val account = Kono.riot.accountAPI.getAccountByTag(leagueShard.toRegionShard(), queryName, queryTag)
+        val summoner = Kono.riot.loLAPI.summonerAPI.getSummonerByPUUID(leagueShard, account.puuid)
 
         val summonerIcon = Kono.riot.dDragonAPI.profileIcons[summoner.profileIconId.toLong()]!!
         val matches = Kono.riot.loLAPI.matchAPI.getMatchList(RegionShard.AMERICAS, summoner.puuid, null, null, 0, 5, null, null)

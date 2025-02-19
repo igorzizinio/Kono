@@ -10,7 +10,6 @@ import me.igorunderplayer.kono.Kono
 import me.igorunderplayer.kono.commands.KonoSlashSubCommand
 import me.igorunderplayer.kono.common.Colors
 import me.igorunderplayer.kono.utils.formatNumber
-import me.igorunderplayer.kono.utils.regionFromLeagueShard
 import no.stelar7.api.r4j.basic.constants.api.regions.LeagueShard
 import no.stelar7.api.r4j.basic.constants.types.lol.GameQueueType
 
@@ -57,9 +56,9 @@ class Profile: KonoSlashSubCommand {
             queryTag = queryRegion
         }
 
-        val account = Kono.riot.accountAPI.getAccountByTag(regionFromLeagueShard(LeagueShard.fromString(queryRegion).get()), queryName, queryTag)
-
-        val summoner = Kono.riot.loLAPI.summonerAPI.getSummonerByPUUID(LeagueShard.fromString(queryRegion).get(), account.puuid)
+        val leagueShard = LeagueShard.fromString(queryRegion).get()
+        val account = Kono.riot.accountAPI.getAccountByTag(leagueShard.toRegionShard(), queryName, queryTag)
+        val summoner = Kono.riot.loLAPI.summonerAPI.getSummonerByPUUID(leagueShard, account.puuid)
 
         if (summoner == null) {
             response.respond {
