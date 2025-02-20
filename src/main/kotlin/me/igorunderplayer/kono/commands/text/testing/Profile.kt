@@ -10,7 +10,10 @@ import kotlinx.coroutines.withContext
 import me.igorunderplayer.kono.Kono
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandCategory
+import me.igorunderplayer.kono.services.UserService
 import me.igorunderplayer.kono.utils.getMentionedUser
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.awt.Color
 import java.awt.Font
 import java.awt.RenderingHints
@@ -26,7 +29,10 @@ class Profile : BaseCommand(
     "exibe o perfil de alguem",
     category = CommandCategory.Misc,
     aliases = listOf("perfil")
-) {
+), KoinComponent {
+
+    private val userService: UserService by inject()
+
     override suspend fun run(event: MessageCreateEvent, args: Array<String>) {
         val width = 800
         val height = 600
@@ -43,7 +49,7 @@ class Profile : BaseCommand(
             return
         }
 
-        val dbUser = Kono.services.userService.getOrCreateUserByDiscordId(user.id.value.toLong())
+        val dbUser = userService.getOrCreateUserByDiscordId(user.id.value.toLong())
 
         if (dbUser == null) {
             event.message.reply {

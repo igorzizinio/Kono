@@ -2,8 +2,11 @@ package me.igorunderplayer.kono.services
 
 import me.igorunderplayer.kono.data.entities.User
 import me.igorunderplayer.kono.data.repositories.UserRepository
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-class UserService(private val userRepository: UserRepository) {
+class UserService() : KoinComponent {
+    private val userRepository: UserRepository by inject()
 
     suspend fun getUserById(userId: Int): User? {
        return userRepository.getUserById(userId)

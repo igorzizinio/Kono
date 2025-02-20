@@ -27,6 +27,10 @@ dependencies {
 
     implementation(kotlin("stdlib-jdk8"))
 
+
+    // Dependency injection
+    implementation("io.insert-koin:koin-core:4.0.2")
+
     // Discord
     implementation("dev.kord:kord-core:0.15.0")
 
