@@ -9,13 +9,18 @@ import dev.kord.rest.builder.message.embed
 import me.igorunderplayer.kono.Kono
 import me.igorunderplayer.kono.commands.KonoSlashSubCommand
 import me.igorunderplayer.kono.common.Colors
+import me.igorunderplayer.kono.services.RiotService
 import me.igorunderplayer.kono.utils.formatNumber
 import no.stelar7.api.r4j.basic.constants.api.regions.LeagueShard
 import no.stelar7.api.r4j.basic.constants.types.lol.GameQueueType
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-class Profile: KonoSlashSubCommand {
+class Profile: KonoSlashSubCommand, KoinComponent {
     override val name = "profile"
     override val description = "mostra perfil de alguem"
+
+    private val riotService: RiotService by inject()
 
     override fun options(): SubCommandBuilder.() -> Unit {
         return {
@@ -47,7 +52,7 @@ class Profile: KonoSlashSubCommand {
         }
 
         val blank = "<:transparent:1142620050952556616>"
-        val champions = Kono.riot.dDragonAPI.champions
+        val champions = riotService.getChampions()
 
         val queryName = queryAccount.split('#').first()
         var queryTag = queryAccount.split('#').getOrNull(1)
@@ -57,8 +62,8 @@ class Profile: KonoSlashSubCommand {
         }
 
         val leagueShard = LeagueShard.fromString(queryRegion).get()
-        val account = Kono.riot.accountAPI.getAccountByTag(leagueShard.toRegionShard(), queryName, queryTag)
-        val summoner = Kono.riot.loLAPI.summonerAPI.getSummonerByPUUID(leagueShard, account.puuid)
+        val account = riotService.getAccountByRiotId(leagueShard.toRegionShard(), queryName, queryTag)
+        val summoner = riotService.getSummonerByPUUID(leagueShard, account?.puuid ?: "")
 
         if (summoner == null) {
             response.respond {
@@ -74,7 +79,7 @@ class Profile: KonoSlashSubCommand {
             embed {
                 color = Color(Colors.RED)
                 author {
-                    name = "${account.name}#${account.tag} - ${summoner.platform}"
+                    name = "${account?.name}#${account?.tag} - ${summoner.platform}"
                     icon = "http://ddragon.leagueoflegends.com/cdn/${Kono.riot.dDragonAPI.versions[0]}/img/profileicon/${summonerIcon.image.full}"
                 }
 

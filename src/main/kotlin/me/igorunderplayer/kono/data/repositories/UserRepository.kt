@@ -2,11 +2,8 @@ package me.igorunderplayer.kono.data.repositories
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import me.igorunderplayer.kono.data.DatabaseManager
 import me.igorunderplayer.kono.data.entities.User
 import me.igorunderplayer.kono.data.entities.Users
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import org.ktorm.database.Database
 import org.ktorm.dsl.eq
 import org.ktorm.dsl.insertAndGenerateKey

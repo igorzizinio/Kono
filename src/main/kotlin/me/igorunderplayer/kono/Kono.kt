@@ -8,7 +8,6 @@ import dev.kord.gateway.PrivilegedIntent
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import me.igorunderplayer.kono.commands.CommandManager
-import me.igorunderplayer.kono.data.DatabaseManager
 import me.igorunderplayer.kono.events.EventManager
 import no.stelar7.api.r4j.basic.APICredentials
 import no.stelar7.api.r4j.impl.R4J

@@ -7,7 +7,6 @@ import io.ktor.client.request.forms.*
 import io.ktor.utils.io.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import me.igorunderplayer.kono.Kono
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandCategory
 import me.igorunderplayer.kono.services.UserService
@@ -21,7 +20,6 @@ import java.awt.geom.Ellipse2D
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import java.net.URI
-import java.net.URL
 import javax.imageio.ImageIO
 
 class Profile : BaseCommand(

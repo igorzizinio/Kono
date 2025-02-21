@@ -8,13 +8,17 @@ import dev.kord.rest.builder.interaction.string
 import dev.kord.rest.builder.message.embed
 import me.igorunderplayer.kono.Kono
 import me.igorunderplayer.kono.commands.KonoSlashSubCommand
+import me.igorunderplayer.kono.services.RiotService
 import me.igorunderplayer.kono.utils.formatNumber
 import no.stelar7.api.r4j.basic.constants.api.regions.LeagueShard
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-class Points(): KonoSlashSubCommand {
+class Points(): KonoSlashSubCommand, KoinComponent {
     override val name = "points"
     override val description = "exibe total de maestria de um jogador"
 
+    private val riotService: RiotService by inject()
 
     override fun options(): SubCommandBuilder.() -> Unit {
         return {
@@ -58,10 +62,11 @@ class Points(): KonoSlashSubCommand {
         }
 
         val leagueShard = LeagueShard.fromString(queryRegion).get()
-        val account = Kono.riot.accountAPI.getAccountByTag(leagueShard.toRegionShard(), queryName, queryTag)
-        val summoner = Kono.riot.loLAPI.summonerAPI.getSummonerByPUUID(leagueShard, account.puuid)
 
-        val champion = Kono.riot.dDragonAPI.champions.values.find {
+        val account = riotService.getAccountByRiotId(leagueShard.toRegionShard(), queryName, queryTag)
+        val summoner = riotService.getSummonerByPUUID(leagueShard, account?.puuid ?: "")
+
+        val champion = riotService.getChampions().values.find {
             it.key.lowercase() == queryChampion.lowercase() || it.name.lowercase() == queryChampion.lowercase()
         }
 
@@ -72,8 +77,8 @@ class Points(): KonoSlashSubCommand {
             return
         }
 
-        val mastery = Kono.riot.loLAPI.masteryAPI.getChampionMastery(leagueShard, account.puuid, champion.id)
-        val summonerIcon = Kono.riot.dDragonAPI.profileIcons[summoner.profileIconId.toLong()]!!
+        val mastery = riotService.getChampionMastery(leagueShard, account?.puuid ?: "", champion.id)
+        val summonerIcon = Kono.riot.dDragonAPI.profileIcons[summoner?.profileIconId?.toLong()]!!
 
         val masteryLevel = if (mastery.championLevel == 0) "default" else "${mastery.championLevel}"
         val emoji = Kono.emojis.firstOrNull { it.name == "mastery_icon_$masteryLevel" }
@@ -85,7 +90,7 @@ class Points(): KonoSlashSubCommand {
         response.respond {
             embed {
                 author {
-                    name = "${account.name} ${account.tag}"
+                    name = "${account?.name} ${account?.tag}"
                     icon = "http://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/profileicon/${summonerIcon.image.full}"
                 }
 
