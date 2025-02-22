@@ -78,13 +78,13 @@ class Points(): KonoSlashSubCommand, KoinComponent {
         }
 
         val mastery = riotService.getChampionMastery(leagueShard, account?.puuid ?: "", champion.id)
-        val summonerIcon = Kono.riot.dDragonAPI.profileIcons[summoner?.profileIconId?.toLong()]!!
+        val summonerIcon = riotService.getProfileIcons()[summoner?.profileIconId?.toLong()]!!
 
         val masteryLevel = if (mastery.championLevel == 0) "default" else "${mastery.championLevel}"
         val emoji = Kono.emojis.firstOrNull { it.name == "mastery_icon_$masteryLevel" }
         val iconText = emoji?.mention ?: ""
 
-        val latestVersion = Kono.riot.dDragonAPI.versions[0]
+        val latestVersion = riotService.getLatestVersion()
 
 
         response.respond {

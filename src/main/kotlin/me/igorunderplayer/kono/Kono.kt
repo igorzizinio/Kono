@@ -9,8 +9,6 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import me.igorunderplayer.kono.commands.CommandManager
 import me.igorunderplayer.kono.events.EventManager
-import no.stelar7.api.r4j.basic.APICredentials
-import no.stelar7.api.r4j.impl.R4J
 import org.slf4j.LoggerFactory
 
 
@@ -21,8 +19,6 @@ class Kono {
         lateinit var commands: CommandManager
 
         lateinit var startupAt: Instant
-
-        lateinit var riot: R4J
         lateinit var emojis: List<Emoji>
     }
 
@@ -31,8 +27,6 @@ class Kono {
     @OptIn(PrivilegedIntent::class)
     suspend fun start() {
         kord = Kord(Config.token)
-
-        riot = R4J(APICredentials(Config.riotApiKey))
 
         logger.info(
             """

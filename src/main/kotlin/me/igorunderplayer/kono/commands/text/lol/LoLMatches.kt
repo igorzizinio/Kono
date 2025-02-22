@@ -7,14 +7,19 @@ import dev.kord.rest.builder.message.embed
 import me.igorunderplayer.kono.Kono
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandCategory
+import me.igorunderplayer.kono.services.RiotService
 import no.stelar7.api.r4j.basic.constants.api.regions.LeagueShard
-import no.stelar7.api.r4j.basic.constants.api.regions.RegionShard
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 class LoLMatches : BaseCommand(
     "lolmatches",
     "mostra partidas de tal user",
     category = CommandCategory.LoL
-) {
+), KoinComponent {
+
+    private val riotService: RiotService by inject()
+
     override suspend fun run(event: MessageCreateEvent, args: Array<String>) {
 
         // TODO: Embed pagination
@@ -41,15 +46,22 @@ class LoLMatches : BaseCommand(
         }
 
         val leagueShard = LeagueShard.fromString(region).get()
-        val account = Kono.riot.accountAPI.getAccountByTag(leagueShard.toRegionShard(), queryName, queryTag)
-        val summoner = Kono.riot.loLAPI.summonerAPI.getSummonerByPUUID(leagueShard, account.puuid)
+        val account = riotService.getAccountByRiotId(leagueShard.toRegionShard(), queryName, queryTag)
+        val summoner = riotService.getSummonerByPUUID(leagueShard, account?.puuid ?: "")
 
-        val summonerIcon = Kono.riot.dDragonAPI.profileIcons[summoner.profileIconId.toLong()]!!
-        val matches = Kono.riot.loLAPI.matchAPI.getMatchList(RegionShard.AMERICAS, summoner.puuid, null, null, 0, 5, null, null)
+        if (summoner == null) {
+            event.message.reply {
+                content = "nao encontrei o dito player"
+            }
+            return
+        }
+
+        val summonerIcon = riotService.getProfileIcons()[summoner.profileIconId.toLong()]!!
+        val matches = riotService.getMatchList(leagueShard.toRegionShard(), summoner.puuid, null, null, 0, 5, null, null)
 
         val embedFields = matches.map { matchId ->
             val field = EmbedBuilder.Field()
-            val match = Kono.riot.loLAPI.matchAPI.getMatch(RegionShard.AMERICAS, matchId)
+            val match = riotService.getMatch(leagueShard.toRegionShard(), matchId)
             val self = match.participants.find { it.puuid == summoner.puuid }!!
 
             val emoji = Kono.emojis.firstOrNull { it.name == "lolchampion_${self.championName}" }
@@ -69,7 +81,7 @@ class LoLMatches : BaseCommand(
             embed {
                 author {
                     name = "${summoner.name} - ${summoner.platform}"
-                    icon = "http://ddragon.leagueoflegends.com/cdn/${Kono.riot.dDragonAPI.versions[0]}/img/profileicon/${summonerIcon.image.full}"
+                    icon = "http://ddragon.leagueoflegends.com/cdn/${riotService.getLatestVersion()}/img/profileicon/${summonerIcon.image.full}"
                 }
                 fields = embedFields
             }

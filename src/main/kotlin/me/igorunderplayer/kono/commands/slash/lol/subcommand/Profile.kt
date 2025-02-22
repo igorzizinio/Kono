@@ -73,14 +73,14 @@ class Profile: KonoSlashSubCommand, KoinComponent {
             return
         }
 
-        val summonerIcon = Kono.riot.dDragonAPI.profileIcons[summoner.profileIconId.toLong()]!!
+        val summonerIcon = riotService.getProfileIcons()[summoner.profileIconId.toLong()]!!
 
         response.respond {
             embed {
                 color = Color(Colors.RED)
                 author {
                     name = "${account?.name}#${account?.tag} - ${summoner.platform}"
-                    icon = "http://ddragon.leagueoflegends.com/cdn/${Kono.riot.dDragonAPI.versions[0]}/img/profileicon/${summonerIcon.image.full}"
+                    icon = "http://ddragon.leagueoflegends.com/cdn/${riotService.getLatestVersion()}/img/profileicon/${summonerIcon.image.full}"
                 }
 
                 field {
