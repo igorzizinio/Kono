@@ -42,8 +42,10 @@ class CommandManager(private val kord: Kord)  {
 
         registerSlashCommand(me.igorunderplayer.kono.commands.slash.testing.Info())
         registerSlashCommand(me.igorunderplayer.kono.commands.slash.testing.Avatar())
+        registerSlashCommand(me.igorunderplayer.kono.commands.slash.testing.Register())
         registerSlashCommand(me.igorunderplayer.kono.commands.slash.lol.LoLCommands())
         registerSlashCommand(me.igorunderplayer.kono.commands.slash.image.ImageCommands())
+
     }
 
     private fun registerCommand(command: BaseCommand) {

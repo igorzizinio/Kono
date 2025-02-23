@@ -7,6 +7,7 @@ import me.igorunderplayer.kono.data.entities.Users
 import org.ktorm.database.Database
 import org.ktorm.dsl.eq
 import org.ktorm.dsl.insertAndGenerateKey
+import org.ktorm.dsl.update
 import org.ktorm.entity.find
 import org.ktorm.entity.sequenceOf
 
@@ -30,4 +31,11 @@ class UserRepository(private val database: Database)  {
         return@withContext getUserById(generatedId)
     }
 
+    suspend fun assignRiotAccountToUser(userId: Int, riotPuuid: String, riotRegion: String): Boolean = withContext(Dispatchers.IO) {
+        database.update(Users) {
+            set(it.riotPuuid, riotPuuid)
+            set(it.riotRegion, riotRegion)
+            where { it.id eq userId }
+        } > 0
+    }
 }

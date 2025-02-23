@@ -10,22 +10,25 @@ import me.igorunderplayer.kono.Kono
 import me.igorunderplayer.kono.commands.KonoSlashSubCommand
 import me.igorunderplayer.kono.common.Colors
 import me.igorunderplayer.kono.services.RiotService
+import me.igorunderplayer.kono.services.UserService
 import me.igorunderplayer.kono.utils.formatNumber
 import no.stelar7.api.r4j.basic.constants.api.regions.LeagueShard
 import no.stelar7.api.r4j.basic.constants.types.lol.GameQueueType
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import kotlin.jvm.optionals.getOrNull
 
 class Profile: KonoSlashSubCommand, KoinComponent {
     override val name = "profile"
     override val description = "mostra perfil de alguem"
 
     private val riotService: RiotService by inject()
+    private val userService: UserService by inject()
 
     override fun options(): SubCommandBuilder.() -> Unit {
         return {
             string("riot-id", "summoner's riot id") {
-                required = true
+                required = false
             }
 
             string("region", "summoner's region") {
@@ -33,43 +36,31 @@ class Profile: KonoSlashSubCommand, KoinComponent {
                     choice(shard.prettyName(), shard.value)
                 }
 
-                required = true
+                required = false
             }
         }
     }
 
     override suspend fun run(event: ChatInputCommandInteractionCreateEvent) {
         val response = event.interaction.deferPublicResponse()
-        val queryAccount = event.interaction.command.strings["riot-id"]
-        val queryRegion = event.interaction.command.strings["region"] ?: "NA1"
+        val queryAccount = event.interaction.command.strings["riot-id"] ?: ""
+        val queryRegion = event.interaction.command.strings["region"] ?: ""
 
-        if (queryAccount.isNullOrBlank()) {
-            response.respond {
-                content = "Insira o Riot ID do invocador desejado"
-            }
-
-            return
-        }
 
         val blank = "<:transparent:1142620050952556616>"
         val champions = riotService.getChampions()
 
-        val queryName = queryAccount.split('#').first()
-        var queryTag = queryAccount.split('#').getOrNull(1)
 
-        if (queryTag.isNullOrBlank()) {
-            queryTag = queryRegion
-        }
+        val leagueShard = LeagueShard.fromString(queryRegion).getOrNull()
 
-        val leagueShard = LeagueShard.fromString(queryRegion).get()
-        val account = riotService.getAccountByRiotId(leagueShard.toRegionShard(), queryName, queryTag)
-        val summoner = riotService.getSummonerByPUUID(leagueShard, account?.puuid ?: "")
 
-        if (summoner == null) {
+        val user = userService.getUserByDiscordId(event.interaction.user.id.value.toLong())
+        val (account, summoner) = riotService.getSummonerAndAccount(user, queryAccount, leagueShard)
+
+        if (account == null || summoner == null) {
             response.respond {
-                content = "Invocador não encontrado!"
+                content = "conta não encontrada!"
             }
-
             return
         }
 
@@ -79,7 +70,7 @@ class Profile: KonoSlashSubCommand, KoinComponent {
             embed {
                 color = Color(Colors.RED)
                 author {
-                    name = "${account?.name}#${account?.tag} - ${summoner.platform}"
+                    name = "${account.name}#${account.tag} - ${summoner.platform}"
                     icon = "http://ddragon.leagueoflegends.com/cdn/${riotService.getLatestVersion()}/img/profileicon/${summonerIcon.image.full}"
                 }
 

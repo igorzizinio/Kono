@@ -59,9 +59,9 @@ class LoLMatches : BaseCommand(
         val summonerIcon = riotService.getProfileIcons()[summoner.profileIconId.toLong()]!!
         val matches = riotService.getMatchList(leagueShard.toRegionShard(), summoner.puuid, null, null, 0, 5, null, null)
 
-        val embedFields = matches.map { matchId ->
+        val embedFields: MutableList<EmbedBuilder.Field> = matches.map { matchId ->
             val field = EmbedBuilder.Field()
-            val match = riotService.getMatch(leagueShard.toRegionShard(), matchId)
+            val match = riotService.getMatch(leagueShard.toRegionShard(), matchId)!!
             val self = match.participants.find { it.puuid == summoner.puuid }!!
 
             val emoji = Kono.emojis.firstOrNull { it.name == "lolchampion_${self.championName}" }
@@ -71,9 +71,9 @@ class LoLMatches : BaseCommand(
 
             field.name = if (self.didWin()) "✔ Vitória" else "❌ Derrota"
             field.value = "$emojiText | ${self.kills}/${self.assists}/${self.deaths}  - $csScore CS \n" +
-                    "> ${match.gameDurationAsDuration.toMinutes()}min - `${match.gameMode.prettyName()} (${match.queue.prettyName()})`"
+                    "> ${match.gameDurationAsDuration?.toMinutes()}min - `${match.gameMode?.prettyName()} (${match.queue?.prettyName()})`"
 
-            field
+            return@map field
         }.toMutableList()
 
         event.message.reply {

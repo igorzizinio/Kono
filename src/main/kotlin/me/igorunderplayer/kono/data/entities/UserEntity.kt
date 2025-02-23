@@ -10,8 +10,8 @@ interface User : Entity<User> {
     var id: Int
     var discordId: Long
     var money: Int
-    var riotPuuid: String
-    var riotRegion: String
+    var riotPuuid: String?
+    var riotRegion: String?
 }
 
 object Users : Table<User>("tb_users") {
