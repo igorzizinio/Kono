@@ -1,6 +1,7 @@
 package me.igorunderplayer.kono.commands.slash.lol.subcommand
 
 import dev.kord.common.Color
+import dev.kord.common.asJavaLocale
 import dev.kord.core.behavior.interaction.response.respond
 import dev.kord.core.event.interaction.ChatInputCommandInteractionCreateEvent
 import dev.kord.rest.builder.interaction.SubCommandBuilder
@@ -10,10 +11,10 @@ import me.igorunderplayer.kono.Kono
 import me.igorunderplayer.kono.commands.KonoSlashSubCommand
 import me.igorunderplayer.kono.services.RiotService
 import me.igorunderplayer.kono.services.UserService
-import me.igorunderplayer.kono.utils.formatNumber
 import no.stelar7.api.r4j.basic.constants.api.regions.LeagueShard
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import java.text.NumberFormat
 
 class Points(): KonoSlashSubCommand, KoinComponent {
     override val name = "points"
@@ -81,6 +82,9 @@ class Points(): KonoSlashSubCommand, KoinComponent {
 
         val latestVersion = riotService.getLatestVersion()
 
+        val formatter = NumberFormat.getInstance(event.interaction.locale?.asJavaLocale())
+        formatter.format(mastery.championPoints)
+
         response.respond {
             embed {
                 author {
@@ -92,7 +96,7 @@ class Points(): KonoSlashSubCommand, KoinComponent {
                     url = "http://ddragon.leagueoflegends.com/cdn/$latestVersion/img/champion/${champion.image.full}"
                 }
 
-                description = "$iconText ${formatNumber(mastery.championPoints)} pontos de maestria"
+                description = "$iconText ${formatter.format(mastery.championPoints)} pontos de maestria"
                 color = getLevelColor(masteryLevelI)
             }
         }
