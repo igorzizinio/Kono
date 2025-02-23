@@ -10,10 +10,12 @@ interface User : Entity<User> {
     var id: Int
     var discordId: Long
     var money: Int
+    var riotPuuid: String
 }
 
 object Users : Table<User>("tb_users") {
     val id = int("id").primaryKey().bindTo { it.id }
     val discordId = long("discord_id").bindTo { it.discordId }
     val money = int("money").bindTo { it.money }
+    val riotPuuid = text("riot_puuid").bindTo { it.riotPuuid }
 }
