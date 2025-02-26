@@ -5,6 +5,7 @@ import dev.kord.core.Kord
 import dev.kord.core.behavior.reply
 import dev.kord.core.event.interaction.ChatInputCommandInteractionCreateEvent
 import dev.kord.core.event.message.MessageCreateEvent
+import me.igorunderplayer.kono.commands.slash.testing.DestinoCommand
 import me.igorunderplayer.kono.commands.text.lol.LoLChampion
 import me.igorunderplayer.kono.commands.text.lol.LoLMatches
 import me.igorunderplayer.kono.commands.text.testing.*
@@ -35,7 +36,7 @@ class CommandManager(private val kord: Kord)  {
         registerCommand(LoLChampion())
         registerCommand(LoLMatches())
 
-        registerCommand(TestDB())
+        registerCommand(DestinoTextCommand())
 
 
         // Register slash commands
@@ -45,6 +46,7 @@ class CommandManager(private val kord: Kord)  {
         registerSlashCommand(me.igorunderplayer.kono.commands.slash.testing.Register())
         registerSlashCommand(me.igorunderplayer.kono.commands.slash.lol.LoLCommands())
         registerSlashCommand(me.igorunderplayer.kono.commands.slash.image.ImageCommands())
+        registerSlashCommand(DestinoCommand())
 
     }
 
@@ -57,7 +59,7 @@ class CommandManager(private val kord: Kord)  {
             val red = "\u001b[31m"
             val reset = "\u001b[0m"
 
-            logger.error("$red ${command.name} is already registered, skipped! $reset")
+            logger.error("$red ${command.name} text command is already registered, skipped! $reset")
             return
         }
 
@@ -73,7 +75,7 @@ class CommandManager(private val kord: Kord)  {
             val red = "\u001b[31m"
             val reset = "\u001b[0m"
 
-            logger.error("$red ${command.name} is already registered, skipped! $reset")
+            logger.error("$red ${command.name} slash command is already registered, skipped! $reset")
             return
         }
 
