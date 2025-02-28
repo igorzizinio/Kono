@@ -6,6 +6,8 @@ import dev.kord.core.behavior.reply
 import dev.kord.core.event.interaction.ChatInputCommandInteractionCreateEvent
 import dev.kord.core.event.message.MessageCreateEvent
 import me.igorunderplayer.kono.commands.slash.testing.DestinoCommand
+import me.igorunderplayer.kono.commands.text.dev.DeleteApplicationCommand
+import me.igorunderplayer.kono.commands.text.dev.GuildsCommand
 import me.igorunderplayer.kono.commands.text.lol.LoLChampion
 import me.igorunderplayer.kono.commands.text.lol.LoLMatches
 import me.igorunderplayer.kono.commands.text.testing.*
@@ -14,9 +16,10 @@ import org.slf4j.LoggerFactory
 enum class CommandCategory {
     Util,
     Misc,
-    Other,
     Management,
-    LoL
+    LoL,
+    Developer,
+    Other
 }
 
 class CommandManager(private val kord: Kord)  {
@@ -30,13 +33,19 @@ class CommandManager(private val kord: Kord)  {
         registerCommand(Help())
 
         registerCommand(Profile())
+        registerCommand(DestinoTextCommand())
         registerCommand(BorderGradient())
+
         registerCommand(Clear())
 
         registerCommand(LoLChampion())
         registerCommand(LoLMatches())
 
-        registerCommand(DestinoTextCommand())
+
+        // Developer Comamands
+        registerCommand(GuildsCommand())
+        registerCommand(DeleteApplicationCommand())
+
 
 
         // Register slash commands
@@ -110,6 +119,8 @@ class CommandManager(private val kord: Kord)  {
             val mention = args.removeAt(0)
             if (mentionRegExp.matches(mention)) {
                 val command = searchCommand(args.removeAt(0)) ?: return
+
+                if (command.category == CommandCategory.Developer && event.message.author?.id?.value?.toLong() != 477534823011844120L) return
 
                 if (command.category == CommandCategory.Management) {
                     val member = event.message.getAuthorAsMemberOrNull() ?: return

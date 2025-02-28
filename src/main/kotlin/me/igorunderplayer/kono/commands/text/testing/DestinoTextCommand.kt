@@ -1,6 +1,5 @@
 package me.igorunderplayer.kono.commands.text.testing
 
-import dev.kord.core.behavior.interaction.respondPublic
 import dev.kord.core.behavior.reply
 import dev.kord.core.event.message.MessageCreateEvent
 import kotlinx.coroutines.flow.toList
@@ -96,7 +95,7 @@ class DestinoTextCommand: BaseCommand(
         )
 
 
-        val destino = destinos.random()
+        val destino = if(user.id.value == 1216546555134345256u) "casar com <@477534823011844120>" else destinos.random()
 
         if (destino.contains("{randomMember}")) {
 
