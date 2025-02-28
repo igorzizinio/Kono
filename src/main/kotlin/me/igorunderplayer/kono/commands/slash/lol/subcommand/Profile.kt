@@ -59,7 +59,8 @@ class Profile: KonoSlashSubCommand, KoinComponent {
 
         if (account == null || summoner == null) {
             response.respond {
-                content = "conta não encontrada!"
+                content = "conta não encontrada! \n" +
+                        "_não esqueça que para utilizar esse comando vc precisa passar seu riot-id e região, ou utilizar `/riot assign` para linkar uma conta riot ao seu discord_"
             }
             return
         }
