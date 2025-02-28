@@ -14,9 +14,9 @@ suspend fun getMentionedUser(message: Message, args: Array<String>): User? {
         message.mentionedUsers.filter { it.id != message.kord.selfId || countSelf }
             .firstOrNull()  ?: message.kord.getUser(
                  Snowflake(args[0].toULongOrNull() ?: ULong.MIN_VALUE)
-            )?.asUserOrNull() ?: message.author
+            )?.asUserOrNull()
     } else {
-        message.author
+        null
     }
 
     return user

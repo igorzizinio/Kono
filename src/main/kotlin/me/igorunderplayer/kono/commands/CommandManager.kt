@@ -8,6 +8,7 @@ import dev.kord.core.event.message.MessageCreateEvent
 import me.igorunderplayer.kono.commands.slash.testing.DestinoCommand
 import me.igorunderplayer.kono.commands.text.dev.DeleteApplicationCommand
 import me.igorunderplayer.kono.commands.text.dev.GuildsCommand
+import me.igorunderplayer.kono.commands.text.`fun`.TinderCommand
 import me.igorunderplayer.kono.commands.text.lol.LoLChampion
 import me.igorunderplayer.kono.commands.text.lol.LoLMatches
 import me.igorunderplayer.kono.commands.text.testing.*
@@ -35,6 +36,7 @@ class CommandManager(private val kord: Kord)  {
         registerCommand(Profile())
         registerCommand(DestinoTextCommand())
         registerCommand(BorderGradient())
+        registerCommand(TinderCommand())
 
         registerCommand(Clear())
 
