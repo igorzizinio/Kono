@@ -1,11 +1,11 @@
 package me.igorunderplayer.kono.commands.slash.testing
 
-import dev.kord.core.Kord
+import dev.kord.common.entity.ApplicationCommandOption
+import dev.kord.common.entity.ApplicationCommandOptionType
+import dev.kord.common.entity.optional.OptionalBoolean
 import dev.kord.core.behavior.interaction.respondEphemeral
 import dev.kord.core.behavior.interaction.respondPublic
-import dev.kord.core.entity.application.GlobalChatInputCommand
 import dev.kord.core.event.interaction.ChatInputCommandInteractionCreateEvent
-import dev.kord.rest.builder.interaction.user
 import kotlinx.coroutines.flow.toList
 import me.igorunderplayer.kono.commands.KonoSlashCommand
 
@@ -13,16 +13,15 @@ class DestinoCommand: KonoSlashCommand {
     override val name = "destino"
     override val description = "descubra seu destino..."
 
-    override suspend fun setup(kord: Kord): GlobalChatInputCommand {
-        return kord.createGlobalChatInputCommand(
-            this.name,
-            this.description
-        ) {
-            user("user", "selecione um usuario para descobrir o destino...") {
-                required = false
-            }
-        }
-    }
+
+    override val options: List<ApplicationCommandOption> = listOf(
+        ApplicationCommandOption(
+            name = "user",
+            description = "o usuario a ser decidido destino",
+            type = ApplicationCommandOptionType.User,
+            required = OptionalBoolean.Value(false)
+        )
+    )
 
     override suspend fun run(event: ChatInputCommandInteractionCreateEvent) {
         val user = event.interaction.command.users["user"] ?: event.interaction.user
@@ -107,7 +106,7 @@ class DestinoCommand: KonoSlashCommand {
 
             val randomMember = event.kord.getGuild(guildId).members.toList().random()
             event.interaction.respondPublic {
-                content = "${user.mention} seu destino é... \n ... ${destino.replace("{randommember}", randomMember.mention)}"
+                content = "${user.mention} seu destino é... \n ... ${destino.replace("{randomMember}", randomMember.mention)}"
             }
 
         } else {

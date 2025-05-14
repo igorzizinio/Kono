@@ -1,10 +1,13 @@
 package me.igorunderplayer.kono.commands
 
+import dev.kord.common.entity.ApplicationCommandType
 import dev.kord.common.entity.Permission
+import dev.kord.common.entity.optional.Optional
 import dev.kord.core.Kord
 import dev.kord.core.behavior.reply
 import dev.kord.core.event.interaction.ChatInputCommandInteractionCreateEvent
 import dev.kord.core.event.message.MessageCreateEvent
+import dev.kord.rest.json.request.ApplicationCommandCreateRequest
 import me.igorunderplayer.kono.commands.slash.testing.DestinoCommand
 import me.igorunderplayer.kono.commands.text.dev.DeleteApplicationCommand
 import me.igorunderplayer.kono.commands.text.dev.GuildsCommand
@@ -28,7 +31,7 @@ class CommandManager(private val kord: Kord)  {
     val commandList = mutableListOf<BaseCommand>()
     private val applicationCommandList = mutableListOf<KonoSlashCommand>()
 
-    suspend fun start() {
+    fun start() {
         registerCommand(Avatar())
         registerCommand(Info())
         registerCommand(Help())
@@ -77,7 +80,7 @@ class CommandManager(private val kord: Kord)  {
         commandList.add(command)
     }
 
-    private suspend fun registerSlashCommand(command: KonoSlashCommand) {
+    private fun registerSlashCommand(command: KonoSlashCommand) {
         val commandFound = applicationCommandList.any {
             it.name.lowercase() == command.name.lowercase()
         }
@@ -90,8 +93,18 @@ class CommandManager(private val kord: Kord)  {
             return
         }
 
-        command.setup(kord)
         applicationCommandList.add(command)
+    }
+
+    suspend fun registerCommands() {
+        kord.rest.interaction.createGlobalApplicationCommands(kord.selfId, this.applicationCommandList.map {
+            ApplicationCommandCreateRequest(
+                name = it.name,
+                description = Optional(it.description),
+                type = ApplicationCommandType.ChatInput,
+                options = Optional(it.options)
+            )
+        })
     }
 
 

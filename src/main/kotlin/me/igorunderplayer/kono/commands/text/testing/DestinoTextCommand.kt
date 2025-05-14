@@ -11,7 +11,7 @@ class DestinoTextCommand: BaseCommand(
     description = "descubra o seu destino, ou de outra pessoa..."
 ) {
     override suspend fun run(event: MessageCreateEvent, args: Array<String>) {
-        val user = getMentionedUser(event.message, args)
+        val user = getMentionedUser(event.message, args) ?: event.message.author
 
         if (user == null) {
             event.message.reply {
@@ -95,7 +95,7 @@ class DestinoTextCommand: BaseCommand(
         )
 
 
-        val destino = if(user.id.value == 1216546555134345256u) "casar com <@477534823011844120>" else destinos.random()
+        val destino = destinos.random()
 
         if (destino.contains("{randomMember}")) {
 

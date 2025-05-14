@@ -22,7 +22,7 @@ class TinderCommand: BaseCommand(
 
         val user = getMentionedUser(event.message, args) ?: guild.members.toList().random()
 
-        val chance = if (event.message.author?.id?.value == 477534823011844120u && user.id.value == 1216546555134345256u) 1_000_000 else (0..100).random()
+        val chance = (0..100).random()
 
         event.message.reply {
             embed {

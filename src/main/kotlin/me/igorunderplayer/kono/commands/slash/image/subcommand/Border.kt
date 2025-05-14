@@ -1,17 +1,18 @@
 package me.igorunderplayer.kono.commands.slash.image.subcommand
 
+import dev.kord.common.entity.ApplicationCommandOption
+import dev.kord.common.entity.ApplicationCommandOptionType
+import dev.kord.common.entity.optional.Optional
+import dev.kord.common.entity.optional.OptionalBoolean
 import dev.kord.core.behavior.interaction.respondEphemeral
 import dev.kord.core.behavior.interaction.response.respond
 import dev.kord.core.event.interaction.ChatInputCommandInteractionCreateEvent
 import dev.kord.rest.Image
-import dev.kord.rest.builder.interaction.SubCommandBuilder
-import dev.kord.rest.builder.interaction.number
-import dev.kord.rest.builder.interaction.string
-import dev.kord.rest.builder.interaction.user
 import io.ktor.client.request.forms.*
 import io.ktor.utils.io.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.JsonPrimitive
 import me.igorunderplayer.kono.commands.KonoSlashSubCommand
 import java.awt.Color
 import java.awt.GradientPaint
@@ -25,21 +26,33 @@ import javax.imageio.ImageIO
 class Border: KonoSlashSubCommand {
     override val name = "border"
     override val description = "cria uma bordinha para sua foto de perfil"
+    override val options: List<ApplicationCommandOption> = listOf(
+        ApplicationCommandOption(
+            name = "user",
+            description =  "usuario",
+            required = OptionalBoolean.Value(true),
+            type = ApplicationCommandOptionType.User
+        ),
 
-    override fun options(): SubCommandBuilder.() -> Unit {
-        return {
-            user("user", "usuario") {
-                required = true
-            }
+        ApplicationCommandOption(
+            name = "color1",
+            description =  "cor hexadecimal (padrão: #FFFFFF)",
+            type = ApplicationCommandOptionType.String
+        ),
+        ApplicationCommandOption(
+            name = "color2",
+            description =  "cor hexadecimal (padrão: #FFFFFF)",
+            type = ApplicationCommandOptionType.String
+        ),
+        ApplicationCommandOption(
+            name = "padding",
+            description = "espaçamento (padrão: 48)",
+            minValue = Optional(JsonPrimitive(0.0)),
+            maxValue = Optional(JsonPrimitive(255.0)),
+            type = ApplicationCommandOptionType.Number
+        )
+    )
 
-            string("color", "cor hexadecimal (padrão: #FFFFFF)")
-            string("color2", "cor hexadecimal (padrão: #FFFFFF)")
-            number("padding", "espaçamento (padrão: 48)") {
-                minValue = 0.0
-                maxValue = 256.0
-            }
-        }
-    }
 
     override suspend fun run(event: ChatInputCommandInteractionCreateEvent) {
         val user = event.interaction.command.users["user"]

@@ -1,9 +1,8 @@
 package me.igorunderplayer.kono.commands.slash.testing
 
 import dev.kord.common.Color
-import dev.kord.core.Kord
+import dev.kord.common.entity.ApplicationCommandOption
 import dev.kord.core.behavior.interaction.response.respond
-import dev.kord.core.entity.application.GlobalChatInputCommand
 import dev.kord.core.event.interaction.ChatInputCommandInteractionCreateEvent
 import dev.kord.rest.builder.message.embed
 import kotlinx.coroutines.flow.count
@@ -16,12 +15,9 @@ import java.lang.management.ManagementFactory
 class Info: KonoSlashCommand {
     override val name = "info"
     override val description = "shows info"
-    override suspend fun setup(kord: Kord): GlobalChatInputCommand {
-        return kord.createGlobalChatInputCommand(
-            this.name,
-            this.description
-        )
-    }
+
+    override val options: List<ApplicationCommandOption> = listOf()
+
 
     override suspend fun run(event: ChatInputCommandInteractionCreateEvent) {
         val response = event.interaction.deferPublicResponse()

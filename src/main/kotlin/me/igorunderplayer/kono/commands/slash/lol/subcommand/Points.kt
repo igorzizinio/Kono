@@ -2,10 +2,13 @@ package me.igorunderplayer.kono.commands.slash.lol.subcommand
 
 import dev.kord.common.Color
 import dev.kord.common.asJavaLocale
+import dev.kord.common.entity.ApplicationCommandOption
+import dev.kord.common.entity.ApplicationCommandOptionType
+import dev.kord.common.entity.Choice
+import dev.kord.common.entity.optional.Optional
+import dev.kord.common.entity.optional.OptionalBoolean
 import dev.kord.core.behavior.interaction.response.respond
 import dev.kord.core.event.interaction.ChatInputCommandInteractionCreateEvent
-import dev.kord.rest.builder.interaction.SubCommandBuilder
-import dev.kord.rest.builder.interaction.string
 import dev.kord.rest.builder.message.embed
 import me.igorunderplayer.kono.Kono
 import me.igorunderplayer.kono.commands.KonoSlashSubCommand
@@ -23,25 +26,34 @@ class Points(): KonoSlashSubCommand, KoinComponent {
     private val riotService: RiotService by inject()
     private val userService: UserService by inject()
 
-    override fun options(): SubCommandBuilder.() -> Unit {
-        return {
-            string("champion", "campeao") {
-                required = true
-            }
+    override val options: List<ApplicationCommandOption> = listOf(
+        ApplicationCommandOption(
+            name ="champion",
+            description = "o campeao",
+            required = OptionalBoolean.Value(true),
+            type = ApplicationCommandOptionType.String
+        ),
 
-            string("riot-id", "summoner's riot id") {
-                required = false
-            }
-
-            string("region", "summoner's region") {
-                for (shard in LeagueShard.entries) {
-                    choice(shard.prettyName(), shard.value)
+        ApplicationCommandOption(
+            name ="riotid",
+            description = "o riot id",
+            required = OptionalBoolean.Value(false),
+            type = ApplicationCommandOptionType.String
+        ),
+        ApplicationCommandOption(
+            name ="region",
+            description = "a regiao",
+            required = OptionalBoolean.Value(false),
+            type = ApplicationCommandOptionType.String,
+            choices = Optional(
+                LeagueShard.entries.map {
+                    Choice.StringChoice(
+                        name = it.prettyName(), nameLocalizations = Optional(), value = it.value,
+                    )
                 }
-
-                required = false
-            }
-        }
-    }
+            )
+        )
+    )
 
     override suspend fun run(event: ChatInputCommandInteractionCreateEvent) {
         val response = event.interaction.deferPublicResponse()

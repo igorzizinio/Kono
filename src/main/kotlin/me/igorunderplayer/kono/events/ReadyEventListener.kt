@@ -24,6 +24,9 @@ suspend fun onReady(event: ReadyEvent) {
 
     Kono.emojis = konoEmojis
 
+    Kono.commands.registerCommands()
+
+
     println("$purple Ready as ${event.kord.getSelf().username} (${event.kord.selfId}) $reset")
 
     event.kord.editPresence {

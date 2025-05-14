@@ -1,9 +1,12 @@
 package me.igorunderplayer.kono.commands.slash.lol.subcommand
 
+import dev.kord.common.entity.ApplicationCommandOption
+import dev.kord.common.entity.ApplicationCommandOptionType
+import dev.kord.common.entity.Choice
+import dev.kord.common.entity.optional.Optional
+import dev.kord.common.entity.optional.OptionalBoolean
 import dev.kord.core.behavior.interaction.response.respond
 import dev.kord.core.event.interaction.ChatInputCommandInteractionCreateEvent
-import dev.kord.rest.builder.interaction.SubCommandBuilder
-import dev.kord.rest.builder.interaction.string
 import me.igorunderplayer.kono.commands.KonoSlashSubCommand
 import me.igorunderplayer.kono.services.RiotService
 import me.igorunderplayer.kono.services.UserService
@@ -19,21 +22,27 @@ class Assign: KonoSlashSubCommand, KoinComponent {
     private val userService: UserService by inject()
     private val riotService: RiotService by inject()
 
-    override fun options(): SubCommandBuilder.() -> Unit {
-        return {
-            string("riot-id", "summoner's riot id") {
-                required = true
-            }
-
-            string("region", "summoner's region") {
-                for (shard in LeagueShard.entries) {
-                    choice(shard.prettyName(), shard.value)
+    override val options = listOf(
+        ApplicationCommandOption(
+            name = "riot-id",
+            description = "account riot-id",
+            required = OptionalBoolean.Value(true),
+            type = ApplicationCommandOptionType.String
+        ),
+        ApplicationCommandOption(
+            name = "region",
+            description = "account region",
+            required = OptionalBoolean.Value(true),
+            type = ApplicationCommandOptionType.String,
+            choices = Optional(
+                LeagueShard.entries.map {
+                    Choice.StringChoice(
+                        name = it.prettyName(), nameLocalizations = Optional(), value = it.value,
+                    )
                 }
-
-                required = true
-            }
-        }
-    }
+            )
+        ),
+    )
 
     override suspend fun run(event: ChatInputCommandInteractionCreateEvent) {
         val response = event.interaction.deferPublicResponse()
