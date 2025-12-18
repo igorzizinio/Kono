@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "2.1.10"
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("com.gradleup.shadow") version "9.3.0"
     application
 }
 
@@ -40,7 +40,7 @@ dependencies {
 
 
     // Riot
-    implementation("com.github.stelar7:R4J:2.5.5")
+    implementation("com.github.stelar7:R4J:2.7.0")
 
     // Ktor
     implementation("io.ktor:ktor-server-core-jvm:2.3.7")

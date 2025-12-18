@@ -2,6 +2,7 @@ package me.igorunderplayer.kono.commands.text.testing
 
 import dev.kord.core.behavior.reply
 import dev.kord.core.event.message.MessageCreateEvent
+import dev.kord.rest.Image
 import io.ktor.client.request.forms.*
 import io.ktor.utils.io.*
 import kotlinx.coroutines.Dispatchers
@@ -27,15 +28,28 @@ class BorderGradient: BaseCommand(
             Color.decode(it)
         }
 
-        val attach = event.message.attachments.firstOrNull()
-        if (attach == null) {
+        if (colors.isEmpty()) {
             event.message.reply {
-                content = "\uD83D\uDD95"
+                content = "porfavor coloca ao menos 1 cor né"
+            }
+        }
+
+        var attachUrl = event.message.attachments.firstOrNull()?.url
+        if (attachUrl == null) {
+            attachUrl = event.message.author?.avatar?.cdnUrl?.toUrl {
+                size = Image.Size.Size2048
+                format = Image.Format.PNG
+            }
+        }
+
+        if (attachUrl == null) {
+            event.message.reply {
+                content = "tomar no seu cu, quer q eu tire imagem da onde?????"
             }
             return
         }
 
-        val attachUri = URI.create(attach.url)
+        val attachUri = URI.create(attachUrl)
         val image = withContext(Dispatchers.IO) {
             ImageIO.read(attachUri.toURL())
         }

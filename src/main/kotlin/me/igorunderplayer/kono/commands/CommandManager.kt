@@ -66,7 +66,7 @@ class CommandManager(private val kord: Kord)  {
 
     private fun registerCommand(command: BaseCommand) {
         val commandFound = commandList.any {
-            it.name.lowercase() == command.name.lowercase()
+            it.name.equals(command.name, ignoreCase = true)
         }
 
         if (commandFound) {
@@ -82,7 +82,7 @@ class CommandManager(private val kord: Kord)  {
 
     private fun registerSlashCommand(command: KonoSlashCommand) {
         val commandFound = applicationCommandList.any {
-            it.name.lowercase() == command.name.lowercase()
+            it.name.equals(command.name, ignoreCase = true)
         }
 
         if (commandFound) {
