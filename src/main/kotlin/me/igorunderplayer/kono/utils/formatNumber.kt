@@ -1,17 +1,19 @@
 package me.igorunderplayer.kono.utils
 
-fun formatNumber(number: Int): String {
-    val million = 1_000_000
-    val thousand = 1_000
+const val million = 1_000_000
+const val thousand = 1_000
 
+fun formatNumber(number: Int): String {
     return when {
         number >= million -> {
             val value = number / million
-            return "${value}M"
+
+            "${value}M"
         }
         number >= thousand -> {
             val value = number / thousand
-            return "${value}K"
+
+            "${value}K"
         }
         else -> number.toString()
     }
