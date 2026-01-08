@@ -47,11 +47,11 @@ class Profile : BaseCommand(
             return
         }
 
-        val dbUser = userService.getOrCreateUserByDiscordId(user.id.value.toLong())
+        val dbUser = userService.getUserByDiscordId(user.id.value.toLong())
 
         if (dbUser == null) {
             event.message.reply {
-                content = "Usuario não encontrado"
+                content = "Usuário não registrado. Use o comando `register` para se cadastrar."
             }
 
             return
