@@ -15,9 +15,10 @@ import no.stelar7.api.r4j.pojo.lol.staticdata.champion.StaticChampion
 import no.stelar7.api.r4j.pojo.lol.staticdata.profileicon.ProfileIconDetails
 import no.stelar7.api.r4j.pojo.lol.summoner.Summoner
 import no.stelar7.api.r4j.pojo.shared.RiotAccount
+import me.igorunderplayer.kono.Config.Companion.riotApiKey
 
-class RiotService(apiKey: String) {
-    private val riot = R4J(APICredentials(apiKey))
+class RiotService() {
+    private val riot = R4J(APICredentials(riotApiKey))
 
 
     suspend fun getAccountByPUUID(region: RegionShard, puuid: String): RiotAccount? = withContext(Dispatchers.IO) {

@@ -2,6 +2,7 @@ package me.igorunderplayer.kono.data.repositories
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import me.igorunderplayer.kono.data.DatabaseManager
 import me.igorunderplayer.kono.data.entities.User
 import me.igorunderplayer.kono.data.entities.Users
 import org.ktorm.database.Database
@@ -11,7 +12,10 @@ import org.ktorm.dsl.update
 import org.ktorm.entity.find
 import org.ktorm.entity.sequenceOf
 
-class UserRepository(private val database: Database)  {
+class UserRepository(private val databaseManager: DatabaseManager)  {
+
+    private val database: Database
+        get() = databaseManager.db
 
 
     suspend fun getUserById(userId: Int): User? = withContext(Dispatchers.IO) {
