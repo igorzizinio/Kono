@@ -15,7 +15,7 @@ object Launcher {
                 modules(appModule)
             }
 
-            val botJob = GlobalScope.launch {
+            val botJob = launch {
                 Kono().start()
             }
 
