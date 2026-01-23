@@ -7,5 +7,5 @@ import me.igorunderplayer.kono.Config.Companion.databasePassword
 import org.ktorm.database.Database
 
 class DatabaseManager() {
-    val db: Database = Database.connect(databaseUrl, user = databaseUser, password = databasePassword)
+    val db: Database = Database.connect(databaseUrl)
 }

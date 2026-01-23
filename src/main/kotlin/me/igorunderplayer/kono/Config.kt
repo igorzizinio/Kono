@@ -36,8 +36,6 @@ class Config {
             properties["TOKEN"] = env("TOKEN")
             properties["RIOT_API_KEY"] = env("RIOT_API_KEY")
             properties["DATABASE_URL"] = env("DATABASE_URL")
-            properties["DATABASE_USER"] = env("DATABASE_USER")
-            properties["DATABASE_PASSWORD"] = env("DATABASE_PASSWORD")
         }
 
         return this
