@@ -73,6 +73,10 @@ tasks {
     }
 }
 
+tasks.register("stage") {
+    dependsOn("shadowJar")
+}
+
 
 application {
     mainClass.set("me.igorunderplayer.kono.Launcher")
