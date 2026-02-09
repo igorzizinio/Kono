@@ -2,10 +2,9 @@ package me.igorunderplayer.kono.data
 
 
 import me.igorunderplayer.kono.Config.Companion.databaseUrl
-import me.igorunderplayer.kono.Config.Companion.databaseUser
-import me.igorunderplayer.kono.Config.Companion.databasePassword
 import org.ktorm.database.Database
+import org.ktorm.support.postgresql.PostgreSqlDialect
 
 class DatabaseManager() {
-    val db: Database = Database.connect(databaseUrl)
+    val db: Database = Database.connect(databaseUrl, dialect = PostgreSqlDialect())
 }

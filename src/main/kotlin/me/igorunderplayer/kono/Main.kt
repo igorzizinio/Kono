@@ -19,7 +19,12 @@ object Launcher {
                 Kono().start()
             }
 
+            val serverJob = launch {
+                Server().start()
+            }
+
             botJob.join()
+            serverJob.join()
         }
     }
 }

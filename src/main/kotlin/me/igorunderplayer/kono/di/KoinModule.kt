@@ -1,7 +1,9 @@
 package me.igorunderplayer.kono.di
 
 import me.igorunderplayer.kono.data.DatabaseManager
+import me.igorunderplayer.kono.data.repositories.RandomMessageRepository
 import me.igorunderplayer.kono.data.repositories.UserRepository
+import me.igorunderplayer.kono.services.RandomMessageService
 import me.igorunderplayer.kono.services.RiotService
 import me.igorunderplayer.kono.services.UserService
 import org.koin.core.module.dsl.singleOf
@@ -12,4 +14,6 @@ val appModule = module {
     singleOf(::UserRepository)
     singleOf(::UserService)
     singleOf(::RiotService)
+    singleOf(::RandomMessageRepository)
+    singleOf(::RandomMessageService)
 }

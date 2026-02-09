@@ -6,3 +6,9 @@ CREATE TABLE IF NOT EXISTS tb_users (
 
 ALTER TABLE tb_users ADD COLUMN riot_puuid TEXT;
 ALTER TABLE tb_users ADD COLUMN riot_region TEXT;
+
+
+CREATE TABLE IF NOT EXISTS tb_random_messages (
+    id SERIAL PRIMARY KEY,
+    content TEXT NOT NULL
+);

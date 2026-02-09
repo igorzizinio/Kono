@@ -6,11 +6,11 @@ import dev.kord.core.behavior.interaction.response.respond
 import dev.kord.core.event.interaction.ChatInputCommandInteractionCreateEvent
 import dev.kord.rest.builder.message.embed
 import kotlinx.coroutines.flow.count
-import kotlinx.datetime.Clock
 import me.igorunderplayer.kono.Kono
 import me.igorunderplayer.kono.commands.KonoSlashCommand
 import me.igorunderplayer.kono.utils.humanizeDuration
 import java.lang.management.ManagementFactory
+import kotlin.time.Clock
 
 class Info: KonoSlashCommand {
     override val name = "info"

@@ -1,8 +1,8 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "2.1.10"
+    kotlin("jvm") version "2.3.10"
+    kotlin("plugin.serialization") version "2.3.10"
     id("com.gradleup.shadow") version "9.3.0"
     application
 }
@@ -16,67 +16,58 @@ java {
 
 repositories {
     mavenCentral()
-
-    maven(
-        url = "https://jitpack.io"
-    )
+    maven("https://jitpack.io")
 }
 
 dependencies {
+
+    // Kotlin
     testImplementation(kotlin("test"))
 
-    implementation(kotlin("stdlib-jdk8"))
-
-
-    // Dependency injection
+    // Dependency Injection
     implementation("io.insert-koin:koin-core:4.0.2")
 
-    // Discord
-    implementation("dev.kord:kord-core:0.15.0")
+    // Ktor
+    implementation("io.ktor:ktor-server-core-jvm:3.2.3")
+    implementation("io.ktor:ktor-server-netty-jvm:3.2.3")
+    implementation("io.ktor:ktor-server-content-negotiation:3.2.3")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:3.2.3")
 
     // Logging
-    implementation("ch.qos.logback:logback-core:1.4.14")
     implementation("ch.qos.logback:logback-classic:1.4.14")
 
+    // Discord
+    implementation("dev.kord:kord-core:0.17.0")
 
     // Riot
     implementation("com.github.stelar7:R4J:2.7.0")
 
-    // Ktor
-    implementation("io.ktor:ktor-server-core-jvm:2.3.7")
-    implementation("io.ktor:ktor-server-netty-jvm:2.3.7")
-    implementation("io.ktor:ktor-server-freemarker:2.3.7")
-
-    // Ktorm
+    // Database
     implementation("org.ktorm:ktorm-core:4.1.1")
+    implementation("org.ktorm:ktorm-support-postgresql:4.1.1")
     implementation("org.postgresql:postgresql:42.7.5")
 }
-
 
 tasks {
     test {
         useJUnitPlatform()
     }
 
-    build {
-        mustRunAfter("clean", "test")
-    }
-
-    withType<ShadowJar> {
-        archiveFileName.set("KonoBot.jar")
-    }
-
     withType<KotlinCompile> {
-        compilerOptions {
-            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
-        }
+        compilerOptions.jvmTarget.set(
+            org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
+        )
+    }
+
+    withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
+        archiveFileName.set("KonoBot.jar")
+        mergeServiceFiles()
     }
 }
 
 tasks.register("stage") {
     dependsOn("shadowJar")
 }
-
 
 application {
     mainClass.set("me.igorunderplayer.kono.Launcher")
