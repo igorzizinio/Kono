@@ -101,7 +101,6 @@ class CommandManager(
                 .toMutableList()
 
             val mention = args.removeAt(0)
-
             if (mentionRegex.matches(mention)) {
 
                 val command = searchCommand(args.removeAt(0)) ?: return
@@ -109,7 +108,7 @@ class CommandManager(
                 // DEV check
                 if (
                     command.category == CommandCategory.Developer &&
-                    event.message.author?.id?.value?.toLong() != 477534823011844120L
+                    event.message.author?.id?.value != 477534823011844120u
                 ) return
 
                 // PERMISSION check
@@ -127,12 +126,14 @@ class CommandManager(
                         return
                     }
                 }
-
                 command.run(event, args.toTypedArray())
             }
 
-        } catch (_: Exception) {
-            // TODO: logar isso depois
+        } catch (exception: Exception) {
+            logger.error("Error while handling command", exception)
+            event.message.reply {
+                content = "\uD83D\uDE2D algo de errado aconteceu ao executar o comando"
+            }
         }
     }
 }

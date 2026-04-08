@@ -1,28 +1,55 @@
 package me.igorunderplayer.kono.di
 
-
-
+import me.igorunderplayer.kono.Kono
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandManager
 import me.igorunderplayer.kono.commands.KonoSlashCommand
+import me.igorunderplayer.kono.commands.text.dev.DeleteApplicationCommand
+import me.igorunderplayer.kono.commands.text.dev.GuildsCommand
+import me.igorunderplayer.kono.commands.text.`fun`.HCommand
+import me.igorunderplayer.kono.commands.text.`fun`.TinderCommand
+import me.igorunderplayer.kono.commands.text.lol.LoLChampion
+import me.igorunderplayer.kono.commands.text.lol.LoLMatches
 import me.igorunderplayer.kono.commands.text.testing.*
-import me.igorunderplayer.kono.commands.text.dev.*
-import me.igorunderplayer.kono.commands.text.lol.*
-import me.igorunderplayer.kono.commands.text.`fun`.*
-import me.igorunderplayer.kono.commands.slash.testing.Info as SlashInfo
+import me.igorunderplayer.kono.data.DatabaseManager
+import me.igorunderplayer.kono.data.repositories.RandomMessageRepository
+import me.igorunderplayer.kono.data.repositories.UserRepository
+import me.igorunderplayer.kono.events.ChatInputCommandInteractionCreateHandler
+import me.igorunderplayer.kono.events.EventManager
+import me.igorunderplayer.kono.events.MessageCreateHandler
+import me.igorunderplayer.kono.events.handlers.ReadyHandler
+import me.igorunderplayer.kono.services.EmojiService
+import me.igorunderplayer.kono.services.RandomMessageService
+import me.igorunderplayer.kono.services.RiotService
+import me.igorunderplayer.kono.services.UserService
+import org.koin.core.module.dsl.bind
+import org.koin.core.module.dsl.factoryOf
+import org.koin.core.module.dsl.singleOf
+import org.koin.dsl.module
+import me.igorunderplayer.kono.commands.slash.image.ImageCommands as SlashImageCommands
+import me.igorunderplayer.kono.commands.slash.lol.LoLCommands as SlashLoLCommands
 import me.igorunderplayer.kono.commands.slash.testing.Avatar as SlashAvatar
 import me.igorunderplayer.kono.commands.slash.testing.DestinoCommand as SlashDestino
+import me.igorunderplayer.kono.commands.slash.testing.Info as SlashInfo
 import me.igorunderplayer.kono.commands.slash.testing.Register as SlashRegister
-import me.igorunderplayer.kono.commands.slash.lol.LoLCommands as SlashLoLCommands
-import me.igorunderplayer.kono.commands.slash.image.ImageCommands as SlashImageCommands
-import me.igorunderplayer.kono.data.DatabaseManager
-import me.igorunderplayer.kono.data.repositories.*
-import me.igorunderplayer.kono.services.*
-
-import org.koin.core.module.dsl.*
-import org.koin.dsl.module
 
 val appModule = module {
+
+    // ========================
+    // KONO
+    // ========================
+    singleOf(::Kono)
+
+
+    // ========================
+    // EVENTS
+    // ========================
+    singleOf(::EventManager)
+
+    singleOf(::ReadyHandler)
+    singleOf(::MessageCreateHandler)
+    singleOf(::ChatInputCommandInteractionCreateHandler)
+
 
     // ========================
     // DATABASE
@@ -41,6 +68,7 @@ val appModule = module {
     singleOf(::UserService)
     singleOf(::RandomMessageService)
     singleOf(::RiotService)
+    singleOf(::EmojiService)
 
     // ========================
     // TEXT COMMANDS

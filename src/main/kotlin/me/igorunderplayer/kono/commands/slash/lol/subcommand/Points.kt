@@ -10,8 +10,8 @@ import dev.kord.common.entity.optional.OptionalBoolean
 import dev.kord.core.behavior.interaction.response.respond
 import dev.kord.core.event.interaction.ChatInputCommandInteractionCreateEvent
 import dev.kord.rest.builder.message.embed
-import me.igorunderplayer.kono.Kono
 import me.igorunderplayer.kono.commands.KonoSlashSubCommand
+import me.igorunderplayer.kono.services.EmojiService
 import me.igorunderplayer.kono.services.RiotService
 import me.igorunderplayer.kono.services.UserService
 import no.stelar7.api.r4j.basic.constants.api.regions.LeagueShard
@@ -19,7 +19,8 @@ import java.text.NumberFormat
 
 class Points(
     private val userService: UserService,
-    private val riotService: RiotService
+    private val riotService: RiotService,
+    private val emojiService: EmojiService,
 ): KonoSlashSubCommand {
     override val name = "points"
     override val description = "exibe total de maestria de um jogador"
@@ -87,7 +88,7 @@ class Points(
 
         val masteryLevelI = if (mastery.championLevel > 7) 7 else mastery.championLevel
         val masteryLevel = if (masteryLevelI == 0) "default" else "$masteryLevelI"
-        val emoji = Kono.emojis.firstOrNull { it.name == "mastery_icon_$masteryLevel" }
+        val emoji = emojiService.findByName("mastery_icon_$masteryLevel")
         val iconText = emoji?.mention ?: ""
 
         val latestVersion = riotService.getLatestVersion()

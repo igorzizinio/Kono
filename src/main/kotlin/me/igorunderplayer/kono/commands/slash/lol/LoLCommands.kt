@@ -10,18 +10,20 @@ import me.igorunderplayer.kono.commands.KonoSlashSubCommand
 import me.igorunderplayer.kono.commands.slash.lol.subcommand.Assign
 import me.igorunderplayer.kono.commands.slash.lol.subcommand.Points
 import me.igorunderplayer.kono.commands.slash.lol.subcommand.Profile
+import me.igorunderplayer.kono.services.EmojiService
 import me.igorunderplayer.kono.services.RiotService
 import me.igorunderplayer.kono.services.UserService
 
 class LoLCommands(
     private val userService: UserService,
-    private val riotService: RiotService
+    private val riotService: RiotService,
+    private val emojiService: EmojiService,
 ): KonoSlashCommand {
     override val name = "lol"
     override val description = "comandos relacionados a league of legends"
 
     private val subCommands = listOf<KonoSlashSubCommand>(
-        Profile(userService, riotService), Points(userService, riotService), Assign(userService, riotService)
+        Profile(userService, riotService, emojiService), Points(userService, riotService, emojiService), Assign(userService, riotService)
     )
 
     override val options: List<ApplicationCommandOption> = this.subCommands.map {

@@ -2,36 +2,26 @@
 package me.igorunderplayer.kono
 
 import dev.kord.core.Kord
-import dev.kord.core.entity.Emoji
 import dev.kord.gateway.ALL
 import dev.kord.gateway.Intents
 import dev.kord.gateway.PrivilegedIntent
 import me.igorunderplayer.kono.commands.CommandManager
 import me.igorunderplayer.kono.events.EventManager
-import org.koin.core.Koin
 import org.slf4j.LoggerFactory
-import kotlin.time.Instant
-import kotlin.time.Clock
 
 
 @OptIn(PrivilegedIntent::class)
-class Kono {
-    companion object {
-        lateinit var kord: Kord
-        lateinit var events: EventManager
-        lateinit var commands: CommandManager
-
-        lateinit var startupAt: Instant
-        lateinit var emojis: List<Emoji>
-    }
+class Kono(
+    private val kord: Kord,
+    private val events: EventManager,
+    private val commands: CommandManager
+) {
 
     private val logger = LoggerFactory.getLogger(this::class.java)
 
-    suspend fun start(koin: Koin) {
+    suspend fun start() {
 
         logger.info("Starting up!")
-
-        kord = koin.get()
 
         logger.info(
             """
@@ -44,11 +34,6 @@ class Kono {
             [0m             
             """.trimIndent()
         )
-
-        startupAt = Clock.System.now()
-
-        events = koin.get()
-        commands = koin.get()
 
         logger.info("Starting event listeners...")
         events.start()

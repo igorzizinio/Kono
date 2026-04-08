@@ -9,9 +9,9 @@ import dev.kord.common.entity.optional.OptionalBoolean
 import dev.kord.core.behavior.interaction.response.respond
 import dev.kord.core.event.interaction.ChatInputCommandInteractionCreateEvent
 import dev.kord.rest.builder.message.embed
-import me.igorunderplayer.kono.Kono
 import me.igorunderplayer.kono.commands.KonoSlashSubCommand
 import me.igorunderplayer.kono.common.Colors
+import me.igorunderplayer.kono.services.EmojiService
 import me.igorunderplayer.kono.services.RiotService
 import me.igorunderplayer.kono.services.UserService
 import me.igorunderplayer.kono.utils.formatNumber
@@ -21,7 +21,8 @@ import kotlin.jvm.optionals.getOrNull
 
 class Profile(
     private val userService: UserService,
-    private val riotService: RiotService
+    private val riotService: RiotService,
+    private val emojiService: EmojiService,
 ): KonoSlashSubCommand {
     override val name = "profile"
     override val description = "mostra perfil de alguem"
@@ -103,7 +104,7 @@ class Profile(
                     inline = true
                     value = summoner.championMasteries.slice(IntRange(0, 2)).joinToString("\n") { championMastery ->
                         val champion = champions[championMastery.championId]!!
-                        val emoji = Kono.emojis.firstOrNull { it.name == "lolchampion_${champion.key}" }
+                        val emoji = emojiService.findByName("lolchampion_${champion.key}")
                         val iconText = emoji?.mention ?: ""
                         "$iconText ${champion.name} - ${formatNumber(championMastery.championPoints)}"
                     }

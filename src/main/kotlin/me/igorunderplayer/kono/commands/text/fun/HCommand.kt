@@ -2,14 +2,15 @@ package me.igorunderplayer.kono.commands.text.`fun`
 
 import dev.kord.core.behavior.reply
 import dev.kord.core.event.message.MessageCreateEvent
-import io.ktor.client.request.forms.ChannelProvider
+import io.ktor.client.request.forms.*
+import io.ktor.utils.io.jvm.javaio.*
 import me.igorunderplayer.kono.commands.BaseCommand
-
-import io.ktor.utils.io.jvm.javaio.toByteReadChannel
+import me.igorunderplayer.kono.commands.CommandCategory
 
 class HCommand: BaseCommand(
     name = "h",
-    description = "h"
+    description = "h",
+    category = CommandCategory.Misc
 ) {
 
     private val hResponses = listOf(

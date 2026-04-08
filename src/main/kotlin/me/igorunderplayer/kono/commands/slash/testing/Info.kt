@@ -6,11 +6,8 @@ import dev.kord.core.behavior.interaction.response.respond
 import dev.kord.core.event.interaction.ChatInputCommandInteractionCreateEvent
 import dev.kord.rest.builder.message.embed
 import kotlinx.coroutines.flow.count
-import me.igorunderplayer.kono.Kono
 import me.igorunderplayer.kono.commands.KonoSlashCommand
-import me.igorunderplayer.kono.utils.humanizeDuration
 import java.lang.management.ManagementFactory
-import kotlin.time.Clock
 
 class Info: KonoSlashCommand {
     override val name = "info"
@@ -31,7 +28,8 @@ class Info: KonoSlashCommand {
         val maxMemory = runtime.maxMemory() / mb
         val totalMemory = runtime.totalMemory() / mb
 
-        val uptime = Clock.System.now() - Kono.startupAt
+        // TODO: fix this (re-implement startupAt)
+        // val uptime = Clock.System.now() - Kono.startupAt
 
         descriptionBuilder.appendLine("\uD83C\uDF10 Em ${event.kord.guilds.count()} servidores")
         descriptionBuilder.appendLine()
@@ -46,7 +44,7 @@ class Info: KonoSlashCommand {
         descriptionBuilder.appendLine("\uD83D\uDCBB E memoria no total: ${maxMemory}MB")
         descriptionBuilder.appendLine()
         descriptionBuilder.appendLine("#️⃣ Threads: ${ManagementFactory.getThreadMXBean().threadCount}")
-        descriptionBuilder.appendLine("\uD83D\uDD50 Tempo ativo: ${humanizeDuration(uptime)}")
+        descriptionBuilder.appendLine("\uD83D\uDD50 Tempo ativo: um tempo inmensurável")
 
         response.respond {
             embed {

@@ -4,14 +4,15 @@ import dev.kord.core.behavior.reply
 import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.rest.builder.message.EmbedBuilder
 import dev.kord.rest.builder.message.embed
-import me.igorunderplayer.kono.Kono
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandCategory
+import me.igorunderplayer.kono.services.EmojiService
 import me.igorunderplayer.kono.services.RiotService
 import no.stelar7.api.r4j.basic.constants.api.regions.LeagueShard
 
 class LoLMatches(
-    private val riotService: RiotService
+    private val riotService: RiotService,
+    private val emojiService: EmojiService
 ) : BaseCommand(
     "lolmatches",
     "mostra partidas de tal user",
@@ -62,7 +63,7 @@ class LoLMatches(
             val match = riotService.getMatch(leagueShard.toRegionShard(), matchId)!!
             val self = match.participants.find { it.puuid == summoner.puuid }!!
 
-            val emoji = Kono.emojis.firstOrNull { it.name == "lolchampion_${self.championName}" }
+            val emoji = emojiService.findByName("lolchampion_${self.championName}")
             val csScore = self.totalMinionsKilled + self.neutralMinionsKilled
 
             val emojiText = emoji?.mention ?: self.championName
