@@ -1,8 +1,11 @@
 package me.igorunderplayer.kono.data.entities
 
 
-import org.ktorm.schema.*
 import org.ktorm.entity.Entity
+import org.ktorm.schema.Table
+import org.ktorm.schema.int
+import org.ktorm.schema.long
+import org.ktorm.schema.text
 
 interface User : Entity<User> {
     companion object : Entity.Factory<User>()

@@ -2,6 +2,7 @@ package me.igorunderplayer.kono.services
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import me.igorunderplayer.kono.Config.Companion.riotApiKey
 import me.igorunderplayer.kono.data.entities.User
 import no.stelar7.api.r4j.basic.APICredentials
 import no.stelar7.api.r4j.basic.constants.api.regions.LeagueShard
@@ -15,7 +16,6 @@ import no.stelar7.api.r4j.pojo.lol.staticdata.champion.StaticChampion
 import no.stelar7.api.r4j.pojo.lol.staticdata.profileicon.ProfileIconDetails
 import no.stelar7.api.r4j.pojo.lol.summoner.Summoner
 import no.stelar7.api.r4j.pojo.shared.RiotAccount
-import me.igorunderplayer.kono.Config.Companion.riotApiKey
 
 class RiotService() {
     private val riot = R4J(APICredentials(riotApiKey))

@@ -1,23 +1,21 @@
 package me.igorunderplayer.kono
 
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.install
-import io.ktor.server.engine.embeddedServer
-import io.ktor.server.netty.Netty
-import io.ktor.server.routing.get
-import io.ktor.server.routing.post
-import io.ktor.server.routing.routing
-import me.igorunderplayer.kono.services.RandomMessageService
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
-import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
-import io.ktor.server.http.content.staticResources
-import io.ktor.server.request.receive
-import io.ktor.server.response.respond
+import io.ktor.server.application.*
+import io.ktor.server.engine.*
+import io.ktor.server.http.content.*
+import io.ktor.server.netty.*
+import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
 import me.igorunderplayer.kono.data.dto.CreateMessageRequest
 import me.igorunderplayer.kono.data.dto.MessageResponse
+import me.igorunderplayer.kono.services.RandomMessageService
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 class Server : KoinComponent {
     val randomMessageService : RandomMessageService by inject()
