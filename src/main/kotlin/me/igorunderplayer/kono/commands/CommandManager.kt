@@ -11,6 +11,7 @@ import dev.kord.rest.json.request.ApplicationCommandCreateRequest
 import me.igorunderplayer.kono.commands.slash.testing.DestinoCommand
 import me.igorunderplayer.kono.commands.text.dev.DeleteApplicationCommand
 import me.igorunderplayer.kono.commands.text.dev.GuildsCommand
+import me.igorunderplayer.kono.commands.text.`fun`.HCommand
 import me.igorunderplayer.kono.commands.text.`fun`.TinderCommand
 import me.igorunderplayer.kono.commands.text.lol.LoLChampion
 import me.igorunderplayer.kono.commands.text.lol.LoLMatches
@@ -50,6 +51,8 @@ class CommandManager(private val kord: Kord)  {
         // Developer Comamands
         registerCommand(GuildsCommand())
         registerCommand(DeleteApplicationCommand())
+
+        registerCommand(HCommand())
 
 
 
