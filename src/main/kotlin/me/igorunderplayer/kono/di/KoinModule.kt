@@ -55,6 +55,7 @@ val appModule = module {
     factoryOf(::DestinoTextCommand) { bind<BaseCommand>() }
     factoryOf(::BorderGradient) { bind<BaseCommand>() }
     factoryOf(::TinderCommand) { bind<BaseCommand>() }
+    factoryOf(::KissCommand) { bind<BaseCommand>() }
 
     factoryOf(::Clear) { bind<BaseCommand>() }
 

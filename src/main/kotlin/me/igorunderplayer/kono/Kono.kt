@@ -45,8 +45,6 @@ class Kono {
             """.trimIndent()
         )
 
-        logger.info("Starting up!")
-
         startupAt = Clock.System.now()
 
         events = koin.get()
