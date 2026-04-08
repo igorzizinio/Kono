@@ -20,7 +20,6 @@ import me.igorunderplayer.kono.Config.Companion.riotApiKey
 class RiotService() {
     private val riot = R4J(APICredentials(riotApiKey))
 
-
     suspend fun getAccountByPUUID(region: RegionShard, puuid: String): RiotAccount? = withContext(Dispatchers.IO) {
         riot.accountAPI.getAccountByPUUID(region, puuid)
     }

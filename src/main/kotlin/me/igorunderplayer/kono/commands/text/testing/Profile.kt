@@ -11,8 +11,6 @@ import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandCategory
 import me.igorunderplayer.kono.services.UserService
 import me.igorunderplayer.kono.utils.getMentionedUser
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import java.awt.Color
 import java.awt.Font
 import java.awt.RenderingHints
@@ -22,15 +20,14 @@ import java.io.ByteArrayOutputStream
 import java.net.URI
 import javax.imageio.ImageIO
 
-class Profile : BaseCommand(
+class Profile(
+    private val userService: UserService
+) : BaseCommand(
     "profile",
     "exibe o perfil de alguem",
     category = CommandCategory.Misc,
     aliases = listOf("perfil")
-), KoinComponent {
-
-    private val userService: UserService by inject()
-
+) {
     override suspend fun run(event: MessageCreateEvent, args: Array<String>) {
         val width = 800
         val height = 600

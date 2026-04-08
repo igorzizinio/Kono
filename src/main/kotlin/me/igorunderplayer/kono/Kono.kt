@@ -8,6 +8,7 @@ import dev.kord.gateway.Intents
 import dev.kord.gateway.PrivilegedIntent
 import me.igorunderplayer.kono.commands.CommandManager
 import me.igorunderplayer.kono.events.EventManager
+import org.koin.core.Koin
 import org.slf4j.LoggerFactory
 import kotlin.time.Instant
 import kotlin.time.Clock
@@ -26,8 +27,11 @@ class Kono {
 
     private val logger = LoggerFactory.getLogger(this::class.java)
 
-    suspend fun start() {
-        kord = Kord(Config.token)
+    suspend fun start(koin: Koin) {
+
+        logger.info("Starting up!")
+
+        kord = koin.get()
 
         logger.info(
             """
@@ -45,13 +49,16 @@ class Kono {
 
         startupAt = Clock.System.now()
 
+        events = koin.get()
+        commands = koin.get()
 
-        events = EventManager(kord)
+        logger.info("Starting event listeners...")
         events.start()
 
-        commands = CommandManager(kord)
+        logger.info("Starting command manager...")
         commands.start()
 
+        logger.info("Logging in!")
         kord.login {
             intents = Intents.ALL
         }

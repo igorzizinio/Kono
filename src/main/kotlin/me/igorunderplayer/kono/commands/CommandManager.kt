@@ -8,14 +8,6 @@ import dev.kord.core.behavior.reply
 import dev.kord.core.event.interaction.ChatInputCommandInteractionCreateEvent
 import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.rest.json.request.ApplicationCommandCreateRequest
-import me.igorunderplayer.kono.commands.slash.testing.DestinoCommand
-import me.igorunderplayer.kono.commands.text.dev.DeleteApplicationCommand
-import me.igorunderplayer.kono.commands.text.dev.GuildsCommand
-import me.igorunderplayer.kono.commands.text.`fun`.HCommand
-import me.igorunderplayer.kono.commands.text.`fun`.TinderCommand
-import me.igorunderplayer.kono.commands.text.lol.LoLChampion
-import me.igorunderplayer.kono.commands.text.lol.LoLMatches
-import me.igorunderplayer.kono.commands.text.testing.*
 import org.slf4j.LoggerFactory
 
 enum class CommandCategory {
@@ -27,56 +19,29 @@ enum class CommandCategory {
     Other
 }
 
-class CommandManager(private val kord: Kord)  {
+class CommandManager(
+    private val kord: Kord,
+    private val commands: List<BaseCommand>,
+    private val slashCommands: List<KonoSlashCommand>
+) {
+
     private val logger = LoggerFactory.getLogger(this::class.java)
+
     val commandList = mutableListOf<BaseCommand>()
     private val applicationCommandList = mutableListOf<KonoSlashCommand>()
 
     fun start() {
-        registerCommand(Avatar())
-        registerCommand(Info())
-        registerCommand(Help())
-
-        registerCommand(Profile())
-        registerCommand(DestinoTextCommand())
-        registerCommand(BorderGradient())
-        registerCommand(TinderCommand())
-
-        registerCommand(Clear())
-
-        registerCommand(LoLChampion())
-        registerCommand(LoLMatches())
-
-
-        // Developer Comamands
-        registerCommand(GuildsCommand())
-        registerCommand(DeleteApplicationCommand())
-
-        registerCommand(HCommand())
-
-
-
-        // Register slash commands
-
-        registerSlashCommand(me.igorunderplayer.kono.commands.slash.testing.Info())
-        registerSlashCommand(me.igorunderplayer.kono.commands.slash.testing.Avatar())
-        registerSlashCommand(me.igorunderplayer.kono.commands.slash.testing.Register())
-        registerSlashCommand(me.igorunderplayer.kono.commands.slash.lol.LoLCommands())
-        registerSlashCommand(me.igorunderplayer.kono.commands.slash.image.ImageCommands())
-        registerSlashCommand(DestinoCommand())
-
+        commands.forEach { registerCommand(it) }
+        slashCommands.forEach { registerSlashCommand(it) }
     }
 
     private fun registerCommand(command: BaseCommand) {
-        val commandFound = commandList.any {
+        val exists = commandList.any {
             it.name.equals(command.name, ignoreCase = true)
         }
 
-        if (commandFound) {
-            val red = "\u001b[31m"
-            val reset = "\u001b[0m"
-
-            logger.error("$red ${command.name} text command is already registered, skipped! $reset")
+        if (exists) {
+            logger.error("\u001b[31m ${command.name} already registered \u001b[0m")
             return
         }
 
@@ -84,15 +49,12 @@ class CommandManager(private val kord: Kord)  {
     }
 
     private fun registerSlashCommand(command: KonoSlashCommand) {
-        val commandFound = applicationCommandList.any {
+        val exists = applicationCommandList.any {
             it.name.equals(command.name, ignoreCase = true)
         }
 
-        if (commandFound) {
-            val red = "\u001b[31m"
-            val reset = "\u001b[0m"
-
-            logger.error("$red ${command.name} slash command is already registered, skipped! $reset")
+        if (exists) {
+            logger.error("\u001b[31m ${command.name} already registered \u001b[0m")
             return
         }
 
@@ -100,33 +62,37 @@ class CommandManager(private val kord: Kord)  {
     }
 
     suspend fun registerCommands() {
-        kord.rest.interaction.createGlobalApplicationCommands(kord.selfId, this.applicationCommandList.map {
-            ApplicationCommandCreateRequest(
-                name = it.name,
-                description = Optional(it.description),
-                type = ApplicationCommandType.ChatInput,
-                options = Optional(it.options)
-            )
-        })
+        kord.rest.interaction.createGlobalApplicationCommands(
+            kord.selfId,
+            applicationCommandList.map {
+                ApplicationCommandCreateRequest(
+                    name = it.name,
+                    description = Optional(it.description),
+                    type = ApplicationCommandType.ChatInput,
+                    options = Optional(it.options)
+                )
+            }
+        )
     }
 
-
-    fun searchCommand (search: String): BaseCommand? {
-        val lowerCase = search.lowercase()
+    fun searchCommand(search: String): BaseCommand? {
+        val lower = search.lowercase()
 
         return commandList.find {
-            it.name == lowerCase || it.aliases.contains(lowerCase)
+            it.name == lower || it.aliases.contains(lower)
         }
     }
 
     suspend fun handleChatInputCommand(event: ChatInputCommandInteractionCreateEvent) {
-        val cmd = this.applicationCommandList.find { it.name == event.interaction.command.rootName }
+        val cmd = applicationCommandList.find {
+            it.name == event.interaction.command.rootName
+        }
 
         cmd?.run(event)
     }
 
     suspend fun handleCommand(event: MessageCreateEvent) {
-        val mentionRegExp = Regex("^<@!?${event.kord.selfId}>$")
+        val mentionRegex = Regex("^<@!?${event.kord.selfId}>$")
 
         try {
             val args = event.message.content
@@ -135,11 +101,18 @@ class CommandManager(private val kord: Kord)  {
                 .toMutableList()
 
             val mention = args.removeAt(0)
-            if (mentionRegExp.matches(mention)) {
+
+            if (mentionRegex.matches(mention)) {
+
                 val command = searchCommand(args.removeAt(0)) ?: return
 
-                if (command.category == CommandCategory.Developer && event.message.author?.id?.value?.toLong() != 477534823011844120L) return
+                // DEV check
+                if (
+                    command.category == CommandCategory.Developer &&
+                    event.message.author?.id?.value?.toLong() != 477534823011844120L
+                ) return
 
+                // PERMISSION check
                 if (command.category == CommandCategory.Management) {
                     val member = event.message.getAuthorAsMemberOrNull() ?: return
                     val permissions = member.getPermissions()
@@ -149,7 +122,7 @@ class CommandManager(private val kord: Kord)  {
                         !permissions.contains(Permission.Administrator)
                     ) {
                         event.message.reply {
-                            content = "Você não tem permissão para executar este comando"
+                            content = "Você não tem permissão"
                         }
                         return
                     }
@@ -157,6 +130,9 @@ class CommandManager(private val kord: Kord)  {
 
                 command.run(event, args.toTypedArray())
             }
-        } catch (_: Exception) {} // TODO
+
+        } catch (_: Exception) {
+            // TODO: logar isso depois
+        }
     }
 }

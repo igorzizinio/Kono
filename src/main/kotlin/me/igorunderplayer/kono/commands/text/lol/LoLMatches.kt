@@ -9,16 +9,14 @@ import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandCategory
 import me.igorunderplayer.kono.services.RiotService
 import no.stelar7.api.r4j.basic.constants.api.regions.LeagueShard
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
-class LoLMatches : BaseCommand(
+class LoLMatches(
+    private val riotService: RiotService
+) : BaseCommand(
     "lolmatches",
     "mostra partidas de tal user",
     category = CommandCategory.LoL
-), KoinComponent {
-
-    private val riotService: RiotService by inject()
+){
 
     override suspend fun run(event: MessageCreateEvent, args: Array<String>) {
 

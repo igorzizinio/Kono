@@ -7,16 +7,14 @@ import dev.kord.rest.builder.message.embed
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandCategory
 import me.igorunderplayer.kono.services.RiotService
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
-class LoLChampion : BaseCommand(
+class LoLChampion(
+    private val riotService: RiotService
+) : BaseCommand(
     "lolchampion",
     "mostra umas infos de um champion",
     category = CommandCategory.LoL
-), KoinComponent {
-    private val riotService: RiotService by inject()
-
+) {
     override suspend fun run(event: MessageCreateEvent, args: Array<String>) {
         val query = args.joinToString(" ")
         val latestVersion = riotService.getLatestVersion()

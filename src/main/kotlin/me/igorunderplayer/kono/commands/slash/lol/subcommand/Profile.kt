@@ -17,16 +17,14 @@ import me.igorunderplayer.kono.services.UserService
 import me.igorunderplayer.kono.utils.formatNumber
 import no.stelar7.api.r4j.basic.constants.api.regions.LeagueShard
 import no.stelar7.api.r4j.basic.constants.types.lol.GameQueueType
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import kotlin.jvm.optionals.getOrNull
 
-class Profile: KonoSlashSubCommand, KoinComponent {
+class Profile(
+    private val userService: UserService,
+    private val riotService: RiotService
+): KonoSlashSubCommand {
     override val name = "profile"
     override val description = "mostra perfil de alguem"
-
-    private val riotService: RiotService by inject()
-    private val userService: UserService by inject()
 
     override val options = listOf(
         ApplicationCommandOption(

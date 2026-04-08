@@ -4,21 +4,30 @@ import dev.kord.core.behavior.channel.createEmbed
 import dev.kord.core.behavior.reply
 import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.rest.builder.message.embed
-import me.igorunderplayer.kono.Kono
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandCategory
+import me.igorunderplayer.kono.commands.CommandManager
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-class Help: BaseCommand(
+class Help: KoinComponent, BaseCommand(
     "help",
     "ajuda um necessitado",
     category = CommandCategory.Util,
     aliases = listOf("ajuda", "mimajude")
 ) {
+
+    private val commandManager: CommandManager by inject()
+
     override suspend fun run(event: MessageCreateEvent, args: Array<String>) {
 
-        val cmd = Kono.commands.searchCommand(args.firstOrNull() ?: "") ?: return displayAllCommands(event)
+        val cmd = commandManager.searchCommand(args.firstOrNull() ?: "")
+            ?: return displayAllCommands(event)
 
-        val aliasesString = if (cmd.aliases.isEmpty()) "⚠️ Nenhum alias registrado" else cmd.aliases.joinToString(", ")
+        val aliasesString = if (cmd.aliases.isEmpty())
+            "⚠️ Nenhum alias registrado"
+        else
+            cmd.aliases.joinToString(", ")
 
         event.message.reply {
             embed {
@@ -38,56 +47,36 @@ class Help: BaseCommand(
     }
 
     private suspend fun displayAllCommands(event: MessageCreateEvent) {
-        val utilCommands = Kono.commands.commandList.filter {
-            it.category == CommandCategory.Util
-        }.map {
-            "▸ ${it.name} - `${it.description}`"
-        }
 
-        val miscCommands = Kono.commands.commandList.filter {
-            it.category == CommandCategory.Misc
-        }.map {
-            "▸ ${it.name} - `${it.description}`"
-        }
+        val grouped = commandManager.commandList
+            .groupBy { it.category }
 
-        val managementCommands = Kono.commands.commandList.filter {
-            it.category == CommandCategory.Management
-        }.map {
-            "▸ ${it.name} - `${it.description}`"
-        }
-
-        val lolCommands = Kono.commands.commandList.filter {
-            it.category == CommandCategory.LoL
-        }.map {
-            "▸ ${it.name} - `${it.description}`"
-        }
-
-        val otherCommands = Kono.commands.commandList.filter {
-            it.category == CommandCategory.Other
-        }.map {
-            "▸ ${it.name} - `${it.description}`"
-        }
+        fun format(category: CommandCategory) =
+            grouped[category]
+                ?.map { "▸ ${it.name} - `${it.description}`" }
+                ?.joinToString("\n")
+                ?: "Nenhum comando"
 
         event.message.channel.createEmbed {
             field {
                 name = "\uD83E\uDDD0 Utilidade"
-                value = utilCommands.joinToString("\n")
+                value = format(CommandCategory.Util)
             }
             field {
                 name = "\uD83E\uDD73 Miscelânea"
-                value = miscCommands.joinToString("\n")
+                value = format(CommandCategory.Misc)
             }
             field {
                 name = "\uD83D\uDEE0 Gerenciamento"
-                value = managementCommands.joinToString("\n")
+                value = format(CommandCategory.Management)
             }
             field {
                 name = "\uD83C\uDF08 League of Legends"
-                value = lolCommands.joinToString("\n")
+                value = format(CommandCategory.LoL)
             }
             field {
                 name = "\uD83E\uDD14 Outros"
-                value = otherCommands.joinToString("\n")
+                value = format(CommandCategory.Other)
             }
         }
     }

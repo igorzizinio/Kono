@@ -15,16 +15,14 @@ import me.igorunderplayer.kono.commands.KonoSlashSubCommand
 import me.igorunderplayer.kono.services.RiotService
 import me.igorunderplayer.kono.services.UserService
 import no.stelar7.api.r4j.basic.constants.api.regions.LeagueShard
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import java.text.NumberFormat
 
-class Points(): KonoSlashSubCommand, KoinComponent {
+class Points(
+    private val userService: UserService,
+    private val riotService: RiotService
+): KonoSlashSubCommand {
     override val name = "points"
     override val description = "exibe total de maestria de um jogador"
-
-    private val riotService: RiotService by inject()
-    private val userService: UserService by inject()
 
     override val options: List<ApplicationCommandOption> = listOf(
         ApplicationCommandOption(
