@@ -12,3 +12,7 @@ CREATE TABLE IF NOT EXISTS tb_random_messages (
     id SERIAL PRIMARY KEY,
     content TEXT NOT NULL
 );
+
+
+ALTER TABLE tb_users ADD COLUMN daily_reward_claimed_at TIMESTAMP;
+ALTER TABLE tb_users ADD COLUMN daily_streak INT;

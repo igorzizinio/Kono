@@ -18,6 +18,7 @@ import me.igorunderplayer.kono.events.ChatInputCommandInteractionCreateHandler
 import me.igorunderplayer.kono.events.EventManager
 import me.igorunderplayer.kono.events.MessageCreateHandler
 import me.igorunderplayer.kono.events.handlers.ReadyHandler
+import me.igorunderplayer.kono.services.DailyService
 import me.igorunderplayer.kono.services.EmojiService
 import me.igorunderplayer.kono.services.RandomMessageService
 import me.igorunderplayer.kono.services.RiotService
@@ -69,6 +70,7 @@ val appModule = module {
     singleOf(::RandomMessageService)
     singleOf(::RiotService)
     singleOf(::EmojiService)
+    singleOf(::DailyService)
 
     // ========================
     // TEXT COMMANDS
@@ -97,6 +99,9 @@ val appModule = module {
 
     // fun
     factoryOf(::HCommand) { bind<BaseCommand>() }
+
+    // testing eKONOmy
+    factoryOf(::DailyCommand) { bind<BaseCommand>() }
 
     // ========================
     // SLASH COMMANDS
