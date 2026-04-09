@@ -22,19 +22,19 @@ class HCommand: BaseCommand(
 
     override suspend fun run(event: MessageCreateEvent, args: Array<String>) {
         val path = hResponses.random()
-        val stream = this::class.java.getResourceAsStream("/$path")
+        this::class.java.getResourceAsStream("/$path").use { stream ->
+            if (stream == null) {
+                event.message.reply { content = "erro ao carregar video 💀 ($path)" }
+                return
+            }
 
-        if (stream == null) {
-            event.message.reply { content = "erro ao carregar video 💀 ($path)" }
-            return
-        }
-
-        val fileName = path.substringAfterLast("/")
-        event.message.reply {
-            content = "h"
-            addFile(fileName, ChannelProvider {
-                stream.toByteReadChannel()
-            })
+            val fileName = path.substringAfterLast("/")
+            event.message.reply {
+                content = "h"
+                addFile(fileName, ChannelProvider {
+                    stream.toByteReadChannel()
+                })
+            }
         }
     }
 }
