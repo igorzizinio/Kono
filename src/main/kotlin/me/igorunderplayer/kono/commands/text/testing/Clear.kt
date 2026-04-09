@@ -16,9 +16,9 @@ class Clear : BaseCommand(
     override suspend fun run(event: MessageCreateEvent, args: Array<String>) {
         val count = args.firstOrNull()?.toIntOrNull()
 
-        if (count == null) {
+        if (count == null || count <= 0) {
             event.message.reply {
-                content = "vc precisa especificar a quantidade de mensagens"
+                content = "vc precisa especificar uma quantidade válida de mensagens"
             }
             return
         }

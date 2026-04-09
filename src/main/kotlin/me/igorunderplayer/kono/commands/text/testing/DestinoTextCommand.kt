@@ -1,5 +1,7 @@
 package me.igorunderplayer.kono.commands.text.testing
 
+import dev.kord.common.entity.MessageFlag
+import dev.kord.common.entity.MessageFlags
 import dev.kord.core.behavior.reply
 import dev.kord.core.event.message.MessageCreateEvent
 import kotlinx.coroutines.flow.toList
@@ -98,12 +100,13 @@ class DestinoTextCommand: BaseCommand(
         val destino = destinos.random()
 
         if (destino.contains("{randomMember}")) {
-
             val randomMember = guild.members.toList().random()
             event.message.reply {
                 content = "${user.mention} seu destino é... \n ... ${destino.replace("{randomMember}", randomMember.mention)}"
+                flags = MessageFlags {
+                    +MessageFlag.SuppressNotifications
+                }
             }
-
         } else {
             event.message.reply {
                 content = "${user.mention} seu destino é... \n ... $destino"

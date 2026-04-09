@@ -54,6 +54,7 @@ class BorderGradient: BaseCommand(
             ImageIO.read(attachUri.toURL())
         }
 
+
         val result = generateBorder(image, 12, colors)
 
         ByteArrayOutputStream().use {
@@ -67,9 +68,7 @@ class BorderGradient: BaseCommand(
             image.flush()
             result.flush()
         }
-
     }
-
 
     private fun generateBorder(image: BufferedImage, padding: Int, colors: List<Color>): BufferedImage {
         val width = image.width
