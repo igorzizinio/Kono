@@ -2,6 +2,8 @@ package me.igorunderplayer.kono.commands.slash.testing
 
 import dev.kord.common.entity.ApplicationCommandOption
 import dev.kord.common.entity.ApplicationCommandOptionType
+import dev.kord.common.entity.MessageFlag
+import dev.kord.common.entity.MessageFlags
 import dev.kord.common.entity.optional.OptionalBoolean
 import dev.kord.core.behavior.interaction.respondEphemeral
 import dev.kord.core.behavior.interaction.respondPublic
@@ -107,6 +109,9 @@ class DestinoCommand: KonoSlashCommand {
             val randomMember = event.kord.getGuild(guildId).members.toList().random()
             event.interaction.respondPublic {
                 content = "${user.mention} seu destino é... \n ... ${destino.replace("{randomMember}", randomMember.mention)}"
+                flags = MessageFlags {
+                    +MessageFlag.SuppressNotifications
+                }
             }
 
         } else {
