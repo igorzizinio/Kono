@@ -50,11 +50,11 @@ class DailyService(
         val newStreak = calculateStreak(lastClaim, currentReset, user.dailyStreak)
         val (reward, bonusApplied) = calculateReward(newStreak)
 
-        val newBalance = user.money + reward
+        val newEssence = user.essence + reward
 
         val success = userRepository.updateDaily(
             userId = user.id,
-            money = newBalance,
+            money = newEssence,
             streak = newStreak,
             claimedAt = now.toInstant(),
             currentReset = currentReset.toInstant()
@@ -65,7 +65,7 @@ class DailyService(
         return DailyResult.Success(
             reward = reward,
             streak = newStreak,
-            balance = newBalance,
+            balance = newEssence    ,
             bonusApplied = bonusApplied,
             nextReset = currentReset.plusDays(1)
         )

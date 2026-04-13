@@ -33,10 +33,10 @@ class DailyCommand(
 
                 event.message.channel.createMessage(
                     """
-                💰 Você recebeu **₭${result.reward}**
+                💰 Você recebeu **${result.reward}** essences!
                 
                 📊 Streak: **${result.streak}/7**
-                💳 Saldo: **₭${result.balance}**$weeklyText
+                💳 Essences: **${result.balance}**$weeklyText
                 """.trimIndent()
                 )
             }

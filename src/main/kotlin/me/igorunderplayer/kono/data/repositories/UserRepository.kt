@@ -31,10 +31,9 @@ class UserRepository(private val databaseManager: DatabaseManager)  {
         database.sequenceOf(Users).find { it.discordId eq discordId }
     }
 
-    suspend fun createUser(discordId: Long, money: Int): User? = withContext(Dispatchers.IO) {
+    suspend fun createUser(discordId: Long): User? = withContext(Dispatchers.IO) {
         val generatedId = database.insertAndGenerateKey(Users) {
             set(it.discordId, discordId)
-            set(it.money, money)
         } as Int
 
         return@withContext getUserById(generatedId)
@@ -56,7 +55,7 @@ class UserRepository(private val databaseManager: DatabaseManager)  {
         currentReset: Instant
     ): Boolean = withContext(Dispatchers.IO) {
         val rowsUpdated = database.update(Users) {
-            set(it.money, money)
+            set(it.essence, money)
             set(it.dailyStreak, streak)
             set(it.dailyRewardClaimedAt, claimedAt)
 
@@ -69,5 +68,28 @@ class UserRepository(private val databaseManager: DatabaseManager)  {
         }
 
         rowsUpdated > 0
+    }
+
+    suspend fun updateWork(
+        userId: Int,
+        konos: Int,
+        workedAt: Instant
+    ) = withContext(Dispatchers.IO) {
+        val updated = database.update(Users) {
+            set(it.konos, konos)
+            set(it.lastWorkAt, workedAt)
+            where { it.id eq userId }
+        }
+
+        updated > 0
+    }
+
+    suspend fun updateEssence(userId: Int, essence: Int) = withContext(Dispatchers.IO) {
+        val updated = database.update(Users) {
+            set(it.essence, essence)
+            where { it.id eq userId }
+        }
+
+        updated > 0
     }
 }

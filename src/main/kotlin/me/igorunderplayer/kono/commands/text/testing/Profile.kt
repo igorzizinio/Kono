@@ -72,7 +72,7 @@ class Profile(
         g2.font = subInfoFont
         g2.paint = Color.LIGHT_GRAY
         g2.drawString('#' + user.username, 152 + stringWidth + 4, 46)
-        g2.drawString("${dbUser.money} Koins", 152, 78)
+        g2.drawString("${dbUser.konos} konos", 152, 78)
         g2.drawString("Level: ??", 152, 106)
         g2.drawString("XP: ??/???", 152, 134)
 

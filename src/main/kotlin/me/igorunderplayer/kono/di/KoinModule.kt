@@ -1,9 +1,11 @@
 package me.igorunderplayer.kono.di
 
+import CardRepository
 import me.igorunderplayer.kono.Kono
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandManager
 import me.igorunderplayer.kono.commands.KonoSlashCommand
+import me.igorunderplayer.kono.commands.text.PullCommand
 import me.igorunderplayer.kono.commands.text.dev.DeleteApplicationCommand
 import me.igorunderplayer.kono.commands.text.dev.GuildsCommand
 import me.igorunderplayer.kono.commands.text.`fun`.HCommand
@@ -12,17 +14,20 @@ import me.igorunderplayer.kono.commands.text.lol.LoLChampion
 import me.igorunderplayer.kono.commands.text.lol.LoLMatches
 import me.igorunderplayer.kono.commands.text.testing.*
 import me.igorunderplayer.kono.data.DatabaseManager
+import me.igorunderplayer.kono.data.repositories.CardInstanceRepository
 import me.igorunderplayer.kono.data.repositories.RandomMessageRepository
 import me.igorunderplayer.kono.data.repositories.UserRepository
 import me.igorunderplayer.kono.events.ChatInputCommandInteractionCreateHandler
 import me.igorunderplayer.kono.events.EventManager
 import me.igorunderplayer.kono.events.MessageCreateHandler
 import me.igorunderplayer.kono.events.handlers.ReadyHandler
+import me.igorunderplayer.kono.services.CardService
 import me.igorunderplayer.kono.services.DailyService
 import me.igorunderplayer.kono.services.EmojiService
 import me.igorunderplayer.kono.services.RandomMessageService
 import me.igorunderplayer.kono.services.RiotService
 import me.igorunderplayer.kono.services.UserService
+import me.igorunderplayer.kono.services.WorkService
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
@@ -62,6 +67,8 @@ val appModule = module {
     // ========================
     singleOf(::UserRepository)
     singleOf(::RandomMessageRepository)
+    singleOf(::CardRepository)
+    singleOf(::CardInstanceRepository)
 
     // ========================
     // SERVICES
@@ -71,6 +78,8 @@ val appModule = module {
     singleOf(::RiotService)
     singleOf(::EmojiService)
     singleOf(::DailyService)
+    singleOf(::WorkService)
+    singleOf(::CardService)
 
     // ========================
     // TEXT COMMANDS
@@ -102,6 +111,8 @@ val appModule = module {
 
     // testing eKONOmy
     factoryOf(::DailyCommand) { bind<BaseCommand>() }
+    factoryOf(::WorkCommand) { bind<BaseCommand>() }
+    factoryOf(::PullCommand) { bind<BaseCommand>() }
 
     // ========================
     // SLASH COMMANDS
