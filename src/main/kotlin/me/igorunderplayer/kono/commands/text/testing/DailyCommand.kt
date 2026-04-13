@@ -15,7 +15,7 @@ class DailyCommand(
 ): BaseCommand(
     name = "daily",
     description = "Get your daily reward!",
-    category = CommandCategory.Developer
+    category = CommandCategory.Misc
 ) {
 
     override suspend fun run(

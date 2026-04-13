@@ -19,8 +19,8 @@ class UserService(
         return getUserByDiscordId(discordId) ?: createUser(discordId)
     }
 
-    suspend fun createUser(discordId: Long, money: Int = 0): User? {
-        return userRepository.createUser(discordId, money)
+    suspend fun createUser(discordId: Long): User? {
+        return userRepository.createUser(discordId)
     }
 
     suspend fun assignRiotAccountToUser(userId: Int, riotPuuid: String, riotRegion: LeagueShard): Boolean {

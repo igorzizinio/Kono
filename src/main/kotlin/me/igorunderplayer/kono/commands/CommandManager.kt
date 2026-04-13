@@ -92,16 +92,18 @@ class CommandManager(
     }
 
     suspend fun handleCommand(event: MessageCreateEvent) {
-        val mentionRegex = Regex("^<@!?${event.kord.selfId}>$")
-
         try {
+
             val args = event.message.content
                 .trim()
-                .split(' ')
+                .split(Regex("\\s+"))
                 .toMutableList()
 
+            if (args.isEmpty()) return
+
+            val id = event.kord.selfId.toString()
             val mention = args.removeAt(0)
-            if (mentionRegex.matches(mention)) {
+            if (mention == "<@$id>" || mention == "<@!$id>")  {
 
                 val command = searchCommand(args.removeAt(0)) ?: return
 

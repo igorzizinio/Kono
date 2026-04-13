@@ -118,6 +118,64 @@ VALUES (
        )
 ON CONFLICT (id) DO NOTHING;
 
+
+-- 🟢 SLIME rosa (personagem base)
+INSERT INTO tb_card_definitions (id, name, type, rarity, base_stats, effect_id)
+VALUES (
+           'PINK_SLIME',
+           'Slime Rosa',
+           'CHARACTER',
+           'RARE',
+           '{
+               "HP": 1850,
+               "ATK": 60,
+               "DEF": 40,
+               "CRIT_CHANCE": 0.05,
+               "CRIT_DAMAGE": 1.2,
+               "SPEED": 120
+           }',
+           NULL
+       )
+ON CONFLICT (id) DO NOTHING;
+
+-- 🟢 SLIME STARCIAD (personagem base)
+INSERT INTO tb_card_definitions (id, name, type, rarity, base_stats, effect_id)
+VALUES (
+           'CIAD_SLIME',
+           'SlimeCiad',
+           'CHARACTER',
+           'EPIC',
+           '{
+               "HP": 240,
+               "ATK": 580,
+               "DEF": 40,
+               "CRIT_CHANCE": 0.05,
+               "CRIT_DAMAGE": 1.2,
+               "SPEED": 120
+           }',
+           NULL
+       )
+ON CONFLICT (id) DO NOTHING;
+
+-- 🟢 SLIME PRISMATICO (personagem base)
+INSERT INTO tb_card_definitions (id, name, type, rarity, base_stats, effect_id)
+VALUES (
+           'PRISMATIC_SLIME',
+           'Slime Prismático',
+           'CHARACTER',
+           'MYTHIC',
+           '{
+               "HP": 3450,
+               "ATK": 380,
+               "DEF": 120,
+               "CRIT_CHANCE": 0.20,
+               "CRIT_DAMAGE": 2.0,
+               "SPEED": 80
+           }',
+           NULL
+       )
+ON CONFLICT (id) DO NOTHING;
+
 -- 🛡️ IRON ARMOR
 INSERT INTO tb_card_definitions (id, name, type, rarity, base_stats, effect_id)
 VALUES (

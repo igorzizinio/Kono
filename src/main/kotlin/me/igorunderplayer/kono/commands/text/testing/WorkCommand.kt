@@ -3,6 +3,7 @@ package me.igorunderplayer.kono.commands.text.testing
 import dev.kord.core.behavior.reply
 import dev.kord.core.event.message.MessageCreateEvent
 import me.igorunderplayer.kono.commands.BaseCommand
+import me.igorunderplayer.kono.commands.CommandCategory
 import me.igorunderplayer.kono.services.WorkResult
 import me.igorunderplayer.kono.services.WorkService
 
@@ -10,7 +11,8 @@ class WorkCommand(
     private val workService: WorkService
 ): BaseCommand(
     name = "work",
-    description = "trabalhe"
+    description = "trabalhe",
+    category = CommandCategory.Misc
 ) {
     override suspend fun run(event: MessageCreateEvent, args: Array<String>) {
         val userId = event.message.author?.id?.value ?: return

@@ -1,6 +1,5 @@
 package me.igorunderplayer.kono.di
 
-import CardRepository
 import me.igorunderplayer.kono.Kono
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandManager
@@ -15,6 +14,7 @@ import me.igorunderplayer.kono.commands.text.lol.LoLMatches
 import me.igorunderplayer.kono.commands.text.testing.*
 import me.igorunderplayer.kono.data.DatabaseManager
 import me.igorunderplayer.kono.data.repositories.CardInstanceRepository
+import me.igorunderplayer.kono.data.repositories.CardRepository
 import me.igorunderplayer.kono.data.repositories.RandomMessageRepository
 import me.igorunderplayer.kono.data.repositories.UserRepository
 import me.igorunderplayer.kono.events.ChatInputCommandInteractionCreateHandler
@@ -24,6 +24,7 @@ import me.igorunderplayer.kono.events.handlers.ReadyHandler
 import me.igorunderplayer.kono.services.CardService
 import me.igorunderplayer.kono.services.DailyService
 import me.igorunderplayer.kono.services.EmojiService
+import me.igorunderplayer.kono.services.GachaService
 import me.igorunderplayer.kono.services.RandomMessageService
 import me.igorunderplayer.kono.services.RiotService
 import me.igorunderplayer.kono.services.UserService
@@ -80,6 +81,7 @@ val appModule = module {
     singleOf(::DailyService)
     singleOf(::WorkService)
     singleOf(::CardService)
+    singleOf(::GachaService)
 
     // ========================
     // TEXT COMMANDS
@@ -89,6 +91,7 @@ val appModule = module {
     factoryOf(::Avatar) { bind<BaseCommand>() }
     factoryOf(::Info) { bind<BaseCommand>() }
     factoryOf(::Help) { bind<BaseCommand>() }
+    factoryOf(::RegisterCommand) { bind<BaseCommand>() }
 
     factoryOf(::Profile) { bind<BaseCommand>() }
     factoryOf(::DestinoTextCommand) { bind<BaseCommand>() }

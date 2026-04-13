@@ -1,7 +1,7 @@
 package me.igorunderplayer.kono.services
 
-import CardRepository
 import me.igorunderplayer.kono.data.entities.CardInstance
+import me.igorunderplayer.kono.data.repositories.CardRepository
 import me.igorunderplayer.kono.domain.card.Stat
 import me.igorunderplayer.kono.domain.card.effect.EffectRegistry
 import me.igorunderplayer.kono.domain.combat.CombatContext

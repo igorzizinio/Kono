@@ -1,61 +1,59 @@
 package me.igorunderplayer.kono.commands.text
 
-import CardRepository
+
+import dev.kord.core.behavior.reply
 import dev.kord.core.event.message.MessageCreateEvent
 import me.igorunderplayer.kono.commands.BaseCommand
-import me.igorunderplayer.kono.data.repositories.CardInstanceRepository
-import me.igorunderplayer.kono.data.repositories.UserRepository
+import me.igorunderplayer.kono.commands.CommandCategory
+import me.igorunderplayer.kono.services.GachaResult
+import me.igorunderplayer.kono.services.GachaService
 
 class PullCommand(
-    private val userRepository: UserRepository,
-    private val cardRepository: CardRepository,
-    private val cardInstanceRepository: CardInstanceRepository
+    private val gachaService: GachaService
 ) : BaseCommand(
     name = "pull",
     description = "Pull a random card using essence!",
+    category = CommandCategory.Misc
 ) {
 
-    private val COST = 1
-
     override suspend fun run(event: MessageCreateEvent, args: Array<String>) {
-        val discordId = event.message.author?.id?.value?.toLong() ?: return
+        val userId = event.message.author?.id?.value?.toLong() ?: return
 
-        val user = userRepository.getUserByDiscordId(discordId)
+        println(args.joinToString(" "))
+        val multiple = args.getOrNull(0) == "10"
 
-        if (user == null) {
-            event.message.channel.createMessage("Você precisa se registrar primeiro.")
-            return
+        when (val result = gachaService.pull(userId, multiple)) {
+            is GachaResult.Success -> {
+                event.message.reply {
+                    content = "🎰 Você puxou: **${result.cardName}** (${result.rarity})\n" +
+                            "💎 Essence restante: ${result.remainingEssence}"
+                }
+            }
+
+            is GachaResult.MultipePullSuccess -> {
+                val pulledCards = result.pulledCards.joinToString("\n") { "🎰 **${it.cardName}** (${it.rarity})" }
+                event.message.reply {
+                    content = "Você puxou:\n$pulledCards\n" +
+                            "💎 Essence restante: ${result.remainingEssence}"
+                }
+            }
+
+            GachaResult.NotEnoughEssence -> {
+                event.message.reply { content = "Você não tem essence suficiente 💎" }
+            }
+
+            GachaResult.UserNotFound -> {
+                event.message.reply { content = "Você precisa se registrar primeiro." }
+            }
+
+            GachaResult.NoCardsAvailable -> {
+                event.message.reply { content = "Nenhuma carta disponível nessa raridade." }
+            }
+
+            else -> {
+                event.message.reply { content = "Erro ao fazer pull." }
+            }
         }
-
-        if (user.essence < COST) {
-            event.message.channel.createMessage("Você não tem essence suficiente 💎")
-            return
-        }
-
-        val pool = cardRepository.getAll()
-
-        if (pool.isEmpty()) {
-            event.message.channel.createMessage("Nenhuma carta disponível.")
-            return
-        }
-
-        val card = pool.random()
-
-        val success = cardInstanceRepository.insert(
-            userId = user.id,
-            definitionId = card.id
-        )
-
-        if (!success) {
-            event.message.channel.createMessage("Erro ao obter carta.")
-            return
-        }
-
-        // desconta essence
-        userRepository.updateEssence(user.id, user.essence - COST)
-
-        event.message.channel.createMessage(
-            "🎰 Você puxou: **${card.name}** (${card.rarity})"
-        )
     }
 }
+

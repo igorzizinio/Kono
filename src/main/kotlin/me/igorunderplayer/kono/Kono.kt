@@ -16,13 +16,10 @@ class Kono(
     private val events: EventManager,
     private val commands: CommandManager
 ) {
-
     private val logger = LoggerFactory.getLogger(this::class.java)
 
     suspend fun start() {
-
         logger.info("Starting up!")
-
         logger.info(
             """
              

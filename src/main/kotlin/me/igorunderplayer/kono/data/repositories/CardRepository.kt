@@ -1,3 +1,5 @@
+package me.igorunderplayer.kono.data.repositories
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import me.igorunderplayer.kono.data.DatabaseManager
