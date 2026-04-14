@@ -17,14 +17,11 @@ class WorkCommand(
     override suspend fun run(event: MessageCreateEvent, args: Array<String>) {
         val userId = event.message.author?.id?.value ?: return
         when (val result = workService.work(userId.toLong())) {
-
             is WorkResult.Success -> {
                 event.message.reply {
                     content = "💼 Você trabalhou e ganhou ₭${result.amount}!\n" +
                             "Saldo: ₭${result.balance}"
                 }
-
-
             }
 
             is WorkResult.OnCooldown -> {

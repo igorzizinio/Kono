@@ -8,13 +8,20 @@ import me.igorunderplayer.kono.data.entities.Users
 import org.ktorm.database.Database
 import org.ktorm.dsl.and
 import org.ktorm.dsl.eq
+import org.ktorm.dsl.from
 import org.ktorm.dsl.insertAndGenerateKey
 import org.ktorm.dsl.isNull
 import org.ktorm.dsl.less
+import org.ktorm.dsl.limit
+import org.ktorm.dsl.map
+import org.ktorm.dsl.offset
 import org.ktorm.dsl.or
+import org.ktorm.dsl.orderBy
+import org.ktorm.dsl.select
 import org.ktorm.dsl.update
 import org.ktorm.entity.find
 import org.ktorm.entity.sequenceOf
+import org.ktorm.expression.OrderByExpression
 import java.time.Instant
 
 class UserRepository(private val databaseManager: DatabaseManager)  {
@@ -22,6 +29,24 @@ class UserRepository(private val databaseManager: DatabaseManager)  {
     private val database: Database
         get() = databaseManager.db
 
+    suspend fun getUsers(): List<User> = withContext(Dispatchers.IO) {
+        database.from(Users).select()
+            .map { row -> Users.createEntity(row) }
+    }
+
+    suspend fun getUsers(count: Int): List<User> = withContext(Dispatchers.IO) {
+        database.from(Users).select()
+            .limit(count)
+            .map { row -> Users.createEntity(row) }
+    }
+
+    suspend fun getUsers(count: Int, orderBy: OrderByExpression, startAt: Int): List<User> = withContext(Dispatchers.IO) {
+        database.from(Users).select()
+            .orderBy(orderBy)
+            .offset(startAt)
+            .limit(count)
+            .map { row -> Users.createEntity(row) }
+    }
 
     suspend fun getUserById(userId: Int): User? = withContext(Dispatchers.IO) {
         database.sequenceOf(Users).find { it.id eq userId }

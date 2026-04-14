@@ -47,7 +47,6 @@ class Help: KoinComponent, BaseCommand(
     }
 
     private suspend fun displayAllCommands(event: MessageCreateEvent) {
-
         val grouped = commandManager.commandList
             .groupBy { it.category }
 

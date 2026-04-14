@@ -1,10 +1,11 @@
-package me.igorunderplayer.kono.commands.text
+package me.igorunderplayer.kono.commands.text.testing
 
 import dev.kord.core.event.message.MessageCreateEvent
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandCategory
 import me.igorunderplayer.kono.data.repositories.CardInstanceRepository
 import me.igorunderplayer.kono.data.repositories.CardRepository
+import me.igorunderplayer.kono.domain.card.Rarity
 
 class InventoryCommand(
     private val cardInstanceRepository: CardInstanceRepository,
@@ -61,13 +62,13 @@ class InventoryCommand(
         event.message.channel.createMessage(content)
     }
 
-    private fun rarityEmoji(rarity: me.igorunderplayer.kono.domain.card.Rarity): String {
+    private fun rarityEmoji(rarity: Rarity): String {
         return when (rarity) {
-            me.igorunderplayer.kono.domain.card.Rarity.COMMON -> "⚪"
-            me.igorunderplayer.kono.domain.card.Rarity.RARE -> "🔵"
-            me.igorunderplayer.kono.domain.card.Rarity.EPIC -> "🟣"
-            me.igorunderplayer.kono.domain.card.Rarity.LEGENDARY -> "🟡"
-            me.igorunderplayer.kono.domain.card.Rarity.MYTHIC -> "🔴"
+            Rarity.COMMON -> "⚪"
+            Rarity.RARE -> "🔵"
+            Rarity.EPIC -> "🟣"
+            Rarity.LEGENDARY -> "🟡"
+            Rarity.MYTHIC -> "🔴"
         }
     }
 }
