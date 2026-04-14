@@ -53,8 +53,8 @@ class Help: KoinComponent, BaseCommand(
 
         fun format(category: CommandCategory) =
             grouped[category]
-                ?.map { "▸ ${it.name} - `${it.description}`" }
                 ?.joinToString("\n")
+                    { "▸ ${it.name} - `${it.description}`" }
                 ?: "Nenhum comando"
 
         event.message.channel.createEmbed {
@@ -69,6 +69,10 @@ class Help: KoinComponent, BaseCommand(
             field {
                 name = "\uD83D\uDEE0 Gerenciamento"
                 value = format(CommandCategory.Management)
+            }
+            field {
+                name = "\uD83C\uDFAE Jogos"
+                value = format(CommandCategory.Game)
             }
             field {
                 name = "\uD83C\uDF08 League of Legends"

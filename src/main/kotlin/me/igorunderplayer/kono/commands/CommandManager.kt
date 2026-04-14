@@ -16,6 +16,7 @@ enum class CommandCategory {
     Management,
     LoL,
     Developer,
+    Game,
     Other
 }
 

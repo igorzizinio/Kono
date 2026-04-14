@@ -5,7 +5,7 @@ import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandManager
 import me.igorunderplayer.kono.commands.KonoSlashCommand
 import me.igorunderplayer.kono.commands.text.InventoryCommand
-import me.igorunderplayer.kono.commands.text.PullCommand
+import me.igorunderplayer.kono.commands.text.testing.PullCommand
 import me.igorunderplayer.kono.commands.text.dev.DeleteApplicationCommand
 import me.igorunderplayer.kono.commands.text.dev.GuildsCommand
 import me.igorunderplayer.kono.commands.text.`fun`.HCommand

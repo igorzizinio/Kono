@@ -12,7 +12,7 @@ class InventoryCommand(
 ) : BaseCommand(
     name = "inventory",
     description = "View your cards",
-    category = CommandCategory.Misc
+    category = CommandCategory.Game
 ) {
 
     private val PAGE_SIZE = 5

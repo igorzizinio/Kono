@@ -12,7 +12,7 @@ class WorkCommand(
 ): BaseCommand(
     name = "work",
     description = "trabalhe",
-    category = CommandCategory.Misc
+    category = CommandCategory.Game
 ) {
     override suspend fun run(event: MessageCreateEvent, args: Array<String>) {
         val userId = event.message.author?.id?.value ?: return

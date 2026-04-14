@@ -1,5 +1,4 @@
-package me.igorunderplayer.kono.commands.text
-
+package me.igorunderplayer.kono.commands.text.testing
 
 import dev.kord.core.behavior.reply
 import dev.kord.core.event.message.MessageCreateEvent
@@ -13,7 +12,7 @@ class PullCommand(
 ) : BaseCommand(
     name = "pull",
     description = "Pull a random card using essence!",
-    category = CommandCategory.Misc
+    category = CommandCategory.Game
 ) {
 
     override suspend fun run(event: MessageCreateEvent, args: Array<String>) {
