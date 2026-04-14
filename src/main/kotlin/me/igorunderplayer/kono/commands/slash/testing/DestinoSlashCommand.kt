@@ -11,7 +11,7 @@ import dev.kord.core.event.interaction.ChatInputCommandInteractionCreateEvent
 import kotlinx.coroutines.flow.toList
 import me.igorunderplayer.kono.commands.KonoSlashCommand
 
-class DestinoCommand: KonoSlashCommand {
+class DestinoSlashCommand: KonoSlashCommand {
     override val name = "destino"
     override val description = "descubra seu destino..."
 

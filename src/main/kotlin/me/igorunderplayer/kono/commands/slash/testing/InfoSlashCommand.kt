@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.count
 import me.igorunderplayer.kono.commands.KonoSlashCommand
 import java.lang.management.ManagementFactory
 
-class Info: KonoSlashCommand {
+class InfoSlashCommand: KonoSlashCommand {
     override val name = "info"
     override val description = "shows info"
 

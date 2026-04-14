@@ -8,7 +8,7 @@ import me.igorunderplayer.kono.services.UserService
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-class Register() : KonoSlashCommand, KoinComponent {
+class RegisterSlashCommand() : KonoSlashCommand, KoinComponent {
     override val name = "register"
     override val description = "registra vc no database!"
     override val options: List<ApplicationCommandOption> = listOf()

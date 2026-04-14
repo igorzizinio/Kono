@@ -34,12 +34,12 @@ import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
-import me.igorunderplayer.kono.commands.slash.image.ImageCommands as SlashImageCommands
-import me.igorunderplayer.kono.commands.slash.lol.LoLCommands as SlashLoLCommands
-import me.igorunderplayer.kono.commands.slash.testing.Avatar as SlashAvatar
-import me.igorunderplayer.kono.commands.slash.testing.DestinoCommand as SlashDestino
-import me.igorunderplayer.kono.commands.slash.testing.Info as SlashInfo
-import me.igorunderplayer.kono.commands.slash.testing.Register as SlashRegister
+import me.igorunderplayer.kono.commands.slash.image.ImageSlashCommands
+import me.igorunderplayer.kono.commands.slash.lol.LoLSlashCommands
+import me.igorunderplayer.kono.commands.slash.testing.AvatarSlashCommand
+import me.igorunderplayer.kono.commands.slash.testing.DestinoSlashCommand
+import me.igorunderplayer.kono.commands.slash.testing.InfoSlashCommand
+import me.igorunderplayer.kono.commands.slash.testing.RegisterSlashCommand
 
 val appModule = module {
 
@@ -123,14 +123,12 @@ val appModule = module {
     // SLASH COMMANDS
     // ========================
 
-    factoryOf(::SlashInfo) { bind<KonoSlashCommand>() }
-    factoryOf(::SlashAvatar) { bind<KonoSlashCommand>() }
-    factoryOf(::SlashRegister) { bind<KonoSlashCommand>() }
-    factoryOf(::SlashDestino) { bind<KonoSlashCommand>() }
-
-    factoryOf(::SlashLoLCommands) { bind<KonoSlashCommand>() }
-
-    factoryOf(::SlashImageCommands) { bind<KonoSlashCommand>() }
+    factoryOf(::InfoSlashCommand) { bind<KonoSlashCommand>() }
+    factoryOf(::AvatarSlashCommand) { bind<KonoSlashCommand>() }
+    factoryOf(::RegisterSlashCommand) { bind<KonoSlashCommand>() }
+    factoryOf(::DestinoSlashCommand) { bind<KonoSlashCommand>() }
+    factoryOf(::LoLSlashCommands) { bind<KonoSlashCommand>() }
+    factoryOf(::ImageSlashCommands) { bind<KonoSlashCommand>() }
 
 
     // ========================

@@ -14,7 +14,7 @@ import me.igorunderplayer.kono.services.EmojiService
 import me.igorunderplayer.kono.services.RiotService
 import me.igorunderplayer.kono.services.UserService
 
-class LoLCommands(
+class LoLSlashCommands(
     private val userService: UserService,
     private val riotService: RiotService,
     private val emojiService: EmojiService,

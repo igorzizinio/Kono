@@ -9,7 +9,7 @@ import dev.kord.rest.Image
 import dev.kord.rest.builder.message.embed
 import me.igorunderplayer.kono.commands.KonoSlashCommand
 
-class Avatar: KonoSlashCommand {
+class AvatarSlashCommand: KonoSlashCommand {
     override val name = "avatar"
     override val description = "Retorna avatar de alguem"
 
