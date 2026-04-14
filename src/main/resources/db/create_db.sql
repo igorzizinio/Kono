@@ -1,111 +1,151 @@
 -- =========================
+-- RESET (DROP ALL)
+-- =========================
+
+DROP TABLE IF EXISTS tb_equipped_cards CASCADE;
+DROP TABLE IF EXISTS tb_card_instances CASCADE;
+DROP TABLE IF EXISTS tb_card_definitions CASCADE;
+DROP TABLE IF EXISTS tb_random_messages CASCADE;
+DROP TABLE IF EXISTS tb_users CASCADE;
+
+-- =========================
 -- USERS
 -- =========================
 
-CREATE TABLE IF NOT EXISTS tb_users (
-                                        id SERIAL PRIMARY KEY,
-                                        discord_id BIGINT UNIQUE NOT NULL,
+CREATE TABLE tb_users (
+                          id SERIAL PRIMARY KEY,
+                          discord_id BIGINT UNIQUE NOT NULL,
 
-    -- 💰 moedas
-                                        konos INT DEFAULT 0,
-                                        essence INT DEFAULT 0
+                          konos INT DEFAULT 0,
+                          essence INT DEFAULT 0,
 
+                          riot_puuid TEXT,
+                          riot_region TEXT,
+
+                          daily_reward_claimed_at TIMESTAMP,
+                          daily_streak INT DEFAULT 0,
+
+                          last_work_at TIMESTAMP,
+
+                          active_character_instance_id INT
 );
-
-ALTER TABLE tb_users ADD COLUMN IF NOT EXISTS riot_puuid TEXT;
-ALTER TABLE tb_users ADD COLUMN IF NOT EXISTS riot_region TEXT;
-
-ALTER TABLE tb_users ADD COLUMN IF NOT EXISTS daily_reward_claimed_at TIMESTAMP;
-ALTER TABLE tb_users ADD COLUMN IF NOT EXISTS daily_streak INT DEFAULT 0;
 
 -- =========================
 -- RANDOM MESSAGES
 -- =========================
 
-CREATE TABLE IF NOT EXISTS tb_random_messages (
-                                                  id SERIAL PRIMARY KEY,
-                                                  content TEXT NOT NULL
+CREATE TABLE tb_random_messages (
+                                    id SERIAL PRIMARY KEY,
+                                    content TEXT NOT NULL
 );
 
 -- =========================
 -- CARD DEFINITIONS
 -- =========================
 
-CREATE TABLE IF NOT EXISTS tb_card_definitions (
-                                                   id TEXT PRIMARY KEY,
-                                                   name TEXT NOT NULL,
-                                                   type TEXT NOT NULL,         -- CHARACTER / EQUIPMENT
-                                                   rarity TEXT NOT NULL,       -- COMMON / RARE / ...
-                                                   base_stats TEXT NOT NULL,   -- JSON
-                                                   effect_id TEXT
+CREATE TABLE tb_card_definitions (
+                                     id TEXT PRIMARY KEY,
+                                     name TEXT NOT NULL,
+                                     description TEXT NOT NULL,
+
+                                     type TEXT NOT NULL,
+                                     rarity TEXT NOT NULL,
+
+                                     faction TEXT,
+                                     tags TEXT NOT NULL DEFAULT '',
+
+                                     base_stats TEXT NOT NULL,
+                                     abilities TEXT NOT NULL DEFAULT '[]'
 );
 
 -- =========================
--- CARD INSTANCES (player inventory)
+-- CARD INSTANCES
 -- =========================
 
-CREATE TABLE IF NOT EXISTS tb_card_instances (
-                                                 id SERIAL PRIMARY KEY,
-                                                 user_id INT NOT NULL,
-                                                 definition_id TEXT NOT NULL,
-                                                 level INT DEFAULT 1,
-                                                 upgraded BOOLEAN DEFAULT FALSE,
+CREATE TABLE tb_card_instances (
+                                   id SERIAL PRIMARY KEY,
+                                   user_id INT NOT NULL,
+                                   definition_id TEXT NOT NULL,
 
-                                                 CONSTRAINT fk_user
-                                                     FOREIGN KEY (user_id)
-                                                         REFERENCES tb_users(id)
-                                                         ON DELETE CASCADE,
+                                   level INT DEFAULT 1,
+                                   upgraded BOOLEAN DEFAULT FALSE,
 
-                                                 CONSTRAINT fk_definition
-                                                     FOREIGN KEY (definition_id)
-                                                         REFERENCES tb_card_definitions(id)
-                                                         ON DELETE CASCADE
+                                   CONSTRAINT fk_user
+                                       FOREIGN KEY (user_id)
+                                           REFERENCES tb_users(id)
+                                           ON DELETE CASCADE,
+
+                                   CONSTRAINT fk_definition
+                                       FOREIGN KEY (definition_id)
+                                           REFERENCES tb_card_definitions(id)
+                                           ON DELETE CASCADE
 );
 
 -- =========================
 -- EQUIPPED CARDS
 -- =========================
 
-CREATE TABLE IF NOT EXISTS tb_equipped_cards (
-                                                 id SERIAL PRIMARY KEY,
-                                                 character_instance_id INT NOT NULL,
-                                                 card_instance_id INT NOT NULL,
-                                                 slot INT NOT NULL, -- 0,1,2
+CREATE TABLE tb_equipped_cards (
+                                   id SERIAL PRIMARY KEY,
+                                   character_instance_id INT NOT NULL,
+                                   card_instance_id INT NOT NULL,
+                                   slot INT NOT NULL,
 
-                                                 CONSTRAINT fk_character
-                                                     FOREIGN KEY (character_instance_id)
-                                                         REFERENCES tb_card_instances(id)
-                                                         ON DELETE CASCADE,
+                                   CONSTRAINT fk_character
+                                       FOREIGN KEY (character_instance_id)
+                                           REFERENCES tb_card_instances(id)
+                                           ON DELETE CASCADE,
 
-                                                 CONSTRAINT fk_card
-                                                     FOREIGN KEY (card_instance_id)
-                                                         REFERENCES tb_card_instances(id)
-                                                         ON DELETE CASCADE,
+                                   CONSTRAINT fk_card
+                                       FOREIGN KEY (card_instance_id)
+                                           REFERENCES tb_card_instances(id)
+                                           ON DELETE CASCADE,
 
-                                                 CONSTRAINT unique_slot UNIQUE (character_instance_id, slot)
+                                   CONSTRAINT unique_slot UNIQUE (character_instance_id, slot),
+
+                                   CONSTRAINT unique_card_instance UNIQUE (card_instance_id)
 );
+
+-- =========================
+-- FK CIRCULAR (ADICIONADA DEPOIS)
+-- =========================
+
+ALTER TABLE tb_users
+    ADD CONSTRAINT fk_active_character
+        FOREIGN KEY (active_character_instance_id)
+            REFERENCES tb_card_instances(id)
+            ON DELETE SET NULL;
 
 -- =========================
 -- INDEXES
 -- =========================
 
-CREATE INDEX IF NOT EXISTS idx_card_instances_user
+CREATE INDEX idx_card_instances_user
     ON tb_card_instances(user_id);
 
-CREATE INDEX IF NOT EXISTS idx_card_instances_definition
+CREATE INDEX idx_card_instances_definition
     ON tb_card_instances(definition_id);
+
+CREATE INDEX idx_equipped_character
+    ON tb_equipped_cards(character_instance_id);
 
 -- =========================
 -- SEEDS
 -- =========================
 
--- 🟢 SLIME (personagem base)
-INSERT INTO tb_card_definitions (id, name, type, rarity, base_stats, effect_id)
+-- 🟢 SLIME (CHARACTER)
+INSERT INTO tb_card_definitions (
+    id, name, description, type, rarity,
+    faction, tags, base_stats, abilities
+)
 VALUES (
            'SLIME',
            'Slime',
+           'Uma criatura gelatinosa básica.',
            'CHARACTER',
            'COMMON',
+           'slime',
+           'slime,starter',
            '{
                "HP": 1000,
                "ATK": 80,
@@ -114,94 +154,139 @@ VALUES (
                "CRIT_DAMAGE": 1.5,
                "SPEED": 90
            }',
-           NULL
-       )
-ON CONFLICT (id) DO NOTHING;
-
-
--- 🟢 SLIME rosa (personagem base)
-INSERT INTO tb_card_definitions (id, name, type, rarity, base_stats, effect_id)
-VALUES (
-           'PINK_SLIME',
-           'Slime Rosa',
-           'CHARACTER',
-           'RARE',
-           '{
-               "HP": 1850,
-               "ATK": 60,
-               "DEF": 40,
-               "CRIT_CHANCE": 0.05,
-               "CRIT_DAMAGE": 1.2,
-               "SPEED": 120
-           }',
-           NULL
-       )
-ON CONFLICT (id) DO NOTHING;
-
--- 🟢 SLIME STARCIAD (personagem base)
-INSERT INTO tb_card_definitions (id, name, type, rarity, base_stats, effect_id)
-VALUES (
-           'CIAD_SLIME',
-           'SlimeCiad',
-           'CHARACTER',
-           'EPIC',
-           '{
-               "HP": 240,
-               "ATK": 580,
-               "DEF": 40,
-               "CRIT_CHANCE": 0.05,
-               "CRIT_DAMAGE": 1.2,
-               "SPEED": 120
-           }',
-           NULL
-       )
-ON CONFLICT (id) DO NOTHING;
-
--- 🟢 SLIME PRISMATICO (personagem base)
-INSERT INTO tb_card_definitions (id, name, type, rarity, base_stats, effect_id)
-VALUES (
-           'PRISMATIC_SLIME',
-           'Slime Prismático',
-           'CHARACTER',
-           'MYTHIC',
-           '{
-               "HP": 3450,
-               "ATK": 380,
-               "DEF": 120,
-               "CRIT_CHANCE": 0.20,
-               "CRIT_DAMAGE": 2.0,
-               "SPEED": 80
-           }',
-           NULL
-       )
-ON CONFLICT (id) DO NOTHING;
+           '[
+               {
+                   "type": "HEAL",
+                   "value": 5,
+                   "trigger": "ON_TURN_START",
+                   "target": "SELF"
+               }
+           ]'
+       );
 
 -- 🛡️ IRON ARMOR
-INSERT INTO tb_card_definitions (id, name, type, rarity, base_stats, effect_id)
+INSERT INTO tb_card_definitions (
+    id, name, description, type, rarity,
+    faction, tags, base_stats, abilities
+)
 VALUES (
            'IRON_ARMOR',
            'Iron Armor',
+           'Armadura que reduz dano recebido.',
            'EQUIPMENT',
            'COMMON',
+           NULL,
+           'armor,defense',
            '{
                "HP": 100,
                "DEF": 60,
                "SPEED": -10
            }',
-           NULL
-       )
-ON CONFLICT (id) DO NOTHING;
+           '[
+               {
+                   "type": "INCOMING_DAMAGE_REDUCTION",
+                   "value": 20,
+                   "trigger": "ON_DAMAGE_TAKEN",
+                   "target": "SELF"
+               }
+           ]'
+       );
+
+-- 🛡️ HEAVY IRON ARMOR
+INSERT INTO tb_card_definitions (
+    id, name, description, type, rarity,
+    faction, tags, base_stats, abilities
+)
+VALUES (
+           'HEAVY_IRON_ARMOR',
+           'Heavy Iron Armor',
+           'Armadura pesada que reduz dano recebido.',
+           'EQUIPMENT',
+           'RARE',
+           NULL,
+           'armor,defense',
+           '{
+               "HP": 100,
+               "DEF": 140,
+               "SPEED": -40
+           }',
+           '[]'
+       );
+
+-- 🎰 GAMBLER CHARM
+INSERT INTO tb_card_definitions (
+    id, name, description, type, rarity,
+    faction, tags, base_stats, abilities
+)
+VALUES (
+           'GAMBLER_CHARM',
+           'Gambler Charm',
+           'Um artefato caótico.',
+           'EQUIPMENT',
+           'EPIC',
+           NULL,
+           'rng,chaos',
+           '{}',
+           '[
+               {
+                   "type": "RNG_EFFECT",
+                   "trigger": "ON_TURN_START",
+                   "target": "SELF"
+               }
+           ]'
+       );
+
+-- 🧛 VAMPIRE CORE
+INSERT INTO tb_card_definitions (
+    id, name, description, type, rarity,
+    faction, tags, base_stats, abilities
+)
+VALUES (
+           'VAMPIRE_CORE',
+           'Vampire Core',
+           'Rouba vida ao atacar.',
+           'EQUIPMENT',
+           'EPIC',
+           'vampire',
+           'vampire,lifesteal',
+           '{}',
+           '[
+               {
+                   "type": "LIFESTEAL",
+                   "value": 25,
+                   "trigger": "ON_HIT",
+                   "target": "SELF"
+               }
+           ]'
+       );
 
 -- 🐟 CRITFISH
-INSERT INTO tb_card_definitions (id, name, type, rarity, base_stats, effect_id)
+INSERT INTO tb_card_definitions (
+    id, name, description, type, rarity,
+    faction, tags, base_stats, abilities
+)
 VALUES (
            'CRITFISH',
            'Critfish',
+           'Um item raro que trava sua chance de crítico em 5% e multiplica o dano crítico em 3x.',
            'EQUIPMENT',
            'LEGENDARY',
-           '{}',
-           'CRITFISH'
-       )
-ON CONFLICT (id) DO NOTHING;
+           NULL,
+           'critfish,critical',
+           '{
+               "CRIT_CHANCE": 0.05,
+               "CRIT_DAMAGE": 3.0
+           }',
+           '[
+               {
+                   "type": "CRIT_PROFILE",
+                   "trigger": "PASSIVE",
+                   "target": "SELF",
+                   "params": {
+                       "critChance": "0.05",
+                       "critDamage": "3.0"
+                   }
+               }
+           ]'
+       );
 
-ALTER TABLE tb_users ADD COLUMN IF NOT EXISTS last_work_at TIMESTAMP;

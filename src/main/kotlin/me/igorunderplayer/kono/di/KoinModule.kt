@@ -40,6 +40,10 @@ import me.igorunderplayer.kono.commands.slash.testing.AvatarSlashCommand
 import me.igorunderplayer.kono.commands.slash.testing.DestinoSlashCommand
 import me.igorunderplayer.kono.commands.slash.testing.InfoSlashCommand
 import me.igorunderplayer.kono.commands.slash.testing.RegisterSlashCommand
+import me.igorunderplayer.kono.domain.team.BuildUnitHandler
+import me.igorunderplayer.kono.domain.team.EquipItemHandler
+import me.igorunderplayer.kono.domain.team.SetActiveCharacterHandler
+import me.igorunderplayer.kono.domain.team.UnequipItemHandler
 
 val appModule = module {
 
@@ -84,6 +88,15 @@ val appModule = module {
     singleOf(::CardService)
     singleOf(::GachaService)
 
+
+    // ========================
+    // Card Game Engine
+    // ========================
+    singleOf(::BuildUnitHandler)
+    singleOf(::EquipItemHandler)
+    singleOf(::SetActiveCharacterHandler)
+    singleOf(::UnequipItemHandler)
+
     // ========================
     // TEXT COMMANDS
     // ========================
@@ -118,7 +131,12 @@ val appModule = module {
     factoryOf(::WorkCommand) { bind<BaseCommand>() }
     factoryOf(::PullCommand) { bind<BaseCommand>() }
     factoryOf(::InventoryCommand) { bind<BaseCommand>() }
+    factoryOf(::EquipItemCommand) { bind<BaseCommand>() }
+    factoryOf(::EquipListCommand) { bind<BaseCommand>() }
+    factoryOf(::UnequipCommand) { bind<BaseCommand>() }
     factoryOf(::TopCommand) { bind<BaseCommand>() }
+    factoryOf(::FightCommand) { bind<BaseCommand>() }
+    factoryOf(::SetActiveCommand) { bind<BaseCommand>() }
 
     // ========================
     // SLASH COMMANDS

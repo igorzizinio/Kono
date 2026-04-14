@@ -25,9 +25,12 @@ interface User : Entity<User> {
     var dailyStreak: Int
 
     var lastWorkAt: Instant?
+
+    val activeCharacterInstanceId: Int?
 }
 
 object Users : Table<User>("tb_users") {
+
     val id = int("id").primaryKey().bindTo { it.id }
     val discordId = long("discord_id").bindTo { it.discordId }
 
@@ -44,4 +47,6 @@ object Users : Table<User>("tb_users") {
         .bindTo { it.dailyStreak }
 
     val lastWorkAt = timestamp("last_work_at").bindTo { it.lastWorkAt }
+
+    val activeCharacterInstanceId = int("active_character_instance_id").bindTo { it.activeCharacterInstanceId }
 }

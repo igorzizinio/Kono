@@ -32,6 +32,9 @@ class InventoryCommand(
 
         // agrupar por definição
         val grouped = instances.groupBy { it.definitionId }
+        val equippedSlots = cardInstanceRepository
+            .getEquippedItemsForActiveCharacter(discordId)
+            .associate { it.cardInstanceId to it.slot }
 
         val entries = grouped.mapNotNull { (definitionId, list) ->
             val def = cardRepository.getDefinition(definitionId) ?: return@mapNotNull null
@@ -48,12 +51,18 @@ class InventoryCommand(
         val content = buildString {
             appendLine("📦 **Seu Inventário** (Página $safePage/$totalPages)\n")
 
-            pageItems.forEach { (def, count, _) ->
+            pageItems.forEach { (def, count, list) ->
                 val emoji = rarityEmoji(def.rarity)
 
                 appendLine(
                     "$emoji **${def.name}** (${def.rarity}) x$count"
                 )
+
+                list.forEach { instance ->
+                    val slot = equippedSlots[instance.id]?.plus(1)
+                    val status = slot?.let { "equipado no slot $it" } ?: "livre"
+                    appendLine("   • #${instance.id} - $status")
+                }
             }
 
             appendLine("\nUse `!inventory <página>`")
