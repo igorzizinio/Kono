@@ -1,5 +1,6 @@
 package me.igorunderplayer.kono.commands.text.testing
 
+import dev.kord.core.behavior.reply
 import dev.kord.core.event.message.MessageCreateEvent
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandCategory
@@ -12,6 +13,7 @@ import me.igorunderplayer.kono.domain.gameplay.Team
 import me.igorunderplayer.kono.domain.team.BuildUnitHandler
 import me.igorunderplayer.kono.engine.combat.CombatEngine
 import me.igorunderplayer.kono.domain.gameplay.Unit
+import me.igorunderplayer.kono.utils.getMentionedUser
 import kotlin.random.Random
 
 class FightCommand(
@@ -26,6 +28,62 @@ class FightCommand(
     override suspend fun run(event: MessageCreateEvent, args: Array<String>) {
         val discordId = event.message.author?.id?.value?.toLong() ?: return
 
+
+        val enemyUser = getMentionedUser(event.message, args)
+
+        if (enemyUser == null) {
+            fightWithBot(event, args)
+            return
+        }
+
+        // 🧠 build player
+        val player = try {
+            buildUnitHandler.executeByDiscordId(discordId)
+        } catch (e: Exception) {
+            event.message.channel.createMessage("❌ Você precisa selecionar um personagem.")
+            return
+        }
+
+        // build enemy
+        val enemy = try {
+            buildUnitHandler.executeByDiscordId(enemyUser.id.value.toLong())
+        } catch (e: Exception) {
+            event.message.channel.createMessage("❌ Seu inimigo ainda não selecionou um personagem..")
+            return
+        }
+
+        val state = CombatState(
+            teams = listOf(
+                Team("player", mutableListOf(player)),
+                Team("enemy", mutableListOf(enemy))
+            ),
+            rng = Random.Default
+        )
+
+        val result = CombatEngine.run(state)
+
+
+        val playerAlive = result.teams[0].units.any { it.hp > 0 }
+
+        val contentString = buildString {
+            appendLine("⚔️ **Combate iniciado!**\n")
+            appendLine("👤 Player: ${player.card.name} (${player.hp.toInt()} HP)")
+            appendLine("👹 Enemy: ${enemy.card.name} (${enemy.hp.toInt()} HP)\n")
+
+            appendLine(
+                if (playerAlive) "🏆 **Você venceu!**"
+                else "💀 **Você perdeu...**"
+            )
+        }
+
+        event.message.reply {
+            content = contentString
+        }
+
+    }
+
+    private suspend fun fightWithBot(event: MessageCreateEvent, args: Array<String>) {
+        val discordId = event.message.author?.id?.value?.toLong() ?: return
         val enemyName = args.getOrNull(0)?.uppercase()
 
         if (enemyName == null) {
@@ -40,6 +98,8 @@ class FightCommand(
             event.message.channel.createMessage("❌ Você precisa selecionar um personagem.")
             return
         }
+
+
 
         // 🧠 buscar inimigo no DB
         val enemyDef = cardRepository.getDefinition(enemyName)
@@ -63,7 +123,7 @@ class FightCommand(
 
         val playerAlive = result.teams[0].units.any { it.hp > 0 }
 
-        val content = buildString {
+        val contentString = buildString {
             appendLine("⚔️ **Combate iniciado!**\n")
             appendLine("👤 Player: ${player.card.name} (${player.hp.toInt()} HP)")
             appendLine("👹 Enemy: ${enemy.card.name} (${enemy.hp.toInt()} HP)\n")
@@ -74,7 +134,9 @@ class FightCommand(
             )
         }
 
-        event.message.channel.createMessage(content)
+        event.message.reply {
+            content = contentString
+        }
     }
 
     // 🔥 transforma CardDefinition em Unit (inimigo)

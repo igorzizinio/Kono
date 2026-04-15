@@ -8,7 +8,11 @@ data class CombatState(
     val rng: Random = Random.Default,
 
     // fila de eventos
-    val queue: ArrayDeque<CombatEvent> = ArrayDeque()
+    val queue: ArrayDeque<CombatEvent> = ArrayDeque(),
+
+    // Buffs temporarios de negacao (consumidos no proximo ataque/defesa).
+    val pendingIncomingDamageNegationByUnitId: MutableMap<String, Int> = mutableMapOf(),
+    val pendingOutgoingDamageNegationByUnitId: MutableMap<String, Int> = mutableMapOf()
 ) {
     fun isFinished(): Boolean {
         return teams.any { team ->

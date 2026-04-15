@@ -16,19 +16,20 @@ object EventProcessor {
             }
 
             is CombatEvent.Attack -> {
-                triggerAbilities(event, state)
+                if (event.attacker.hp <= 0) return
+
+                val liveTarget = resolveLiveTarget(event.attacker, event.target, state) ?: return
+
+                val normalizedAttack = CombatEvent.Attack(event.attacker, liveTarget)
+                triggerAbilities(normalizedAttack, state)
 
                 val atk = event.attacker.stats[Stat.ATK] ?: 0.0
-                val def = event.target.stats[Stat.DEF] ?: 0.0
+                val def = liveTarget.stats[Stat.DEF] ?: 0.0
 
                 val baseDamage = atk * (100 / (100 + def))
 
-                println("ATK: $atk, DEF: $def, DAMAGE: $baseDamage")
-
-
-
                 state.queue.add(
-                    CombatEvent.BeforeDamage(event.attacker, event.target, baseDamage)
+                    CombatEvent.BeforeDamage(event.attacker, liveTarget, baseDamage)
                 )
             }
 
@@ -40,7 +41,14 @@ object EventProcessor {
                 var damage = event.damage
                 modifiers.forEach { damage = it(damage) }
 
+                if (isDodged(event, state)) {
+                    damage = 0.0
+                }
+
+                damage = applyPendingDamageNegations(event, damage, state)
+
                 damage = applyCriticalDamage(event.source, damage, state)
+                damage = damage.coerceAtLeast(0.0)
 
                 event.target.hp -= damage
 
@@ -125,5 +133,81 @@ object EventProcessor {
                 )
             }
         }
+    }
+
+    private fun applyPendingDamageNegations(
+        event: CombatEvent.BeforeDamage,
+        damage: Double,
+        state: CombatState
+    ): Double {
+        val sourceNegates = consumeNegation(
+            unitId = event.source.id,
+            buckets = state.pendingOutgoingDamageNegationByUnitId
+        )
+
+        val targetNegates = consumeNegation(
+            unitId = event.target.id,
+            buckets = state.pendingIncomingDamageNegationByUnitId
+        )
+
+        if (sourceNegates || targetNegates) return 0.0
+
+        return damage
+    }
+
+    private fun consumeNegation(
+        unitId: String,
+        buckets: MutableMap<String, Int>
+    ): Boolean {
+        val current = buckets[unitId] ?: return false
+        val remaining = current - 1
+
+        if (remaining <= 0) {
+            buckets.remove(unitId)
+        } else {
+            buckets[unitId] = remaining
+        }
+
+        return true
+    }
+
+    private fun isDodged(event: CombatEvent.BeforeDamage, state: CombatState): Boolean {
+        if (event.damage <= 0.0) return false
+
+        val dodgeChance = resolveDodgeChance(event.source, event.target)
+        if (dodgeChance <= 0.0) return false
+
+        return state.rng.nextDouble() < dodgeChance
+    }
+
+    private fun resolveDodgeChance(
+        attacker: me.igorunderplayer.kono.domain.gameplay.Unit,
+        target: me.igorunderplayer.kono.domain.gameplay.Unit
+    ): Double {
+        val attackerSpeed = attacker.stats[Stat.SPEED] ?: 0.0
+        val targetSpeed = target.stats[Stat.SPEED] ?: 0.0
+        val speedAdvantage = targetSpeed - attackerSpeed
+
+        if (speedAdvantage <= 0.0) return 0.0
+
+        // +100 de vantagem em SPEED = +25% de esquiva, com teto de 45%.
+        return (speedAdvantage / 400.0).coerceIn(0.0, 0.45)
+    }
+
+    private fun resolveLiveTarget(
+        attacker: me.igorunderplayer.kono.domain.gameplay.Unit,
+        requestedTarget: me.igorunderplayer.kono.domain.gameplay.Unit,
+        state: CombatState
+    ): me.igorunderplayer.kono.domain.gameplay.Unit? {
+        if (requestedTarget.hp > 0) return requestedTarget
+
+        val attackerTeam = state.teams.firstOrNull { team -> team.units.any { it == attacker } }
+            ?: return null
+
+        return state.teams
+            .asSequence()
+            .filter { it != attackerTeam }
+            .flatMap { it.units.asSequence() }
+            .firstOrNull { it.hp > 0 }
     }
 }

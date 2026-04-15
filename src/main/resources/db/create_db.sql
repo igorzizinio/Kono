@@ -204,7 +204,7 @@ VALUES (
            'EQUIPMENT',
            'RARE',
            NULL,
-           'armor,defense',
+           'heavy,armor,defense',
            '{
                "HP": 100,
                "DEF": 140,
@@ -225,7 +225,7 @@ VALUES (
            'EQUIPMENT',
            'EPIC',
            NULL,
-           'rng,chaos',
+           'gambler,chaos',
            '{}',
            '[
                {
@@ -285,6 +285,41 @@ VALUES (
                    "params": {
                        "critChance": "0.05",
                        "critDamage": "3.0"
+                   }
+               }
+           ]'
+       );
+
+
+-- ??? undefined
+INSERT INTO tb_card_definitions (
+    id, name, description, type, rarity,
+    faction, tags, base_stats, abilities
+)
+VALUES (
+           'UNDEFINED',
+           'undefined',
+           '`error: undefined is not a item`',
+           'EQUIPMENT',
+           'MYTHIC',
+           NULL,
+           'bug,chaos',
+           '{}',
+           '[
+               {
+                   "type": "RNG_EFFECT",
+                   "trigger": "ON_TURN_START",
+                   "target": "SELF",
+                   "params": {
+                       "profile": "UNDEFINED_BUG",
+                       "selfDamageMin": "60",
+                       "selfDamageMax": "140",
+                       "enemyDamageMin": "70",
+                       "enemyDamageMax": "160",
+                       "selfHealMin": "50",
+                       "selfHealMax": "120",
+                       "enemyHealMin": "50",
+                       "enemyHealMax": "120"
                    }
                }
            ]'

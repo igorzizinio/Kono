@@ -4,6 +4,7 @@ import me.igorunderplayer.kono.domain.card.Stat
 import me.igorunderplayer.kono.domain.gameplay.CombatEvent
 import me.igorunderplayer.kono.domain.gameplay.CombatState
 import me.igorunderplayer.kono.domain.gameplay.Unit
+import kotlin.math.floor
 
 object CombatEngine {
 
@@ -22,9 +23,12 @@ object CombatEngine {
 
                 state.queue.add(CombatEvent.TurnStart(unit))
 
-                val target = findTarget(unit, state) ?: continue
+                val attackCount = resolveAttackCount(unit, state)
 
-                state.queue.add(CombatEvent.Attack(unit, target))
+                repeat(attackCount) {
+                    val target = findTarget(unit, state) ?: return@repeat
+                    state.queue.add(CombatEvent.Attack(unit, target))
+                }
 
                 processQueue(state)
 
@@ -50,5 +54,21 @@ object CombatEngine {
         } ?: return null
 
         return enemyTeam.units.firstOrNull { it.hp > 0 }
+    }
+
+    private fun resolveAttackCount(unit: Unit, state: CombatState): Int {
+        val speed = unit.stats[Stat.SPEED] ?: 0.0
+
+        // SPEED acima de 120 comeca a ganhar ataques extras (max 3 ataques no turno).
+        val extraAttackBudget = ((speed - 120.0) / 100.0).coerceAtLeast(0.0)
+        val guaranteedExtra = floor(extraAttackBudget).toInt()
+        val extraChance = extraAttackBudget - guaranteedExtra
+
+        var extraAttacks = guaranteedExtra
+        if (extraChance > 0.0 && state.rng.nextDouble() < extraChance) {
+            extraAttacks += 1
+        }
+
+        return (1 + extraAttacks).coerceIn(1, 3)
     }
 }

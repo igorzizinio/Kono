@@ -6,7 +6,7 @@ import me.igorunderplayer.kono.data.repositories.UserRepository
 import me.igorunderplayer.kono.domain.card.Rarity
 import kotlin.random.Random
 
-const val GACHA_COST = 1
+const val GACHA_COST = 40
 
 data class PulledCard (
     val cardName: String,

@@ -65,7 +65,7 @@ class InventoryCommand(
                 }
             }
 
-            appendLine("\nUse `!inventory <página>`")
+            appendLine("\nUse `inventory <página>`")
         }
 
         event.message.channel.createMessage(content)
