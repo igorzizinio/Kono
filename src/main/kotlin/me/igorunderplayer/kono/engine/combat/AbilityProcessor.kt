@@ -1,6 +1,7 @@
 package me.igorunderplayer.kono.engine.combat
 
 import me.igorunderplayer.kono.domain.card.ability.Ability
+import me.igorunderplayer.kono.domain.card.ability.AbilityTarget
 import me.igorunderplayer.kono.domain.card.ability.AbilityTrigger
 import me.igorunderplayer.kono.domain.card.ability.AbilityType
 import me.igorunderplayer.kono.domain.gameplay.CombatEvent
@@ -31,8 +32,12 @@ object AbilityProcessor {
             AbilityType.DAMAGE -> {
                 if (event is CombatEvent.Attack && event.attacker == owner) {
                     val value = ability.value ?: return
+                    val target = when (ability.target) {
+                        AbilityTarget.SELF -> owner
+                        else -> event.target
+                    }
                     state.queue.add(
-                        CombatEvent.BeforeDamage(owner, event.target, value)
+                        CombatEvent.BeforeDamage(owner, target, value)
                     )
                 }
             }

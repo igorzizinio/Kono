@@ -141,26 +141,26 @@ INSERT INTO tb_card_definitions (
 VALUES (
            'SLIME',
            'Slime',
-           'Uma criatura gelatinosa básica.',
+           'Uma criatura gelatinosa básica. Muita durabilidade, porém pouco dano. Sofre ferimentos ao atacar',
            'CHARACTER',
            'COMMON',
            'slime',
            'slime,starter',
            '{
-               "HP": 1000,
-               "ATK": 80,
-               "DEF": 60,
-               "CRIT_CHANCE": 0.05,
-               "CRIT_DAMAGE": 1.5,
-               "SPEED": 90
+                "HP": 580,
+                "ATK": 38,
+                "DEF": 8,
+                "CRIT_CHANCE": 0.05,
+                "CRIT_DAMAGE": 1.25,
+                "SPEED": 80
            }',
            '[
-               {
-                   "type": "HEAL",
-                   "value": 5,
-                   "trigger": "ON_TURN_START",
-                   "target": "SELF"
-               }
+                {
+                    "type": "DAMAGE",
+                    "value": 12,
+                    "trigger": "ON_ATTACK",
+                    "target": "SELF"
+                }
            ]'
        );
 
@@ -178,18 +178,11 @@ VALUES (
            NULL,
            'armor,defense',
            '{
-               "HP": 100,
-               "DEF": 60,
-               "SPEED": -10
+               "HP": 180,
+               "DEF": 15,
+               "SPEED": -5
            }',
-           '[
-               {
-                   "type": "INCOMING_DAMAGE_REDUCTION",
-                   "value": 20,
-                   "trigger": "ON_DAMAGE_TAKEN",
-                   "target": "SELF"
-               }
-           ]'
+           '[]'
        );
 
 -- 🛡️ HEAVY IRON ARMOR
@@ -206,9 +199,9 @@ VALUES (
            NULL,
            'heavy,armor,defense',
            '{
-               "HP": 100,
-               "DEF": 140,
-               "SPEED": -40
+               "HP": 110,
+               "DEF": 60,
+               "SPEED": -20
            }',
            '[]'
        );
@@ -253,7 +246,7 @@ VALUES (
            '[
                {
                    "type": "LIFESTEAL",
-                   "value": 25,
+                   "value": 10,
                    "trigger": "ON_HIT",
                    "target": "SELF"
                }
