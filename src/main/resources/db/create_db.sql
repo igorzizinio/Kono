@@ -318,3 +318,59 @@ VALUES (
            ]'
        );
 
+
+-- 🟢 Cavaleirinho (CHARACTER)
+INSERT INTO tb_card_definitions (
+    id, name, description, type, rarity,
+    faction, tags, base_stats, abilities
+)
+VALUES (
+           'JUNIOR_KNIGHT',
+           'Cavaleirinho',
+           'Um jovem que sonha em ser um grande cavaleiro, ainda é pequeno e fraco. Porém ja possui sua propria armadura e espada de madeira.',
+           'CHARACTER',
+           'COMMON',
+           NULL,
+           'starter',
+           '{
+                "HP": 480,
+                "ATK": 32,
+                "DEF": 40,
+                "CRIT_CHANCE": 0.05,
+                "CRIT_DAMAGE": 1.25,
+                "SPEED": 70
+           }',
+           '[]'
+       );
+
+-- 🔪 Bandido (CHARACTER)
+INSERT INTO tb_card_definitions (
+    id, name, description, type, rarity,
+    faction, tags, base_stats, abilities
+)
+VALUES (
+           'THIEF',
+           'Bandido',
+           'Um jovem que cresceu nas ruas e aprendeu a sobreviver roubando. Apesar e ágil, ele ainda é fraco e tem muito a aprender.\n\n**Injusto:** Causa 10 de dano adicional ao acertar um ataque.',
+           'CHARACTER',
+           'RARE',
+           NULL,
+           'starter',
+           '{
+                "HP": 420,
+                "ATK": 36,
+                "DEF": 14,
+                "CRIT_CHANCE": 0.10,
+                "CRIT_DAMAGE": 1.4,
+                "SPEED": 115
+           }',
+           '[
+                {
+                    "type": "DAMAGE",
+                    "value": 10,
+                    "trigger": "ON_ATTACK",
+                    "target": "ENEMY"
+                }
+           ]'
+       );
+
