@@ -43,7 +43,7 @@ object EventProcessor {
                 var damage = event.damage
                 modifiers.forEach { damage = it(damage) }
 
-                val dodged = isDodged(event, state)
+                val dodged = event.canBeDodged && isDodged(event, state)
                 if (dodged) {
                     damage = 0.0
                 }
@@ -51,7 +51,11 @@ object EventProcessor {
                 val (postNegationDamage, wasNegated) = applyPendingDamageNegations(event, damage, state)
                 damage = postNegationDamage
 
-                val (postCritDamage, wasCritical) = applyCriticalDamage(event.source, damage, state)
+                val (postCritDamage, wasCritical) = if (event.canCrit) {
+                    applyCriticalDamage(event.source, damage, state)
+                } else {
+                    damage to false
+                }
                 damage = postCritDamage
                 damage = damage.coerceAtLeast(0.0)
 
@@ -66,12 +70,20 @@ object EventProcessor {
                     }
                     else -> {
                         val critSuffix = if (wasCritical) " 🔥 CRITICO!" else ""
-                        state.combatLog += "💥 ${unitLabel(event.source, state)} causou ${formatValue(damage)} de dano em ${unitLabel(event.target, state)}.$critSuffix ${unitLabel(event.target, state)} ficou com ${formatHp(event.target.hp.coerceAtLeast(0.0))} HP."
+                        val damageLabel = if (event.isTrueDamage) "dano verdadeiro" else "dano"
+                        state.combatLog += "💥 ${unitLabel(event.source, state)} causou ${formatValue(damage)} de $damageLabel em ${unitLabel(event.target, state)}.$critSuffix ${unitLabel(event.target, state)} ficou com ${formatHp(event.target.hp.coerceAtLeast(0.0))} HP."
                     }
                 }
 
                 state.queue.add(
-                    CombatEvent.AfterDamage(event.source, event.target, damage)
+                    CombatEvent.AfterDamage(
+                        source = event.source,
+                        target = event.target,
+                        damage = damage,
+                        isTrueDamage = event.isTrueDamage,
+                        wasCritical = wasCritical,
+                        sourceAbilityType = event.sourceAbilityType
+                    )
                 )
 
                 if (event.target.hp <= 0) {
@@ -113,15 +125,9 @@ object EventProcessor {
         val critProfile = source.abilities.firstOrNull { it.type == AbilityType.CRIT_PROFILE }
 
         if (critProfile != null) {
-            val critChance = critProfile.params
-                ?.get("critChance")
-                ?.toDoubleOrNull()
-                ?: 0.05
+            val critChance = critProfile.params?.critChance ?: 0.05
 
-            val critDamage = critProfile.params
-                ?.get("critDamage")
-                ?.toDoubleOrNull()
-                ?: 3.0
+            val critDamage = critProfile.params?.critDamage ?: 3.0
 
             return critChance.coerceIn(0.0, 1.0) to critDamage
         }
@@ -141,9 +147,10 @@ object EventProcessor {
         val units = state.teams.flatMap { it.units }
 
         for (unit in units) {
-            for (ability in unit.abilities) {
+            for ((abilityIndex, ability) in unit.abilities.withIndex()) {
                 AbilityProcessor.process(
                     ability,
+                    abilityIndex,
                     unit,
                     event,
                     state,

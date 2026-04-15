@@ -17,6 +17,9 @@ data class CombatState(
     // Nome exibido por unidade para logs/embeds (ex.: "Slime de Igor").
     val unitDisplayNamesById: MutableMap<String, String> = mutableMapOf(),
 
+    // Estado de runtime para passivas por habilidade (ex.: ativar a cada 3 hits).
+    val hitCounterByAbilityKey: MutableMap<String, Int> = mutableMapOf(),
+
     // Registro textual da simulacao, usado para retorno no comando fight.
     val combatLog: MutableList<String> = mutableListOf()
 ) {

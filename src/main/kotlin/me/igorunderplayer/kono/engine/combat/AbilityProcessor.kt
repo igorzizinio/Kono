@@ -12,6 +12,7 @@ object AbilityProcessor {
 
     fun process(
         ability: Ability,
+        abilityIndex: Int,
         owner: Unit,
         event: CombatEvent,
         state: CombatState,
@@ -23,23 +24,24 @@ object AbilityProcessor {
 
             AbilityType.LIFESTEAL -> {
                 if (event is CombatEvent.AfterDamage && event.source == owner) {
+                    if (event.damage <= 0.0) return
+                    if (!shouldActivateByHitCycle(ability, owner, abilityIndex, state)) return
+
                     val value = ability.value ?: return
                     val heal = event.damage * (value / 100.0)
-                    owner.hp += heal
+                    if (heal <= 0.0) return
+
+                    val before = owner.hp
+                    healUnit(owner, heal)
+                    val healedAmount = (owner.hp - before).coerceAtLeast(0.0)
+                    if (healedAmount > 0.0) {
+                        state.combatLog += "🩸 ${unitLabel(owner, state)} drenou ${formatValue(healedAmount)} de vida."
+                    }
                 }
             }
 
             AbilityType.DAMAGE -> {
-                if (event is CombatEvent.Attack && event.attacker == owner) {
-                    val value = ability.value ?: return
-                    val target = when (ability.target) {
-                        AbilityTarget.SELF -> owner
-                        else -> event.target
-                    }
-                    state.queue.add(
-                        CombatEvent.BeforeDamage(owner, target, value)
-                    )
-                }
+                queueDamageAbility(ability, abilityIndex, owner, event, state)
             }
 
             AbilityType.RNG_EFFECT -> {
@@ -61,6 +63,81 @@ object AbilityProcessor {
             }
 
             else -> {}
+        }
+    }
+
+    private fun queueDamageAbility(
+        ability: Ability,
+        abilityIndex: Int,
+        owner: Unit,
+        event: CombatEvent,
+        state: CombatState
+    ) {
+        val value = ability.value ?: return
+
+        when (event) {
+            is CombatEvent.Attack -> {
+                if (event.attacker != owner) return
+                val target = resolveTarget(ability.target, owner, event.target)
+                queueAbilityDamageEvent(
+                    owner = owner,
+                    target = target,
+                    baseDamage = value,
+                    ability = ability,
+                    state = state,
+                    defaultTrueDamage = false
+                )
+            }
+
+            is CombatEvent.AfterDamage -> {
+                if (event.source != owner || event.damage <= 0.0) return
+                if (event.sourceAbilityType == AbilityType.DAMAGE) return
+                if (!shouldActivateByHitCycle(ability, owner, abilityIndex, state)) return
+
+                val target = resolveTarget(ability.target, owner, event.target)
+                queueAbilityDamageEvent(
+                    owner = owner,
+                    target = target,
+                    baseDamage = value,
+                    ability = ability,
+                    state = state,
+                    defaultTrueDamage = true
+                )
+            }
+
+            else -> return
+        }
+    }
+
+    private fun queueAbilityDamageEvent(
+        owner: Unit,
+        target: Unit,
+        baseDamage: Double,
+        ability: Ability,
+        state: CombatState,
+        defaultTrueDamage: Boolean
+    ) {
+        val isTrueDamage = ability.params?.trueDamage ?: defaultTrueDamage
+        val canCrit = ability.params?.canCrit ?: !isTrueDamage
+        val canBeDodged = ability.params?.canBeDodged ?: !isTrueDamage
+
+        state.queue.add(
+            CombatEvent.BeforeDamage(
+                source = owner,
+                target = target,
+                damage = baseDamage,
+                isTrueDamage = isTrueDamage,
+                canCrit = canCrit,
+                canBeDodged = canBeDodged,
+                sourceAbilityType = ability.type
+            )
+        )
+    }
+
+    private fun resolveTarget(target: AbilityTarget?, owner: Unit, defaultTarget: Unit): Unit {
+        return when (target) {
+            AbilityTarget.SELF -> owner
+            else -> defaultTarget
         }
     }
 
@@ -96,7 +173,7 @@ object AbilityProcessor {
         owner: Unit,
         state: CombatState
     ) {
-        val profile = ability.params?.get("profile")
+        val profile = ability.params?.profile
 
         if (profile == "UNDEFINED_BUG") {
             applyUndefinedEffect(owner, state, ability)
@@ -138,7 +215,14 @@ object AbilityProcessor {
 
         if (enemy != null) {
             effects += {
-                state.queue.add(CombatEvent.BeforeDamage(owner, enemy, enemyDamage))
+                state.queue.add(
+                    CombatEvent.BeforeDamage(
+                        source = owner,
+                        target = enemy,
+                        damage = enemyDamage,
+                        sourceAbilityType = AbilityType.RNG_EFFECT
+                    )
+                )
             }
             effects += { healUnit(enemy, enemyHeal) }
             effects += {
@@ -187,13 +271,53 @@ object AbilityProcessor {
         fallbackMin: Double,
         fallbackMax: Double
     ): Double {
-        val minValue = ability.params?.get(minKey)?.toDoubleOrNull() ?: fallbackMin
-        val maxValue = ability.params?.get(maxKey)?.toDoubleOrNull() ?: fallbackMax
+        val minValue = resolveDoubleParam(ability, minKey) ?: fallbackMin
+        val maxValue = resolveDoubleParam(ability, maxKey) ?: fallbackMax
         val low = minOf(minValue, maxValue)
         val high = maxOf(minValue, maxValue)
 
         if (low == high) return low
 
         return state.rng.nextDouble(low, high)
+    }
+
+    private fun shouldActivateByHitCycle(
+        ability: Ability,
+        owner: Unit,
+        abilityIndex: Int,
+        state: CombatState
+    ): Boolean {
+        val everyHits = ability.params?.everyHits?.coerceAtLeast(1) ?: 1
+
+        if (everyHits == 1) return true
+
+        val key = "${owner.id}#$abilityIndex"
+        val nextCounter = (state.hitCounterByAbilityKey[key] ?: 0) + 1
+        state.hitCounterByAbilityKey[key] = nextCounter
+
+        return nextCounter % everyHits == 0
+    }
+
+    private fun resolveDoubleParam(ability: Ability, key: String): Double? {
+        return when (key) {
+            "selfDamageMin" -> ability.params?.selfDamageMin
+            "selfDamageMax" -> ability.params?.selfDamageMax
+            "enemyDamageMin" -> ability.params?.enemyDamageMin
+            "enemyDamageMax" -> ability.params?.enemyDamageMax
+            "selfHealMin" -> ability.params?.selfHealMin
+            "selfHealMax" -> ability.params?.selfHealMax
+            "enemyHealMin" -> ability.params?.enemyHealMin
+            "enemyHealMax" -> ability.params?.enemyHealMax
+            else -> null
+        }
+    }
+
+    private fun unitLabel(unit: Unit, state: CombatState): String {
+        return state.unitDisplayNamesById[unit.id] ?: unit.card.name
+    }
+
+    private fun formatValue(value: Double): String {
+        val rounded = String.format(java.util.Locale.US, "%.2f", value)
+        return rounded.trimEnd('0').trimEnd('.')
     }
 }

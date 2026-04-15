@@ -1,5 +1,7 @@
 package me.igorunderplayer.kono.domain.gameplay
 
+import me.igorunderplayer.kono.domain.card.ability.AbilityType
+
 sealed class CombatEvent {
 
     data class TurnStart(val unit: Unit) : CombatEvent()
@@ -12,13 +14,20 @@ sealed class CombatEvent {
     data class BeforeDamage(
         val source: Unit,
         val target: Unit,
-        var damage: Double
+        var damage: Double,
+        val isTrueDamage: Boolean = false,
+        val canCrit: Boolean = true,
+        val canBeDodged: Boolean = true,
+        val sourceAbilityType: AbilityType? = null
     ) : CombatEvent()
 
     data class AfterDamage(
         val source: Unit,
         val target: Unit,
-        val damage: Double
+        val damage: Double,
+        val isTrueDamage: Boolean = false,
+        val wasCritical: Boolean = false,
+        val sourceAbilityType: AbilityType? = null
     ) : CombatEvent()
 
     data class Death(val unit: Unit) : CombatEvent()

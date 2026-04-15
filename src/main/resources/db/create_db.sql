@@ -159,7 +159,13 @@ VALUES (
                     "type": "DAMAGE",
                     "value": 12,
                     "trigger": "ON_ATTACK",
-                    "target": "SELF"
+                    "target": "SELF",
+                    "params": {
+                        "trueDamage": false,
+                        "canCrit": false,
+                        "canBeDodged": true,
+                        "everyHits": 1
+                    }
                 }
            ]'
        );
@@ -224,7 +230,10 @@ VALUES (
                {
                    "type": "RNG_EFFECT",
                    "trigger": "ON_TURN_START",
-                   "target": "SELF"
+                    "target": "SELF",
+                    "params": {
+                        "profile": "DEFAULT"
+                    }
                }
            ]'
        );
@@ -248,7 +257,10 @@ VALUES (
                    "type": "LIFESTEAL",
                    "value": 10,
                    "trigger": "ON_HIT",
-                   "target": "SELF"
+                    "target": "SELF",
+                    "params": {
+                        "everyHits": 1
+                    }
                }
            ]'
        );
@@ -276,8 +288,8 @@ VALUES (
                    "trigger": "PASSIVE",
                    "target": "SELF",
                    "params": {
-                       "critChance": "0.05",
-                       "critDamage": "3.0"
+                       "critChance": 0.05,
+                       "critDamage": 3.0
                    }
                }
            ]'
@@ -305,14 +317,14 @@ VALUES (
                    "target": "SELF",
                    "params": {
                        "profile": "UNDEFINED_BUG",
-                       "selfDamageMin": "60",
-                       "selfDamageMax": "140",
-                       "enemyDamageMin": "70",
-                       "enemyDamageMax": "160",
-                       "selfHealMin": "50",
-                       "selfHealMax": "120",
-                       "enemyHealMin": "50",
-                       "enemyHealMax": "120"
+                       "selfDamageMin": 60,
+                       "selfDamageMax": 140,
+                       "enemyDamageMin": 70,
+                       "enemyDamageMax": 160,
+                       "selfHealMin": 50,
+                       "selfHealMax": 120,
+                       "enemyHealMin": 50,
+                       "enemyHealMax": 120
                    }
                }
            ]'
@@ -368,8 +380,14 @@ VALUES (
                 {
                     "type": "DAMAGE",
                     "value": 10,
-                    "trigger": "ON_ATTACK",
-                    "target": "ENEMY"
+                    "trigger": "ON_HIT",
+                    "target": "ENEMY",
+                    "params": {
+                        "trueDamage": true,
+                        "canCrit": false,
+                        "canBeDodged": false,
+                        "everyHits": 1
+                    }
                 }
            ]'
        );
