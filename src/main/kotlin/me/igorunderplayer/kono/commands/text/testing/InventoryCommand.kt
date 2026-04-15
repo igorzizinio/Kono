@@ -1,10 +1,13 @@
 package me.igorunderplayer.kono.commands.text.testing
 
+import dev.kord.core.behavior.reply
 import dev.kord.core.event.message.MessageCreateEvent
+import dev.kord.rest.builder.message.embed
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandCategory
 import me.igorunderplayer.kono.data.repositories.CardInstanceRepository
 import me.igorunderplayer.kono.data.repositories.CardRepository
+import me.igorunderplayer.kono.domain.card.CardType
 import me.igorunderplayer.kono.domain.card.Rarity
 
 class InventoryCommand(
@@ -26,7 +29,7 @@ class InventoryCommand(
         val instances = cardInstanceRepository.getByDiscordId(discordId)
 
         if (instances.isEmpty()) {
-            event.message.channel.createMessage("📦 Seu inventário está vazio.")
+            event.message.reply { content = "📦 Seu inventário está vazio." }
             return
         }
 
@@ -48,14 +51,14 @@ class InventoryCommand(
             .drop((safePage - 1) * PAGE_SIZE)
             .take(PAGE_SIZE)
 
-        val content = buildString {
-            appendLine("📦 **Seu Inventário** (Página $safePage/$totalPages)\n")
+        val inventoryBody = buildString {
 
             pageItems.forEach { (def, count, list) ->
-                val emoji = rarityEmoji(def.rarity)
+                val rarityEmoji = resolveRarityEmoji(def.rarity)
+                val cardTypeEmoji = resolveCardTypeEmoji(def.type)
 
                 appendLine(
-                    "$emoji **${def.name}** (${def.rarity}) x$count"
+                    "$rarityEmoji $cardTypeEmoji **${def.name}** (${def.rarity}) x$count"
                 )
 
                 list.forEach { instance ->
@@ -64,20 +67,29 @@ class InventoryCommand(
                     appendLine("   • #${instance.id} - $status")
                 }
             }
-
-            appendLine("\nUse `inventory <página>`")
         }
 
-        event.message.channel.createMessage(content)
+        event.message.reply {
+            embed {
+                title = "📦 Seu Inventário"
+                description = inventoryBody.ifBlank { "Nenhuma carta nesta página." }
+                footer {
+                    text = "Página $safePage/$totalPages • Use inventory <página>"
+                }
+            }
+        }
     }
 
-    private fun rarityEmoji(rarity: Rarity): String {
-        return when (rarity) {
-            Rarity.COMMON -> "⚪"
-            Rarity.RARE -> "🔵"
-            Rarity.EPIC -> "🟣"
-            Rarity.LEGENDARY -> "🟡"
-            Rarity.MYTHIC -> "🔴"
-        }
+    private fun resolveRarityEmoji(rarity: Rarity): String = when (rarity) {
+        Rarity.COMMON -> "▫️"
+        Rarity.RARE -> "🔹"
+        Rarity.EPIC -> "🟣"
+        Rarity.LEGENDARY -> "🟠"
+        Rarity.MYTHIC -> "🔥"
+    }
+
+    private fun resolveCardTypeEmoji(cardType: CardType): String = when (cardType) {
+        CardType.CHARACTER -> "👤"
+        CardType.EQUIPMENT -> "🎒"
     }
 }
