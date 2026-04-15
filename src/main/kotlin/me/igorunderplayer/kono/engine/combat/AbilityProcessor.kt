@@ -4,6 +4,7 @@ import me.igorunderplayer.kono.domain.card.ability.Ability
 import me.igorunderplayer.kono.domain.card.ability.AbilityTarget
 import me.igorunderplayer.kono.domain.card.ability.AbilityTrigger
 import me.igorunderplayer.kono.domain.card.ability.AbilityType
+import me.igorunderplayer.kono.domain.card.Stat
 import me.igorunderplayer.kono.domain.gameplay.CombatEvent
 import me.igorunderplayer.kono.domain.gameplay.CombatState
 import me.igorunderplayer.kono.domain.gameplay.Unit
@@ -175,11 +176,24 @@ object AbilityProcessor {
     ) {
         val profile = ability.params?.profile
 
-        if (profile == "UNDEFINED_BUG") {
-            applyUndefinedEffect(owner, state, ability)
-            return
-        }
+        when (profile) {
+            "UNDEFINED_BUG" -> {
+                applyUndefinedEffect(owner, state, ability)
+                return
+            }
 
+            "MARKUS_GAMBLER" -> {
+                applyMarkusGamblerEffect(owner, state, ability)
+                return
+            }
+
+            else -> {
+                applyDefaultRandomEffect(owner, state)
+            }
+        }
+    }
+
+    private fun applyDefaultRandomEffect(owner: Unit, state: CombatState) {
         // Legacy RNG behavior (used by older items like Gambler Charm).
         val roll = state.rng.nextDouble()
         if (roll < 0.5) {
@@ -187,6 +201,166 @@ object AbilityProcessor {
         } else {
             owner.hp -= 5
         }
+    }
+
+    private fun applyMarkusGamblerEffect(owner: Unit, state: CombatState, ability: Ability) {
+        val enemy = findPrimaryEnemy(owner, state)
+        val coins = (state.luckCoinsByUnitId[owner.id] ?: 0) + 1
+        state.luckCoinsByUnitId[owner.id] = coins
+
+        state.combatLog += "🪙 ${unitLabel(owner, state)} acumulou 1 Moeda da Sorte (total: $coins)."
+
+        val strongEveryTurns = ability.params?.strongEveryTurns?.coerceAtLeast(2) ?: 4
+        val isStrongTurn = state.turn % strongEveryTurns == 0
+
+        if (isStrongTurn) {
+            state.combatLog += "🎰 ${unitLabel(owner, state)} entrou em ALL-IN neste turno!"
+            applyMarkusStrongEffect(owner, enemy, state, ability, coins)
+        } else {
+            applyMarkusBasicEffect(owner, enemy, state, ability, coins)
+        }
+
+        // Quanto mais SPEED, maior a chance de rolar um efeito basico adicional.
+        val extraRollChance = resolveExtraRollChance(owner, ability)
+        if (state.rng.nextDouble() < extraRollChance) {
+            state.combatLog += "⚡ ${unitLabel(owner, state)} ganhou uma rolagem extra pela velocidade!"
+            applyMarkusBasicEffect(owner, enemy, state, ability, coins)
+        }
+    }
+
+    private fun applyMarkusBasicEffect(
+        owner: Unit,
+        enemy: Unit?,
+        state: CombatState,
+        ability: Ability,
+        coins: Int
+    ) {
+        val outcome = pickWeighted(
+            state = state,
+            options = listOf(
+                BasicOutcome.ATK_UP to 24.0,
+                BasicOutcome.SPEED_UP to 23.0,
+                BasicOutcome.DAMAGE_ENEMY to 22.0,
+                BasicOutcome.HEAL_SELF to 16.0,
+                BasicOutcome.SELF_DAMAGE to (15.0 - coins * (ability.params?.coinBiasPerCoin ?: 0.9)).coerceAtLeast(2.0),
+                BasicOutcome.SHIELD_SELF to 14.0,
+                BasicOutcome.NOTHING to 7.0
+            )
+        )
+
+        when (outcome) {
+            BasicOutcome.ATK_UP -> {
+                val amount = randomRange(state, ability, "atkBuffMin", "atkBuffMax", 4.0, 9.0)
+                buffStat(owner, Stat.ATK, amount)
+                state.combatLog += "🃏 ${unitLabel(owner, state)} puxou carta de ataque: +${formatValue(amount)} ATK."
+            }
+
+            BasicOutcome.SPEED_UP -> {
+                val amount = randomRange(state, ability, "speedBuffMin", "speedBuffMax", 5.0, 12.0)
+                buffStat(owner, Stat.SPEED, amount)
+                state.combatLog += "🎲 ${unitLabel(owner, state)} ganhou impulso: +${formatValue(amount)} SPEED."
+            }
+
+            BasicOutcome.DAMAGE_ENEMY -> {
+                if (enemy == null) return
+                val amount = randomRange(state, ability, "enemyDamageMin", "enemyDamageMax", 22.0, 42.0)
+                queueRngDamage(owner, enemy, amount, state)
+                state.combatLog += "💥 ${unitLabel(owner, state)} acertou a Carta da Sorte e causou ${formatValue(amount)} de dano."
+            }
+
+            BasicOutcome.HEAL_SELF -> {
+                val amount = randomRange(state, ability, "selfHealMin", "selfHealMax", 16.0, 34.0)
+                val healed = healAndMeasure(owner, amount)
+                if (healed > 0.0) {
+                    state.combatLog += "💉 ${unitLabel(owner, state)} recuperou ${formatValue(healed)} de HP."
+                }
+            }
+
+            BasicOutcome.SELF_DAMAGE -> {
+                val amount = randomRange(state, ability, "selfDamageMin", "selfDamageMax", 14.0, 30.0)
+                owner.hp -= amount
+                state.combatLog += "💀 ${unitLabel(owner, state)} perdeu ${formatValue(amount)} de HP em uma aposta ruim."
+            }
+
+            BasicOutcome.SHIELD_SELF -> {
+                val stacks = randomIntRange(state, ability, "shieldMin", "shieldMax", 1, 1)
+                grantShieldStacks(owner, stacks, state)
+                state.combatLog += "🛡️ ${unitLabel(owner, state)} ganhou $stacks camada(s) de escudo."
+            }
+
+            BasicOutcome.NOTHING -> {
+                state.combatLog += "🃏 ${unitLabel(owner, state)} puxou uma carta vazia. Nada aconteceu."
+            }
+        }
+    }
+
+    private fun applyMarkusStrongEffect(
+        owner: Unit,
+        enemy: Unit?,
+        state: CombatState,
+        ability: Ability,
+        coins: Int
+    ) {
+        val hpMultiplier = 1.0 + (1.0 - hpRatio(owner)).coerceIn(0.0, 1.0) * 0.6
+        val strongMultiplier = (ability.params?.strongMultiplier ?: 2.0) * hpMultiplier
+
+        val outcome = pickWeighted(
+            state = state,
+            options = listOf(
+                StrongOutcome.MASSIVE_DAMAGE to 34.0,
+                StrongOutcome.BIG_SHIELD to 24.0,
+                StrongOutcome.BIG_SPEED to 24.0,
+                StrongOutcome.BIG_SELF_DAMAGE to (18.0 - coins * (ability.params?.coinBiasPerCoin ?: 0.9)).coerceAtLeast(3.0)
+            )
+        )
+
+        when (outcome) {
+            StrongOutcome.MASSIVE_DAMAGE -> {
+                if (enemy == null) return
+                val base = randomRange(state, ability, "enemyDamageMin", "enemyDamageMax", 22.0, 42.0)
+                val amount = base * strongMultiplier
+                queueRngDamage(owner, enemy, amount, state)
+                state.combatLog += "🎯 ${unitLabel(owner, state)} venceu a Aposta Alta e causou ${formatValue(amount)} de dano!"
+            }
+
+            StrongOutcome.BIG_SHIELD -> {
+                val base = randomIntRange(state, ability, "shieldMin", "shieldMax", 1, 1)
+                val stacks = (base * strongMultiplier).toInt().coerceAtLeast(2)
+                grantShieldStacks(owner, stacks, state)
+                state.combatLog += "🛡️ ${unitLabel(owner, state)} levantou um escudo enorme ($stacks camadas)."
+            }
+
+            StrongOutcome.BIG_SPEED -> {
+                val base = randomRange(state, ability, "speedBuffMin", "speedBuffMax", 5.0, 12.0)
+                val amount = base * strongMultiplier
+                buffStat(owner, Stat.SPEED, amount)
+                state.combatLog += "⚡ ${unitLabel(owner, state)} recebeu +${formatValue(amount)} SPEED no all-in."
+            }
+
+            StrongOutcome.BIG_SELF_DAMAGE -> {
+                val base = randomRange(state, ability, "selfDamageMin", "selfDamageMax", 14.0, 30.0)
+                val amount = base * (1.4 + (strongMultiplier - 1.0) * 0.35)
+                owner.hp -= amount
+                state.combatLog += "💀 ${unitLabel(owner, state)} perdeu ${formatValue(amount)} de HP no all-in."
+            }
+        }
+    }
+
+    private enum class BasicOutcome {
+        ATK_UP,
+        SPEED_UP,
+        DAMAGE_ENEMY,
+        HEAL_SELF,
+        SELF_DAMAGE,
+        SHIELD_SELF,
+        NOTHING
+    }
+
+    private enum class StrongOutcome {
+        MASSIVE_DAMAGE,
+        BIG_SHIELD,
+        BIG_SPEED,
+        BIG_SELF_DAMAGE
     }
 
     private fun applyUndefinedEffect(
@@ -308,8 +482,95 @@ object AbilityProcessor {
             "selfHealMax" -> ability.params?.selfHealMax
             "enemyHealMin" -> ability.params?.enemyHealMin
             "enemyHealMax" -> ability.params?.enemyHealMax
+            "atkBuffMin" -> ability.params?.atkBuffMin
+            "atkBuffMax" -> ability.params?.atkBuffMax
+            "speedBuffMin" -> ability.params?.speedBuffMin
+            "speedBuffMax" -> ability.params?.speedBuffMax
             else -> null
         }
+    }
+
+    private fun resolveIntParam(ability: Ability, key: String): Int? {
+        return when (key) {
+            "shieldMin" -> ability.params?.shieldMin
+            "shieldMax" -> ability.params?.shieldMax
+            else -> null
+        }
+    }
+
+    private fun randomIntRange(
+        state: CombatState,
+        ability: Ability,
+        minKey: String,
+        maxKey: String,
+        fallbackMin: Int,
+        fallbackMax: Int
+    ): Int {
+        val minValue = resolveIntParam(ability, minKey) ?: fallbackMin
+        val maxValue = resolveIntParam(ability, maxKey) ?: fallbackMax
+        val low = minOf(minValue, maxValue)
+        val high = maxOf(minValue, maxValue)
+
+        if (low == high) return low
+
+        return state.rng.nextInt(low, high + 1)
+    }
+
+    private fun buffStat(unit: Unit, stat: Stat, amount: Double) {
+        if (amount <= 0.0) return
+        unit.stats[stat] = (unit.stats[stat] ?: 0.0) + amount
+    }
+
+    private fun healAndMeasure(unit: Unit, amount: Double): Double {
+        val before = unit.hp
+        healUnit(unit, amount)
+        return (unit.hp - before).coerceAtLeast(0.0)
+    }
+
+    private fun grantShieldStacks(unit: Unit, stacks: Int, state: CombatState) {
+        if (stacks <= 0) return
+        state.pendingIncomingDamageNegationByUnitId[unit.id] =
+            (state.pendingIncomingDamageNegationByUnitId[unit.id] ?: 0) + stacks
+    }
+
+    private fun queueRngDamage(owner: Unit, target: Unit, damage: Double, state: CombatState) {
+        state.queue.add(
+            CombatEvent.BeforeDamage(
+                source = owner,
+                target = target,
+                damage = damage,
+                isTrueDamage = false,
+                canCrit = false,
+                canBeDodged = true,
+                sourceAbilityType = AbilityType.RNG_EFFECT
+            )
+        )
+    }
+
+    private fun resolveExtraRollChance(owner: Unit, ability: Ability): Double {
+        val speed = owner.stats[Stat.SPEED] ?: 0.0
+        val factor = ability.params?.extraRollSpeedFactor ?: 0.003
+        return ((speed - 100.0) * factor).coerceIn(0.0, 0.55)
+    }
+
+    private fun hpRatio(unit: Unit): Double {
+        val maxHp = unit.stats[Stat.HP] ?: return 1.0
+        if (maxHp <= 0.0) return 1.0
+        return (unit.hp / maxHp).coerceIn(0.0, 1.0)
+    }
+
+    private fun <T> pickWeighted(state: CombatState, options: List<Pair<T, Double>>): T {
+        val totalWeight = options.sumOf { (_, weight) -> weight.coerceAtLeast(0.0) }
+        if (totalWeight <= 0.0) return options.first().first
+
+        var roll = state.rng.nextDouble() * totalWeight
+        for ((value, weight) in options) {
+            val safeWeight = weight.coerceAtLeast(0.0)
+            roll -= safeWeight
+            if (roll <= 0.0) return value
+        }
+
+        return options.last().first
     }
 
     private fun unitLabel(unit: Unit, state: CombatState): String {

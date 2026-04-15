@@ -383,7 +383,7 @@ VALUES (
                     "trigger": "ON_HIT",
                     "target": "ENEMY",
                     "params": {
-                        "trueDamage": true,
+                        "trueDamage": false,
                         "canCrit": false,
                         "canBeDodged": false,
                         "everyHits": 1
@@ -392,3 +392,190 @@ VALUES (
            ]'
        );
 
+
+-- 🎰 Markus, Mestre das Apostas (CHARACTER)
+INSERT INTO tb_card_definitions (
+    id, name, description, type, rarity,
+    faction, tags, base_stats, abilities
+)
+VALUES (
+           'MARKUS',
+           'Markus, Mestre das Apostas',
+           'Dono de um cassino onde fortunas são feitas e vidas são perdidas, Markus transforma cada turno em uma aposta. Quanto maior o risco e quanto pior a situacao, maiores podem ser as recompensas.',
+           'CHARACTER',
+           'LEGENDARY',
+           'gambler',
+           'rng,gambler,risk,chaos,scaling,boss',
+           '{
+                "HP": 720,
+                "ATK": 58,
+                "DEF": 14,
+                "CRIT_CHANCE": 0.10,
+                "CRIT_DAMAGE": 1.5,
+                "SPEED": 110
+           }',
+           '[
+                {
+                    "type": "RNG_EFFECT",
+                    "trigger": "ON_TURN_START",
+                    "target": "SELF",
+                    "params": {
+                        "profile": "MARKUS_GAMBLER",
+                        "strongEveryTurns": 5,
+                        "coinBiasPerCoin": 0.45,
+                        "strongMultiplier": 1.7,
+                        "extraRollSpeedFactor": 0.002,
+                        "enemyDamageMin": 24,
+                        "enemyDamageMax": 44,
+                        "selfHealMin": 18,
+                        "selfHealMax": 36,
+                        "selfDamageMin": 16,
+                        "selfDamageMax": 34,
+                        "atkBuffMin": 3,
+                        "atkBuffMax": 7,
+                        "speedBuffMin": 3,
+                        "speedBuffMax": 8,
+                        "shieldMin": 1,
+                        "shieldMax": 1
+                    }
+                }
+           ]'
+       );
+
+
+-- 🏹 Veyn, Besteiro de Markus (CHARACTER)
+INSERT INTO tb_card_definitions (
+    id, name, description, type, rarity,
+    faction, tags, base_stats, abilities
+)
+VALUES (
+           'VEYN',
+           'Veyn, Besteiro de Markus',
+           'Atirador de elite do cassino de Markus. Nao aposta em forca bruta: aposta em ritmo, precisao e pressao constante. Quanto mais rapido ele joga, mais a sorte trabalha a favor.',
+           'CHARACTER',
+           'EPIC',
+           'gambler',
+           'rng,gambler,speed,archer,marksman,risk',
+           '{
+                "HP": 510,
+                "ATK": 42,
+                "DEF": 16,
+                "CRIT_CHANCE": 0.10,
+                "CRIT_DAMAGE": 1.25,
+                "SPEED": 135
+           }',
+           '[
+                {
+                    "type": "DAMAGE",
+                    "value": 12,
+                    "trigger": "ON_HIT",
+                    "target": "ENEMY",
+                    "params": {
+                        "trueDamage": false,
+                        "canCrit": false,
+                        "canBeDodged": true,
+                        "everyHits": 2
+                    }
+                },
+                {
+                    "type": "RNG_EFFECT",
+                    "trigger": "ON_TURN_START",
+                    "target": "SELF",
+                    "params": {
+                        "profile": "MARKUS_GAMBLER",
+                        "strongEveryTurns": 6,
+                        "coinBiasPerCoin": 0.25,
+                        "strongMultiplier": 1.4,
+                        "extraRollSpeedFactor": 0.0028,
+                        "enemyDamageMin": 18,
+                        "enemyDamageMax": 34,
+                        "selfHealMin": 4,
+                        "selfHealMax": 16,
+                        "selfDamageMin": 12,
+                        "selfDamageMax": 24,
+                        "atkBuffMin": 2,
+                        "atkBuffMax": 6,
+                        "speedBuffMin": 4,
+                        "speedBuffMax": 8,
+                        "shieldMin": 1,
+                        "shieldMax": 1
+                    }
+                }
+           ]'
+       );
+
+
+-- THE Statstick
+INSERT INTO tb_card_definitions (
+    id, name, description, type, rarity,
+    faction, tags, base_stats, abilities
+)
+VALUES (
+           'STATSTICK',
+           'O Statstick',
+           'Dizem que todos já o usaram… ou estiveram à sua procura. Um simples graveto, escolhido não por seu poder oculto, mas pelos números que carrega.\nAumenta ATK, DEF e HP',
+           'EQUIPMENT',
+           'LEGENDARY',
+           NULL,
+           'stat',
+           '{
+                "HP": 240,
+                "ATK": 60,
+                "DEF": 25
+           }',
+           '[]'
+       );
+
+
+-- Wooden sword
+INSERT INTO tb_card_definitions (
+    id, name, description, type, rarity,
+    faction, tags, base_stats, abilities
+)
+VALUES (
+           'WOODEN_SWORD',
+           'Espada de Madeira',
+           'Uma espada de madeira usada por recrutas iniciantes. Não é grande coisa, mas já é melhor que um graveto.',
+           'EQUIPMENT',
+           'COMMON',
+           NULL,
+           'starter',
+           '{
+                "ATK": 15
+           }',
+           '[]'
+       );
+
+
+-- Besta da Caçadora de Demônios
+INSERT INTO tb_card_definitions (
+    id, name, description, type, rarity,
+    faction, tags, base_stats, abilities
+)
+VALUES (
+           'DEMON_HUNTER_CROSSBOW',
+           'Besta da Caçadora de Demônios',
+           'Projetada para caçar o que não deveria morrer. Uma besta herdada de uma antiga guerreira de um reino esquecido, com flechas embebidas em prata pura. A cada três ataques, libera um poder que ignora qualquer defesa.',
+           'EQUIPMENT',
+           'LEGENDARY',
+           NULL,
+           'speed',
+           '{
+                "SPEED": 10,
+                "ATK": 15
+           }',
+           '[
+                {
+                    "type": "DAMAGE",
+                    "value": 20,
+                    "trigger": "ON_HIT",
+                    "target": "ENEMY",
+                    "params": {
+                        "trueDamage": true,
+                        "canCrit": false,
+                        "canBeDodged": true,
+                        "everyHits": 3
+                    }
+                }
+           ]'
+       );

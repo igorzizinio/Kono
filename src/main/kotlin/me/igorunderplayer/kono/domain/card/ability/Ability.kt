@@ -29,5 +29,17 @@ data class AbilityParams(
     val selfHealMin: Double? = null,
     val selfHealMax: Double? = null,
     val enemyHealMin: Double? = null,
-    val enemyHealMax: Double? = null
+    val enemyHealMax: Double? = null,
+
+    // RNG/gambler tuning
+    val atkBuffMin: Double? = null,
+    val atkBuffMax: Double? = null,
+    val speedBuffMin: Double? = null,
+    val speedBuffMax: Double? = null,
+    val shieldMin: Int? = null,
+    val shieldMax: Int? = null,
+    val strongEveryTurns: Int? = null,
+    val coinBiasPerCoin: Double? = null,
+    val strongMultiplier: Double? = null,
+    val extraRollSpeedFactor: Double? = null
 )
