@@ -7,6 +7,7 @@ import me.igorunderplayer.kono.commands.KonoSlashCommand
 import me.igorunderplayer.kono.commands.text.testing.InventoryCommand
 import me.igorunderplayer.kono.commands.text.testing.PullCommand
 import me.igorunderplayer.kono.commands.text.dev.DeleteApplicationCommand
+import me.igorunderplayer.kono.commands.text.dev.GiveCommand
 import me.igorunderplayer.kono.commands.text.dev.GuildsCommand
 import me.igorunderplayer.kono.commands.text.`fun`.HCommand
 import me.igorunderplayer.kono.commands.text.`fun`.TinderCommand
@@ -122,6 +123,7 @@ val appModule = module {
     // dev
     factoryOf(::GuildsCommand) { bind<BaseCommand>() }
     factoryOf(::DeleteApplicationCommand) { bind<BaseCommand>() }
+    factoryOf(::GiveCommand) { bind<BaseCommand>() }
 
     // fun
     factoryOf(::HCommand) { bind<BaseCommand>() }

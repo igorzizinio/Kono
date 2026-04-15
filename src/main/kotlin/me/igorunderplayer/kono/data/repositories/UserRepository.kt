@@ -117,4 +117,13 @@ class UserRepository(private val databaseManager: DatabaseManager)  {
 
         updated > 0
     }
+
+    suspend fun updateKonos(userId: Int, konos: Int) = withContext(Dispatchers.IO) {
+        val updated = database.update(Users) {
+            set(it.konos, konos)
+            where { it.id eq userId }
+        }
+
+        updated > 0
+    }
 }
