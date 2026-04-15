@@ -3,6 +3,7 @@ package me.igorunderplayer.kono.services
 import me.igorunderplayer.kono.data.repositories.CardInstanceRepository
 import me.igorunderplayer.kono.data.repositories.CardRepository
 import me.igorunderplayer.kono.data.repositories.UserRepository
+import me.igorunderplayer.kono.domain.card.CardType
 import me.igorunderplayer.kono.domain.card.Rarity
 import kotlin.random.Random
 
@@ -10,7 +11,8 @@ const val GACHA_COST = 40
 
 data class PulledCard (
     val cardName: String,
-    val rarity: Rarity
+    val rarity: Rarity,
+    val type: CardType
 )
 
 sealed class GachaResult {
@@ -23,6 +25,7 @@ sealed class GachaResult {
     data class Success(
         val cardName: String,
         val rarity: Rarity,
+        val type: CardType,
         val remainingEssence: Int
     ) : GachaResult()
 
@@ -72,7 +75,8 @@ class GachaService(
             results.add(
                 PulledCard(
                     cardName = card.name,
-                    rarity = card.rarity
+                    rarity = card.rarity,
+                    type = card.type,
                 )
             )
         }
@@ -92,7 +96,8 @@ class GachaService(
             GachaResult.Success(
                 cardName = card.cardName,
                 rarity = card.rarity,
-                remainingEssence = newEssence
+                remainingEssence = newEssence,
+                type = card.type
             )
         }
     }
