@@ -12,7 +12,13 @@ data class CombatState(
 
     // Buffs temporarios de negacao (consumidos no proximo ataque/defesa).
     val pendingIncomingDamageNegationByUnitId: MutableMap<String, Int> = mutableMapOf(),
-    val pendingOutgoingDamageNegationByUnitId: MutableMap<String, Int> = mutableMapOf()
+    val pendingOutgoingDamageNegationByUnitId: MutableMap<String, Int> = mutableMapOf(),
+
+    // Nome exibido por unidade para logs/embeds (ex.: "Slime de Igor").
+    val unitDisplayNamesById: MutableMap<String, String> = mutableMapOf(),
+
+    // Registro textual da simulacao, usado para retorno no comando fight.
+    val combatLog: MutableList<String> = mutableListOf()
 ) {
     fun isFinished(): Boolean {
         return teams.any { team ->

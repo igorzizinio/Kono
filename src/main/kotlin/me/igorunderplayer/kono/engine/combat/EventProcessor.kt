@@ -7,11 +7,12 @@ import me.igorunderplayer.kono.domain.gameplay.CombatState
 
 object EventProcessor {
 
-    suspend fun process(event: CombatEvent, state: CombatState) {
+     fun process(event: CombatEvent, state: CombatState) {
 
         when (event) {
 
             is CombatEvent.TurnStart -> {
+                state.combatLog += "🎬 ${unitLabel(event.unit, state)} iniciou o turno com ${formatHp(event.unit.hp)} HP."
                 triggerAbilities(event, state)
             }
 
@@ -19,6 +20,7 @@ object EventProcessor {
                 if (event.attacker.hp <= 0) return
 
                 val liveTarget = resolveLiveTarget(event.attacker, event.target, state) ?: return
+                state.combatLog += "🗡️ ${unitLabel(event.attacker, state)} atacou ${unitLabel(liveTarget, state)}."
 
                 val normalizedAttack = CombatEvent.Attack(event.attacker, liveTarget)
                 triggerAbilities(normalizedAttack, state)
@@ -41,16 +43,32 @@ object EventProcessor {
                 var damage = event.damage
                 modifiers.forEach { damage = it(damage) }
 
-                if (isDodged(event, state)) {
+                val dodged = isDodged(event, state)
+                if (dodged) {
                     damage = 0.0
                 }
 
-                damage = applyPendingDamageNegations(event, damage, state)
+                val (postNegationDamage, wasNegated) = applyPendingDamageNegations(event, damage, state)
+                damage = postNegationDamage
 
-                damage = applyCriticalDamage(event.source, damage, state)
+                val (postCritDamage, wasCritical) = applyCriticalDamage(event.source, damage, state)
+                damage = postCritDamage
                 damage = damage.coerceAtLeast(0.0)
 
                 event.target.hp -= damage
+
+                when {
+                    dodged -> {
+                        state.combatLog += "💨 ${unitLabel(event.target, state)} desviou do ataque de ${unitLabel(event.source, state)}."
+                    }
+                    wasNegated -> {
+                        state.combatLog += "🛡️ ${unitLabel(event.target, state)} anulou o dano de ${unitLabel(event.source, state)}."
+                    }
+                    else -> {
+                        val critSuffix = if (wasCritical) " 🔥 CRITICO!" else ""
+                        state.combatLog += "💥 ${unitLabel(event.source, state)} causou ${formatValue(damage)} de dano em ${unitLabel(event.target, state)}.$critSuffix ${unitLabel(event.target, state)} ficou com ${formatHp(event.target.hp.coerceAtLeast(0.0))} HP."
+                    }
+                }
 
                 state.queue.add(
                     CombatEvent.AfterDamage(event.source, event.target, damage)
@@ -66,7 +84,7 @@ object EventProcessor {
             }
 
             is CombatEvent.Death -> {
-                // pode expandir depois
+                state.combatLog += "☠️ ${unitLabel(event.unit, state)} foi derrotado."
             }
         }
     }
@@ -75,17 +93,17 @@ object EventProcessor {
         source: me.igorunderplayer.kono.domain.gameplay.Unit,
         damage: Double,
         state: CombatState
-    ): Double {
+    ): Pair<Double, Boolean> {
         val (critChance, critDamage) = resolveCriticalStats(source)
 
-        if (critChance <= 0.0) return damage
+        if (critChance <= 0.0 || damage <= 0.0) return damage to false
 
         val roll = state.rng.nextDouble()
 
         return if (roll < critChance) {
-            damage * critDamage
+            (damage * critDamage) to true
         } else {
-            damage
+            damage to false
         }
     }
 
@@ -115,7 +133,7 @@ object EventProcessor {
         return critChance to critDamage
     }
 
-    private suspend fun triggerAbilities(
+    private fun triggerAbilities(
         event: CombatEvent,
         state: CombatState,
         modifiers: MutableList<DamageModifier> = mutableListOf()
@@ -139,7 +157,7 @@ object EventProcessor {
         event: CombatEvent.BeforeDamage,
         damage: Double,
         state: CombatState
-    ): Double {
+    ): Pair<Double, Boolean> {
         val sourceNegates = consumeNegation(
             unitId = event.source.id,
             buckets = state.pendingOutgoingDamageNegationByUnitId
@@ -150,9 +168,22 @@ object EventProcessor {
             buckets = state.pendingIncomingDamageNegationByUnitId
         )
 
-        if (sourceNegates || targetNegates) return 0.0
+        if (sourceNegates || targetNegates) return 0.0 to true
 
-        return damage
+        return damage to false
+    }
+
+    private fun unitLabel(unit: me.igorunderplayer.kono.domain.gameplay.Unit, state: CombatState): String {
+        return state.unitDisplayNamesById[unit.id] ?: unit.card.name
+    }
+
+    private fun formatHp(value: Double): String {
+        return formatValue(value.coerceAtLeast(0.0))
+    }
+
+    private fun formatValue(value: Double): String {
+        val rounded = String.format(java.util.Locale.US, "%.2f", value)
+        return rounded.trimEnd('0').trimEnd('.')
     }
 
     private fun consumeNegation(

@@ -11,6 +11,7 @@ object CombatEngine {
     suspend fun run(state: CombatState): CombatState {
 
         while (!state.isFinished()) {
+            state.combatLog += "• • • • • • • • • • • • • • • \n🔄 Turno ${state.turn}"
 
             val units = state.teams
                 .flatMap { it.units }
@@ -24,6 +25,9 @@ object CombatEngine {
                 state.queue.add(CombatEvent.TurnStart(unit))
 
                 val attackCount = resolveAttackCount(unit, state)
+                if (attackCount > 1) {
+                    state.combatLog += "⚡ ${unitLabel(unit, state)} ganha $attackCount ataques neste turno."
+                }
 
                 repeat(attackCount) {
                     val target = findTarget(unit, state) ?: return@repeat
@@ -70,5 +74,9 @@ object CombatEngine {
         }
 
         return (1 + extraAttacks).coerceIn(1, 3)
+    }
+
+    private fun unitLabel(unit: Unit, state: CombatState): String {
+        return state.unitDisplayNamesById[unit.id] ?: unit.card.name
     }
 }
