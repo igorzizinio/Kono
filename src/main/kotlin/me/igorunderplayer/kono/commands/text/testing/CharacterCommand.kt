@@ -5,6 +5,7 @@ import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.rest.builder.message.embed
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.domain.card.prettyName
+import me.igorunderplayer.kono.domain.card.prettyValue
 import me.igorunderplayer.kono.domain.card.toDisplayEmoji
 import me.igorunderplayer.kono.domain.team.BuildUnitHandler
 import me.igorunderplayer.kono.domain.team.SetActiveCharacterHandler
@@ -81,7 +82,7 @@ class CharacterCommand(
                             appendLine()
                             appendLine("**Status:**")
                             result.unit.stats.forEach { (stat, value) ->
-                                appendLine("- **${stat.prettyName()}**: $value")
+                                appendLine("- **${stat.prettyName()}**: ${prettyValue(stat, value)}")
                             }
                         }
                         event.message.reply {
