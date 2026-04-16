@@ -51,8 +51,10 @@ class FightCommand(
         // 🧠 build player
         val player = try {
             buildUnitHandler.executeByDiscordId(discordId)
-        } catch (_: Exception) {
-            event.message.channel.createMessage("❌ Você precisa selecionar um personagem.")
+        } catch (e: Exception) {
+            println("errorr: ${e.message}")
+            println("Full stack: ${e.stackTraceToString()}")
+            event.message.channel.createMessage("❌ Você precisa selecionar um personagem ativo. Use: `setactive <instance_id>` (veja ids com `inventory perso`)\n\n**Erro interno:** ${e.message}")
             return
         }
 
@@ -89,7 +91,7 @@ class FightCommand(
         val player = try {
             buildUnitHandler.executeByDiscordId(discordId)
         } catch (_: Exception) {
-            event.message.channel.createMessage("❌ Você precisa selecionar um personagem.")
+            event.message.channel.createMessage("❌ Você precisa selecionar um personagem ativo. Use: `setactive <instance_id>` (veja ids com `inventory perso`)")
             return
         }
 

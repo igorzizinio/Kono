@@ -18,6 +18,6 @@ object CardInstances : Table<CardInstance>("tb_card_instances") {
     val id = int("id").primaryKey().bindTo { it.id }
     val userId = int("user_id").bindTo { it.userId }
     val definitionId = text("definition_id").bindTo { it.definitionId }
-    val level = int("level").bindTo { it.level }
+    val level = int("level").bindTo { it.level } // começa em 1
     val upgraded = boolean("upgraded").bindTo { it.upgraded }
 }

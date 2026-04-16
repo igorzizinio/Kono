@@ -9,29 +9,36 @@ class SetActiveCommand(
     private val setActiveCharacterHandler: SetActiveCharacterHandler
 ): BaseCommand(
     name = "setactive",
-    description = "selecione seu personagem ativo para combate!"
+    description = "selecione seu personagem ativo por instance id"
 ) {
 
     override suspend fun run(event: MessageCreateEvent, args: Array<String>) {
         val userId = event.message.author?.id?.value ?: return
         if (args.isEmpty()) {
             event.message.reply {
-                content = "Por favor, forneça o nome do personagem que deseja definir como ativo."
+                content = "Use: `setactive <instance_id>` (exemplo: `setactive 42`)."
             }
             return
         }
 
-        val characterName = args.joinToString(" ")
-        when (val result = setActiveCharacterHandler.execute(userId.toLong(), characterName)) {
+        val instanceId = args[0].toIntOrNull()
+        if (instanceId == null || instanceId <= 0) {
+            event.message.reply {
+                content = "Instance ID inválido. Use um número inteiro positivo, exemplo: `setactive 42`."
+            }
+            return
+        }
+
+        when (val result = setActiveCharacterHandler.execute(userId.toLong(), instanceId)) {
             is SetActiveCharacterHandler.Result.Success -> {
                 event.message.reply {
-                    content = "Personagem '${result.characterName}' definido como ativo com sucesso!"
+                    content = "Personagem '${result.characterName}' (#${result.instanceId}) definido como ativo com sucesso!"
                 }
             }
 
             is SetActiveCharacterHandler.Result.CharacterNotFound -> {
                 event.message.reply {
-                    content = "Personagem '${result.characterName}' não encontrado na sua equipe."
+                    content = "Não encontrei um personagem com instance ID #${result.instanceId} na sua conta."
                 }
             }
 

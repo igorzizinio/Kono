@@ -13,7 +13,15 @@ object StatSerializer {
     }
 
     fun deserialize(data: String): Map<Stat, Double> {
-        val map = json.decodeFromString<Map<String, Double>>(data)
-        return map.mapKeys { Stat.valueOf(it.key) }
+        if (data.isBlank() || data == "{}") {
+            return emptyMap()
+        }
+        return try {
+            val map = json.decodeFromString<Map<String, Double>>(data)
+            map.mapKeys { Stat.valueOf(it.key) }
+        } catch (e: Exception) {
+            println("Error deserializing stats '$data': ${e.message}")
+            emptyMap()
+        }
     }
 }

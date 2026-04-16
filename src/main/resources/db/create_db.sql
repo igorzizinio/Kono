@@ -562,3 +562,11 @@ VALUES (
 
 UPDATE tb_card_definitions SET name = 'Veyn' WHERE id = 'VEYN';
 UPDATE tb_card_definitions SET description = 'Veyn, Besteiro de Markus. Atirador de elite do cassino de Markus. Nao aposta em forca bruta: aposta em ritmo, precisao e pressao constante. Quanto mais rapido ele joga, mais a sorte trabalha a favor.' WHERE id = 'VEYN';
+
+--- Adicionando campo de stats per level
+ALTER TABLE tb_card_definitions
+ADD COLUMN stats_per_level TEXT NOT NULL DEFAULT '{
+                                                 "HP": 5,
+                                                 "ATK": 2.5,
+                                                 "DEF": 2
+                                                 }';

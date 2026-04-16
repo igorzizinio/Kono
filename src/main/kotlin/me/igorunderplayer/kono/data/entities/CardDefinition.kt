@@ -18,6 +18,13 @@ interface CardDefinition : Entity<CardDefinition> {
     val type: CardType
     val rarity: Rarity
 
+    var statsPerLevelRaw: String
+    var statsPerLevel: Map<Stat, Double>
+        get() = StatSerializer.deserialize(statsPerLevelRaw)
+        set(value) {
+            statsPerLevelRaw = StatSerializer.serialize(value)
+        }
+
     var baseStatsRaw: String
     var baseStats: Map<Stat, Double>
         get() = StatSerializer.deserialize(baseStatsRaw)
@@ -63,6 +70,9 @@ object CardDefinitions : Table<CardDefinition>("tb_card_definitions") {
 
     val baseStatsRaw = text("base_stats")
         .bindTo { it.baseStatsRaw }
+
+    val statsPerLevelRaw = text("stats_per_level")
+        .bindTo { it.statsPerLevelRaw }
 
     val faction = text("faction")
         .bindTo { it.faction }

@@ -25,6 +25,18 @@ class BuildUnitHandler(
         get() = databaseManager.db
 
     suspend fun executeByDiscordId(userId: Long): Unit = withContext(Dispatchers.IO) {
+        val userRow = database
+            .from(Users)
+            .select()
+            .where { Users.discordId eq userId }
+            .map { Users.createEntity(it) }
+            .firstOrNull()
+            ?: error("Usuário não encontrado")
+
+        if (userRow.activeCharacterInstanceId == null) {
+            error("Nenhum personagem ativo selecionado. Use: setactive <instance_id>")
+        }
+
         val character = database
             .from(Users)
             .innerJoin(CardInstances, on = Users.activeCharacterInstanceId eq CardInstances.id)
@@ -32,14 +44,13 @@ class BuildUnitHandler(
             .select()
             .where { Users.discordId eq userId }
             .map { row ->
-
                 val def = CardDefinitions.createEntity(row)
                 val inst = CardInstances.createEntity(row)
 
                 Pair(def, inst)
             }
             .firstOrNull()
-            ?: error("Nenhum personagem ativo")
+            ?: error("Personagem ativo (#${userRow.activeCharacterInstanceId}) não encontrado no banco de dados")
 
         val (charDef, charInst) = character
 
@@ -61,6 +72,17 @@ class BuildUnitHandler(
 
         // stats base
         val stats = charDef.baseStats.toMutableMap()
+
+        // aumenta de acordo com nivel
+        try {
+            val statsPerLevel = charDef.statsPerLevel
+            for ((stat, value) in stats) {
+                stats[stat] = value + ((statsPerLevel[stat] ?: 0.0) * (charInst.level - 1))
+            }
+        } catch (e: Exception) {
+            println("Error calculating stats per level: ${e.message}")
+            e.printStackTrace()
+        }
 
         // soma stats dos equips
         for (equip in equips) {

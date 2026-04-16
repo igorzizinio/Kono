@@ -15,7 +15,6 @@ import org.ktorm.dsl.map
 import org.ktorm.dsl.select
 import org.ktorm.dsl.update
 import org.ktorm.dsl.where
-import org.ktorm.support.postgresql.ilike
 
 class SetActiveCharacterHandler(
     private val databaseManager: DatabaseManager
@@ -25,12 +24,12 @@ class SetActiveCharacterHandler(
         get() = databaseManager.db
 
     sealed class Result {
-        data class Success(val characterName: String) : Result()
-        data class CharacterNotFound(val characterName: String) : Result()
+        data class Success(val instanceId: Int, val characterName: String) : Result()
+        data class CharacterNotFound(val instanceId: Int) : Result()
         object UserNotFound : Result()
     }
 
-    suspend fun execute(discordId: Long, characterName: String): Result = withContext(Dispatchers.IO) {
+    suspend fun execute(discordId: Long, instanceId: Int): Result = withContext(Dispatchers.IO) {
         val user = database
             .from(Users)
             .select()
@@ -45,7 +44,7 @@ class SetActiveCharacterHandler(
             .select()
             .where {
                 (CardInstances.userId eq user.id) and
-                        (CardDefinitions.name ilike "%$characterName%") and
+                        (CardInstances.id eq instanceId) and
                         (CardDefinitions.type eq CardType.CHARACTER)
             }
             .map { row ->
@@ -54,7 +53,7 @@ class SetActiveCharacterHandler(
                 Pair(instance, definition)
             }
             .firstOrNull()
-            ?: return@withContext Result.CharacterNotFound(characterName)
+            ?: return@withContext Result.CharacterNotFound(instanceId)
 
         val (instance, definition) = character
 
@@ -63,6 +62,6 @@ class SetActiveCharacterHandler(
             where { it.id eq user.id }
         }
 
-        Result.Success(definition.name)
+        Result.Success(instance.id, definition.name)
     }
 }
