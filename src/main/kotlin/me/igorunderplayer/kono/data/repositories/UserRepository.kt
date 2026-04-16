@@ -59,6 +59,7 @@ class UserRepository(private val databaseManager: DatabaseManager)  {
     suspend fun createUser(discordId: Long): User? = withContext(Dispatchers.IO) {
         val generatedId = database.insertAndGenerateKey(Users) {
             set(it.discordId, discordId)
+            set(it.essence, 1200) // usuário começam com 1600 essences = 30 giros
         } as Int
 
         return@withContext getUserById(generatedId)
