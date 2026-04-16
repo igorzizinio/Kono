@@ -136,4 +136,13 @@ class UserRepository(private val databaseManager: DatabaseManager)  {
 
         updated > 0
     }
+
+    suspend fun updatePity(userId: Int, epic: Int, legendary: Int): Boolean = withContext(Dispatchers.IO) {
+        val updated = database.update(Users) {
+            set(it.pityEpic, epic)
+            set(it.pityLegendary, legendary)
+            where { it.id eq userId }
+        }
+        return@withContext updated > 0
+    }
 }

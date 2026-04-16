@@ -27,6 +27,9 @@ interface User : Entity<User> {
     var lastWorkAt: Instant?
 
     val activeCharacterInstanceId: Int?
+
+    val pityLegendary: Int
+    val pityEpic: Int
 }
 
 object Users : Table<User>("tb_users") {
@@ -49,4 +52,7 @@ object Users : Table<User>("tb_users") {
     val lastWorkAt = timestamp("last_work_at").bindTo { it.lastWorkAt }
 
     val activeCharacterInstanceId = int("active_character_instance_id").bindTo { it.activeCharacterInstanceId }
+
+    val pityLegendary = int("pity_legendary").bindTo { it.pityLegendary }
+    val pityEpic = int("pity_epic").bindTo { it.pityEpic }
 }

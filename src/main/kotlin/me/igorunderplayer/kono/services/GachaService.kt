@@ -9,6 +9,9 @@ import kotlin.random.Random
 
 const val GACHA_COST = 40
 
+const val LEGENDARY_HARD_PITY = 40
+const val EPIC_HARD_PITY = 10
+
 data class PulledCard (
     val cardName: String,
     val rarity: Rarity,
@@ -54,8 +57,15 @@ class GachaService(
 
         val results = mutableListOf<PulledCard>()
 
+        var epicPity = user.pityEpic
+        var legendaryPity = user.pityLegendary
+
         repeat(pullCount) {
-            val rarity = rollRarity()
+            val rarity = when {
+                legendaryPity >= LEGENDARY_HARD_PITY -> Rarity.LEGENDARY
+                epicPity >= EPIC_HARD_PITY -> Rarity.EPIC
+                else -> rollRarity()
+            }
 
             val pool = cardRepository.getByRarity(rarity)
 
@@ -79,12 +89,36 @@ class GachaService(
                     type = card.type,
                 )
             )
+
+            when (rarity) {
+                Rarity.LEGENDARY -> {
+                    legendaryPity = 0
+                    epicPity++
+                }
+                Rarity.EPIC -> {
+                    epicPity = 0
+                    legendaryPity++
+                }
+                else -> {
+                    epicPity++
+                    legendaryPity++
+                }
+            }
         }
+
 
         val newEssence = user.essence - totalCost
         val updated = userRepository.updateEssence(user.id, newEssence)
 
         if (!updated) return GachaResult.Error
+
+        val updatedPity = userRepository.updatePity(
+            userId = user.id,
+            epic = epicPity,
+            legendary = legendaryPity
+        )
+
+        if (!updatedPity) return GachaResult.Error
 
         return if (multiple) {
             GachaResult.MultipePullSuccess(
@@ -109,8 +143,8 @@ class GachaService(
         return when {
             roll < 60.0 -> Rarity.COMMON        // 50%
             roll < 85.0 -> Rarity.RARE          // 25%
-            roll < 98.6 -> Rarity.EPIC          // 13.6%
-            roll < 99.8 -> Rarity.LEGENDARY     // 1.2%
+            roll < 98.4 -> Rarity.EPIC          // 13.4%
+            roll < 99.8 -> Rarity.LEGENDARY     // 1.4%
             else -> Rarity.MYTHIC               // 0.2%
         }
     }

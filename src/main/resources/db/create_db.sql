@@ -815,3 +815,8 @@ VALUES (
                }
            ]'
        );
+
+
+ALTER TABLE tb_users
+    ADD COLUMN pity_epic INT DEFAULT 0,
+    ADD COLUMN pity_legendary INT DEFAULT 0;
