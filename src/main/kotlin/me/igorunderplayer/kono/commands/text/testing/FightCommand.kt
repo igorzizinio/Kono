@@ -2,10 +2,12 @@ package me.igorunderplayer.kono.commands.text.testing
 
 import dev.kord.common.entity.ButtonStyle
 import dev.kord.core.behavior.interaction.respondEphemeral
+import dev.kord.core.behavior.interaction.response.createEphemeralFollowup
 import dev.kord.core.behavior.reply
 import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.rest.builder.component.ActionRowBuilder
 import dev.kord.rest.builder.message.embed
+import kotlinx.coroutines.time.delay
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandCategory
 import me.igorunderplayer.kono.data.entities.CardDefinition
@@ -19,6 +21,7 @@ import me.igorunderplayer.kono.engine.combat.CombatEngine
 import me.igorunderplayer.kono.domain.gameplay.Unit
 import me.igorunderplayer.kono.utils.getMentionedUser
 import me.igorunderplayer.kono.utils.interaction.awaitButtonInteraction
+import java.time.Duration
 import kotlin.random.Random
 
 class FightCommand(
@@ -190,20 +193,35 @@ class FightCommand(
             allowedUserId = event.message.author?.id?.value?.toLong() ?: return
         ) ?: return
 
-        logClick.interaction.respondEphemeral {
-            content = "📜 Diário de batalha"
+        val firstPage = logPages.first()
 
-            logPages.forEach { page ->
-                embed {
-                    title = page.title
-                    description = page.description
-                    page.footer?.let { footerText ->
-                        footer {
-                            text = footerText
-                        }
+        val response = logClick.interaction.respondEphemeral {
+            content = "📜 Diário de batalha"
+            embed {
+                title = firstPage.title
+                description = firstPage.description
+                firstPage.footer?.let { footerText ->
+                    footer {
+                        text = footerText
                     }
                 }
             }
+        }
+
+        logPages.subList(1, logPages.size).forEach { page ->
+               response.createEphemeralFollowup {
+                   embed {
+                       title = page.title
+                       description = page.description
+                       page.footer?.let { footerText ->
+                           footer {
+                               text = footerText
+                           }
+                       }
+                   }
+               }
+
+            delay(Duration.ofMillis(250)) // delay para não enviar tudo de uma vez
         }
     }
 
