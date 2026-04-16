@@ -8,41 +8,44 @@ import kotlin.math.floor
 
 object CombatEngine {
 
-    suspend fun run(state: CombatState): CombatState {
-
+    suspend fun runAutonomous(state: CombatState): CombatState {
         while (!state.isFinished()) {
-            state.combatLog += "• • • • • • • • • • • • • • • \n🔄 Turno ${state.turn}"
-
-            val units = state.teams
-                .flatMap { it.units }
-                .filter { it.hp > 0 }
-                .sortedByDescending { it.stats[Stat.SPEED] ?: 0.0 }
-
-            for (unit in units) {
-
-                if (unit.hp <= 0) continue
-
-                state.queue.add(CombatEvent.TurnStart(unit))
-
-                val attackCount = resolveAttackCount(unit, state)
-                if (attackCount > 1) {
-                    state.combatLog += "⚡ ${unitLabel(unit, state)} ganha $attackCount ataques neste turno."
-                }
-
-                repeat(attackCount) {
-                    val target = findTarget(unit, state) ?: return@repeat
-                    state.queue.add(CombatEvent.Attack(unit, target))
-                }
-
-                processQueue(state)
-
-                if (state.isFinished()) break
-            }
-
-            state.turn++
+            processState(state)
         }
 
         return state
+    }
+
+    suspend fun processState(state: CombatState) {
+        state.combatLog += "🔄 Turno ${state.turn}"
+
+        val units = state.teams
+            .flatMap { it.units }
+            .filter { it.hp > 0 }
+            .sortedByDescending { it.stats[Stat.SPEED] ?: 0.0 }
+
+        for (unit in units) {
+
+            if (unit.hp <= 0) continue
+
+            state.queue.add(CombatEvent.TurnStart(unit))
+
+            val attackCount = resolveAttackCount(unit, state)
+            if (attackCount > 1) {
+                state.combatLog += "⚡ ${unitLabel(unit, state)} ganha $attackCount ataques neste turno."
+            }
+
+            repeat(attackCount) {
+                val target = findTarget(unit, state) ?: return@repeat
+                state.queue.add(CombatEvent.Attack(unit, target))
+            }
+
+            processQueue(state)
+
+            if (state.isFinished()) break
+        }
+
+        state.turn++
     }
 
     private suspend fun processQueue(state: CombatState) {

@@ -1,8 +1,11 @@
 package me.igorunderplayer.kono.commands.text.testing
 
-import dev.kord.core.behavior.channel.createEmbed
+import dev.kord.common.entity.ButtonStyle
+import dev.kord.core.behavior.interaction.respondEphemeral
+import dev.kord.core.behavior.reply
 import dev.kord.core.event.message.MessageCreateEvent
-import kotlinx.coroutines.delay
+import dev.kord.rest.builder.component.ActionRowBuilder
+import dev.kord.rest.builder.message.embed
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandCategory
 import me.igorunderplayer.kono.data.entities.CardDefinition
@@ -15,8 +18,8 @@ import me.igorunderplayer.kono.domain.team.BuildUnitHandler
 import me.igorunderplayer.kono.engine.combat.CombatEngine
 import me.igorunderplayer.kono.domain.gameplay.Unit
 import me.igorunderplayer.kono.utils.getMentionedUser
+import me.igorunderplayer.kono.utils.interaction.awaitButtonInteraction
 import kotlin.random.Random
-import kotlin.time.Duration.Companion.milliseconds
 
 class FightCommand(
     private val buildUnitHandler: BuildUnitHandler,
@@ -29,7 +32,6 @@ class FightCommand(
 
     companion object {
         private const val EMBED_DESCRIPTION_LIMIT = 3500
-        private const val EMBED_SEND_COOLDOWN_MS = 700L
     }
 
     override suspend fun run(event: MessageCreateEvent, args: Array<String>) {
@@ -69,7 +71,6 @@ class FightCommand(
             playerOwnerName = playerOwnerName,
             enemyOwnerName = enemyOwnerName
         )
-
     }
 
     private suspend fun fightWithBot(event: MessageCreateEvent, args: Array<String>) {
@@ -77,7 +78,7 @@ class FightCommand(
         val enemyName = args.getOrNull(0)?.uppercase()
 
         if (enemyName == null) {
-            event.message.channel.createMessage("⚠️ Use: `!fight <enemy_id>`")
+            event.message.channel.createMessage("⚠️ Use: `fight <enemy_id> (exemplo: slime)`")
             return
         }
 
@@ -154,10 +155,10 @@ class FightCommand(
         val playerStartHp = player.hp
         val enemyStartHp = enemy.hp
 
-        val result = CombatEngine.run(state)
+        val result = CombatEngine.runAutonomous(state)
         val playerAlive = result.teams[0].units.any { it.hp > 0 }
 
-        val embeds = buildCombatEmbeds(
+        val summary = buildCombatSummaryEmbed(
             playerDisplayName = playerDisplayName,
             enemyDisplayName = enemyDisplayName,
             playerStartHp = playerStartHp,
@@ -165,13 +166,48 @@ class FightCommand(
             playerFinalHp = player.hp,
             enemyFinalHp = enemy.hp,
             playerAlive = playerAlive,
-            eventLog = result.combatLog
         )
 
-        sendEmbedsWithCooldown(event, embeds)
+        val logPages = buildCombatLogEmbeds(result.combatLog)
+        val logButtonId = "fight-log-${event.message.channelId}-${event.message.id}-${System.currentTimeMillis()}"
+
+        event.message.reply {
+            embed {
+                title = summary.title
+                description = summary.description
+                summary.footer?.let { footerText ->
+                    footer {
+                        text = footerText
+                    }
+                }
+            }
+
+            addComponent(createLogButton(logButtonId))
+        }
+
+        val logClick = event.kord.awaitButtonInteraction(
+            customId = logButtonId,
+            allowedUserId = event.message.author?.id?.value?.toLong() ?: return
+        ) ?: return
+
+        logClick.interaction.respondEphemeral {
+            content = "📜 Diário de batalha"
+
+            logPages.forEach { page ->
+                embed {
+                    title = page.title
+                    description = page.description
+                    page.footer?.let { footerText ->
+                        footer {
+                            text = footerText
+                        }
+                    }
+                }
+            }
+        }
     }
 
-    private fun buildCombatEmbeds(
+    private fun buildCombatSummaryEmbed(
         playerDisplayName: String,
         enemyDisplayName: String,
         playerStartHp: Double,
@@ -179,8 +215,7 @@ class FightCommand(
         playerFinalHp: Double,
         enemyFinalHp: Double,
         playerAlive: Boolean,
-        eventLog: List<String>
-    ): List<CombatEmbedPage> {
+    ): CombatEmbedPage {
         val summaryDescription = buildString {
             appendLine("⚔️ **Combate iniciado!**")
             appendLine("👤 **Jogador:** $playerDisplayName (${playerStartHp.toInt()} HP)")
@@ -191,26 +226,11 @@ class FightCommand(
             appendLine("💔 **HP final Inimigo:** ${enemyFinalHp.coerceAtLeast(0.0).toInt()}")
         }
 
-        val pages = mutableListOf(
-            CombatEmbedPage(
-                title = "⚔️ Resultado do Combate",
-                description = summaryDescription.trim(),
-                footer = null
-            )
+        return CombatEmbedPage(
+            title = "⚔️ Resultado do Combate",
+            description = summaryDescription.trim(),
+            footer = "Clique no botão abaixo para ver o diário em modo privado"
         )
-
-        val eventPages = paginateEventLog(eventLog)
-        val totalPages = eventPages.size
-
-        eventPages.forEachIndexed { index, page ->
-            pages += CombatEmbedPage(
-                title = "📜 Diario de Batalha",
-                description = page,
-                footer = "Pagina ${index + 1}/$totalPages"
-            )
-        }
-
-        return pages
     }
 
     private fun resolveCombatantDisplayNames(
@@ -226,32 +246,31 @@ class FightCommand(
         return "$playerName de ${playerOwnerName.trim()}" to "$enemyName de ${enemyOwnerName.trim()}"
     }
 
-    private suspend fun sendEmbedsWithCooldown(
-        event: MessageCreateEvent,
-        pages: List<CombatEmbedPage>
-    ) {
-        pages.forEachIndexed { index, page ->
-            event.message.channel.createEmbed {
-                title = page.title
-                description = page.description
-                page.footer?.let { footerText ->
-                    footer {
-                        text = footerText
-                    }
-                }
-            }
+    private fun buildCombatLogEmbeds(eventLog: List<String>): List<CombatEmbedPage> {
+        val eventPages = paginateEventLog(eventLog)
+        val totalPages = eventPages.size
 
-            if (index != pages.lastIndex) {
-                delay(EMBED_SEND_COOLDOWN_MS.milliseconds)
-            }
+        return eventPages.mapIndexed { index, page ->
+            CombatEmbedPage(
+                title = "📜 Diario de Batalha",
+                description = page,
+                footer = "Pagina ${index + 1}/$totalPages"
+            )
+        }
+    }
+
+    private fun createLogButton(customButtonId: String) = ActionRowBuilder().apply {
+        interactionButton(
+            ButtonStyle.Primary,
+            customButtonId,
+        ) {
+            label = "Ver diário"
         }
     }
 
     private fun paginateEventLog(eventLog: List<String>): List<String> {
-        val lines = if (eventLog.isEmpty()) {
+        val lines = eventLog.ifEmpty {
             listOf("ℹ️ Nenhum evento foi registrado durante a luta.")
-        } else {
-            eventLog
         }
 
         val pages = mutableListOf<String>()

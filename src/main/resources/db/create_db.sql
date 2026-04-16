@@ -450,8 +450,8 @@ INSERT INTO tb_card_definitions (
 )
 VALUES (
            'VEYN',
-           'Veyn, Besteiro de Markus',
-           'Atirador de elite do cassino de Markus. Nao aposta em forca bruta: aposta em ritmo, precisao e pressao constante. Quanto mais rapido ele joga, mais a sorte trabalha a favor.',
+           'Veyn',
+           'Veyn, Besteiro de Markus. Atirador de elite do cassino de Markus. Nao aposta em forca bruta: aposta em ritmo, precisao e pressao constante. Quanto mais rapido ele joga, mais a sorte trabalha a favor.',
            'CHARACTER',
            'EPIC',
            'gambler',
@@ -504,27 +504,6 @@ VALUES (
            ]'
        );
 
-
--- THE Statstick
-INSERT INTO tb_card_definitions (
-    id, name, description, type, rarity,
-    faction, tags, base_stats, abilities
-)
-VALUES (
-           'STATSTICK',
-           'O Statstick',
-           'Dizem que todos já o usaram… ou estiveram à sua procura. Um simples graveto, escolhido não por seu poder oculto, mas pelos números que carrega.\nAumenta ATK, DEF e HP',
-           'EQUIPMENT',
-           'LEGENDARY',
-           NULL,
-           'stat',
-           '{
-                "HP": 240,
-                "ATK": 60,
-                "DEF": 25
-           }',
-           '[]'
-       );
 
 
 -- Wooden sword
@@ -579,3 +558,7 @@ VALUES (
                 }
            ]'
        );
+
+
+UPDATE tb_card_definitions SET name = 'Veyn' WHERE id = 'VEYN';
+UPDATE tb_card_definitions SET description = 'Veyn, Besteiro de Markus. Atirador de elite do cassino de Markus. Nao aposta em forca bruta: aposta em ritmo, precisao e pressao constante. Quanto mais rapido ele joga, mais a sorte trabalha a favor.' WHERE id = 'VEYN';

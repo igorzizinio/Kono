@@ -139,6 +139,8 @@ val appModule = module {
     factoryOf(::TopCommand) { bind<BaseCommand>() }
     factoryOf(::FightCommand) { bind<BaseCommand>() }
     factoryOf(::SetActiveCommand) { bind<BaseCommand>() }
+    factoryOf(::StartFightCommand) { bind<BaseCommand>() }
+    factoryOf(::CardCommand) { bind<BaseCommand>() }
 
     // ========================
     // SLASH COMMANDS

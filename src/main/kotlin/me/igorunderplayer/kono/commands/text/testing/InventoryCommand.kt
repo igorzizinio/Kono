@@ -7,8 +7,7 @@ import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandCategory
 import me.igorunderplayer.kono.data.repositories.CardInstanceRepository
 import me.igorunderplayer.kono.data.repositories.CardRepository
-import me.igorunderplayer.kono.domain.card.CardType
-import me.igorunderplayer.kono.domain.card.Rarity
+import me.igorunderplayer.kono.domain.card.toDisplayEmoji
 
 class InventoryCommand(
     private val cardInstanceRepository: CardInstanceRepository,
@@ -54,8 +53,8 @@ class InventoryCommand(
         val inventoryBody = buildString {
 
             pageItems.forEach { (def, count, list) ->
-                val rarityEmoji = resolveRarityEmoji(def.rarity)
-                val cardTypeEmoji = resolveCardTypeEmoji(def.type)
+                val rarityEmoji = def.rarity.toDisplayEmoji()
+                val cardTypeEmoji = def.type.toDisplayEmoji()
 
                 appendLine(
                     "$rarityEmoji $cardTypeEmoji **${def.name}** (${def.rarity}) x$count"
@@ -78,18 +77,5 @@ class InventoryCommand(
                 }
             }
         }
-    }
-
-    private fun resolveRarityEmoji(rarity: Rarity): String = when (rarity) {
-        Rarity.COMMON -> "▫️"
-        Rarity.RARE -> "🔹"
-        Rarity.EPIC -> "🟣"
-        Rarity.LEGENDARY -> "🟠"
-        Rarity.MYTHIC -> "🔥"
-    }
-
-    private fun resolveCardTypeEmoji(cardType: CardType): String = when (cardType) {
-        CardType.CHARACTER -> "👤"
-        CardType.EQUIPMENT -> "🎒"
     }
 }

@@ -40,4 +40,9 @@ class CardRepository(
             .filter { it.type eq type }
             .toList()
     }
+
+    suspend fun getByName(name: String): CardDefinition? = withContext(Dispatchers.IO) {
+        database.sequenceOf(CardDefinitions)
+            .find { it.name eq name }
+    }
 }

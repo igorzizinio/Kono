@@ -7,4 +7,8 @@ class CardService(
 ) {
 
     suspend fun getCardDefinition(id: String) = cardRepository.getDefinition(id)
+
+    suspend fun getCardDefinitionByName(name: String) = cardRepository.getByName(name)
+
+    suspend fun getCardDefinitions() = cardRepository.getAll()
 }
