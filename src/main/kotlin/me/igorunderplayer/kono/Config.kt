@@ -16,12 +16,6 @@ class Config {
 
         val databaseUrl: String get() = properties.getProperty("DATABASE_URL")
             ?: error("DATABASE_URL not defined")
-
-        val databaseUser: String get() = properties.getProperty("DATABASE_USER")
-            ?: error("DATABASE_USER not defined")
-
-        val databasePassword: String get() = properties.getProperty("DATABASE_PASSWORD")
-            ?: error("DATABASE_PASSWORD not defined")
     }
 
     fun load(path: String = "config.properties"): Config {
