@@ -18,7 +18,8 @@ class InventoryCommand(
 ) : BaseCommand(
     name = "inventory",
     description = "Use inventory item|perso <pagina>",
-    category = CommandCategory.Game
+    category = CommandCategory.Game,
+    aliases = listOf("inv")
 ) {
 
     private val PAGE_SIZE = 5
