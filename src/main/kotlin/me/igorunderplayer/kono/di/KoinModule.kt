@@ -41,6 +41,7 @@ import me.igorunderplayer.kono.commands.slash.testing.AvatarSlashCommand
 import me.igorunderplayer.kono.commands.slash.testing.DestinoSlashCommand
 import me.igorunderplayer.kono.commands.slash.testing.InfoSlashCommand
 import me.igorunderplayer.kono.commands.slash.testing.RegisterSlashCommand
+import me.igorunderplayer.kono.data.repositories.EquippedCardsRepository
 import me.igorunderplayer.kono.domain.team.BuildUnitHandler
 import me.igorunderplayer.kono.domain.team.EquipItemHandler
 import me.igorunderplayer.kono.domain.team.SetActiveCharacterHandler
@@ -76,6 +77,7 @@ val appModule = module {
     singleOf(::RandomMessageRepository)
     singleOf(::CardRepository)
     singleOf(::CardInstanceRepository)
+    singleOf(::EquippedCardsRepository)
 
     // ========================
     // SERVICES
