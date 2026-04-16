@@ -127,4 +127,13 @@ class UserRepository(private val databaseManager: DatabaseManager)  {
 
         updated > 0
     }
+
+    suspend fun updateActiveCharacter(userId: Int, activeCharacterInstanceId: Int): Boolean = withContext(Dispatchers.IO) {
+        val updated = database.update(Users) {
+            set(it.activeCharacterInstanceId, activeCharacterInstanceId)
+            where { it.id eq userId }
+        }
+
+        updated > 0
+    }
 }

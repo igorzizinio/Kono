@@ -5,6 +5,7 @@ package me.igorunderplayer.kono.data.repositories
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import me.igorunderplayer.kono.data.DatabaseManager
+import me.igorunderplayer.kono.data.entities.CardDefinition
 import me.igorunderplayer.kono.data.entities.CardDefinitions
 import me.igorunderplayer.kono.data.entities.CardInstance
 import me.igorunderplayer.kono.data.entities.CardInstances
@@ -103,6 +104,35 @@ class CardInstanceRepository(
                 )
             }
             .sortedBy { it.slot }
+    }
+
+    suspend fun isOwnedEquipmentInstance(userId: Int, instanceId: Int): Boolean = withContext(Dispatchers.IO) {
+        database.from(CardInstances)
+            .innerJoin(CardDefinitions, on = CardInstances.definitionId eq CardDefinitions.id)
+            .select(CardInstances.id)
+            .where {
+                (CardInstances.id eq instanceId) and
+                        (CardInstances.userId eq userId) and
+                        (CardDefinitions.type eq CardType.EQUIPMENT)
+            }
+            .totalRecordsInAllPages > 0
+    }
+
+    suspend fun getOwnedCharacterWithDefinition(userId: Int, instanceId: Int): Pair<CardInstance, CardDefinition>? = withContext(Dispatchers.IO) {
+        database.from(CardInstances)
+            .innerJoin(CardDefinitions, on = CardInstances.definitionId eq CardDefinitions.id)
+            .select()
+            .where {
+                (CardInstances.userId eq userId) and
+                        (CardInstances.id eq instanceId) and
+                        (CardDefinitions.type eq CardType.CHARACTER)
+            }
+            .map { row ->
+                val instance = CardInstances.createEntity(row)
+                val definition = CardDefinitions.createEntity(row)
+                instance to definition
+            }
+            .firstOrNull()
     }
 
 }
