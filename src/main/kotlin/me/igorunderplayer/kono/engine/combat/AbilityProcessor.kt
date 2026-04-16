@@ -235,10 +235,13 @@ object AbilityProcessor {
         ability: Ability,
         coins: Int
     ) {
+        val hasDefBuffParams = ability.params?.defBuffMin != null || ability.params?.defBuffMax != null
+
         val outcome = pickWeighted(
             state = state,
             options = listOf(
                 BasicOutcome.ATK_UP to 24.0,
+                BasicOutcome.DEF_UP to if (hasDefBuffParams) 18.0 else 0.0,
                 BasicOutcome.SPEED_UP to 23.0,
                 BasicOutcome.DAMAGE_ENEMY to 22.0,
                 BasicOutcome.HEAL_SELF to 16.0,
@@ -286,6 +289,12 @@ object AbilityProcessor {
                 val stacks = randomIntRange(state, ability, "shieldMin", "shieldMax", 1, 1)
                 grantShieldStacks(owner, stacks, state)
                 state.combatLog += "🛡️ ${unitLabel(owner, state)} ganhou $stacks camada(s) de escudo."
+            }
+
+            BasicOutcome.DEF_UP -> {
+                val amount = randomRange(state, ability, "defBuffMin", "defBuffMax", 4.0, 9.0)
+                buffStat(owner, Stat.DEF, amount)
+                state.combatLog += "🧱 ${unitLabel(owner, state)} reforcou a guarda: +${formatValue(amount)} DEF."
             }
 
             BasicOutcome.NOTHING -> {
@@ -353,6 +362,7 @@ object AbilityProcessor {
         HEAL_SELF,
         SELF_DAMAGE,
         SHIELD_SELF,
+        DEF_UP,
         NOTHING
     }
 
@@ -484,6 +494,8 @@ object AbilityProcessor {
             "enemyHealMax" -> ability.params?.enemyHealMax
             "atkBuffMin" -> ability.params?.atkBuffMin
             "atkBuffMax" -> ability.params?.atkBuffMax
+            "defBuffMin" -> ability.params?.defBuffMin
+            "defBuffMax" -> ability.params?.defBuffMax
             "speedBuffMin" -> ability.params?.speedBuffMin
             "speedBuffMax" -> ability.params?.speedBuffMax
             else -> null

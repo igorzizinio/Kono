@@ -409,8 +409,8 @@ VALUES (
            '{
                 "HP": 720,
                 "ATK": 58,
-                "DEF": 14,
-                "CRIT_CHANCE": 0.10,
+                "DEF": 16,
+                "CRIT_CHANCE": 0.15,
                 "CRIT_DAMAGE": 1.5,
                 "SPEED": 110
            }',
@@ -423,17 +423,19 @@ VALUES (
                         "profile": "MARKUS_GAMBLER",
                         "strongEveryTurns": 5,
                         "coinBiasPerCoin": 0.45,
-                        "strongMultiplier": 1.7,
+                        "strongMultiplier": 2.5,
                         "extraRollSpeedFactor": 0.002,
-                        "enemyDamageMin": 24,
-                        "enemyDamageMax": 44,
-                        "selfHealMin": 18,
-                        "selfHealMax": 36,
-                        "selfDamageMin": 16,
-                        "selfDamageMax": 34,
-                        "atkBuffMin": 3,
-                        "atkBuffMax": 7,
-                        "speedBuffMin": 3,
+                        "enemyDamageMin": 28,
+                        "enemyDamageMax": 52,
+                        "selfHealMin": 16,
+                        "selfHealMax": 38,
+                        "selfDamageMin": 14,
+                        "selfDamageMax": 32,
+                        "atkBuffMin": 4,
+                        "atkBuffMax": 8,
+                        "defBuffMin": 2,
+                        "defBuffMax": 6,
+                        "speedBuffMin": 4,
                         "speedBuffMax": 8,
                         "shieldMin": 1,
                         "shieldMax": 1
@@ -570,3 +572,246 @@ ADD COLUMN stats_per_level TEXT NOT NULL DEFAULT '{
                                                  "ATK": 2.5,
                                                  "DEF": 2
                                                  }';
+
+
+
+UPDATE tb_card_definitions SET abilities = '[
+                {
+                    "type": "DAMAGE",
+                    "value": 8,
+                    "trigger": "ON_HIT",
+                    "target": "ENEMY",
+                    "params": {
+                        "trueDamage": false,
+                        "canCrit": false,
+                        "canBeDodged": true,
+                        "everyHits": 2
+                    }
+                },
+                {
+                    "type": "RNG_EFFECT",
+                    "trigger": "ON_TURN_START",
+                    "target": "SELF",
+                    "params": {
+                        "profile": "MARKUS_GAMBLER",
+                        "strongEveryTurns": 6,
+                        "coinBiasPerCoin": 0.25,
+                        "strongMultiplier": 1.5,
+                        "extraRollSpeedFactor": 0.0028,
+                        "enemyDamageMin": 15,
+                        "enemyDamageMax": 30,
+                        "selfHealMin": 5,
+                        "selfHealMax": 15,
+                        "selfDamageMin": 12,
+                        "selfDamageMax": 24,
+                        "atkBuffMin": 4,
+                        "atkBuffMax": 8,
+                        "speedBuffMin": 2,
+                        "speedBuffMax": 12,
+                        "shieldMin": 0,
+                        "shieldMax": 0
+                    }
+                }
+           ]',
+            base_stats = '{
+                "HP": 490,
+                "ATK": 42,
+                "DEF": 16,
+                "CRIT_CHANCE": 0.15,
+                "CRIT_DAMAGE": 1.25,
+                "SPEED": 120
+           }',
+           stats_per_level = '{
+                "HP": 2.5,
+                "ATK": 2,
+                "DEF": 1.4,
+                "CRIT_CHANCE": 0.01,
+                "SPEED": 1.5
+           }'
+WHERE id = 'VEYN';
+
+
+UPDATE tb_card_definitions
+    SET base_stats = '{
+        "SPEED": 15
+    }',
+    abilities = '[
+    {
+        "type": "DAMAGE",
+        "value": 30,
+        "trigger": "ON_HIT",
+        "target": "ENEMY",
+        "params": {
+            "trueDamage": true,
+            "canCrit": false,
+            "canBeDodged": true,
+            "everyHits": 3
+        }
+    }
+    ]',
+    stats_per_level = '{
+        "SPEED": 2
+    }'
+
+
+WHERE id = 'DEMON_HUNTER_CROSSBOW';
+
+
+
+
+-- 🛡️ Jorge, Escudeiro de Markus (CHARACTER)
+INSERT INTO tb_card_definitions (
+    id, name, description, type, rarity,
+    faction, tags, base_stats, abilities
+)
+VALUES (
+           'JORGE',
+           'Jorge',
+           '',
+           'CHARACTER',
+           'EPIC',
+           'gambler',
+           'rng,gambler,tank,defense,risk',
+           '{
+                "HP": 680,
+                "ATK": 28,
+                "DEF": 32,
+                "CRIT_CHANCE": 0.10,
+                "CRIT_DAMAGE": 1.5,
+                "SPEED": 70
+           }',
+           '[
+                {
+                    "type": "HEAL",
+                    "value": 5,
+                    "trigger": "ON_DAMAGE_TAKEN",
+                    "target": "ALL_ALLIES",
+                    "params": {
+                        "everyHits": 3
+                    }
+                },
+                {
+                    "type": "RNG_EFFECT",
+                    "trigger": "ON_TURN_START",
+                    "target": "SELF",
+                    "params": {
+                        "profile": "MARKUS_GAMBLER",
+                        "strongEveryTurns": 4,
+                        "coinBiasPerCoin": 0.25,
+                        "strongMultiplier": 1.4,
+                        "extraRollSpeedFactor": 0.0028,
+                        "enemyDamageMin": 12,
+                        "enemyDamageMax": 26,
+                        "selfHealMin": 12,
+                        "selfHealMax": 32,
+                        "selfDamageMin": 6,
+                        "selfDamageMax": 18,
+                        "defBuffMin": 2,
+                        "defBuffMax": 6,
+                        "speedBuffMin": 2,
+                        "speedBuffMax": 4,
+                        "shieldMin": 1,
+                        "shieldMax": 2
+                    }
+                }
+           ]'
+       );
+
+
+
+UPDATE tb_card_definitions
+    SET base_stats = '{
+                "HP": 720,
+                "ATK": 58,
+                "DEF": 16,
+                "CRIT_CHANCE": 0.15,
+                "CRIT_DAMAGE": 1.5,
+                "SPEED": 110
+           }',
+        abilities = '[
+             {
+                 "type": "RNG_EFFECT",
+                 "trigger": "ON_TURN_START",
+                 "target": "SELF",
+                 "params": {
+                     "profile": "MARKUS_GAMBLER",
+                     "strongEveryTurns": 5,
+                     "coinBiasPerCoin": 0.45,
+                     "strongMultiplier": 2.5,
+                     "extraRollSpeedFactor": 0.002,
+                     "enemyDamageMin": 28,
+                     "enemyDamageMax": 52,
+                     "selfHealMin": 16,
+                     "selfHealMax": 38,
+                     "selfDamageMin": 14,
+                     "selfDamageMax": 32,
+                     "atkBuffMin": 4,
+                     "atkBuffMax": 8,
+                     "defBuffMin": 2,
+                     "defBuffMax": 6,
+                     "speedBuffMin": 4,
+                     "speedBuffMax": 8,
+                     "shieldMin": 1,
+                     "shieldMax": 1
+                 }
+             }
+        ]'
+WHERE id = 'MARKUS';
+
+
+INSERT INTO tb_card_definitions (
+    id, name, description, type, rarity,
+    faction, tags, base_stats, abilities
+)
+VALUES (
+           'ALL_IN_EMBLEM',
+           'Arma do All-In',
+           'Arma assinatura de Markus. Cada turno e uma aposta: pressao, ritmo e risco na mesma medida.',
+           'EQUIPMENT',
+           'LEGENDARY',
+           'gambler',
+           'gambler,markus,signature,weapon,risk,chaos',
+           '{
+               "ATK": 15,
+               "SPEED": 6,
+               "CRIT_CHANCE": 0.03
+           }',
+           '[
+               {
+                   "type": "DAMAGE",
+                   "value": 16,
+                   "trigger": "ON_HIT",
+                   "target": "ENEMY",
+                   "params": {
+                       "trueDamage": false,
+                       "canCrit": false,
+                       "canBeDodged": true,
+                       "everyHits": 2
+                   }
+               },
+               {
+                   "type": "RNG_EFFECT",
+                   "trigger": "ON_TURN_START",
+                   "target": "SELF",
+                   "params": {
+                       "profile": "MARKUS_GAMBLER",
+                       "strongEveryTurns": 6,
+                       "coinBiasPerCoin": 0.20,
+                       "strongMultiplier": 1.35,
+                       "extraRollSpeedFactor": 0.0022,
+                       "enemyDamageMin": 10,
+                       "enemyDamageMax": 20,
+                       "selfHealMin": 4,
+                       "selfHealMax": 12,
+                       "selfDamageMin": 6,
+                       "selfDamageMax": 14,
+                       "atkBuffMin": 2,
+                       "atkBuffMax": 5,
+                       "speedBuffMin": 2,
+                       "speedBuffMax": 6,
+                       "shieldMin": 0,
+                       "shieldMax": 0
+                   }
+               }
+           ]'
+       );

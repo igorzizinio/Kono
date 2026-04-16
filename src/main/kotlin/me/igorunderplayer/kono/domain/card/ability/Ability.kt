@@ -34,6 +34,8 @@ data class AbilityParams(
     // RNG/gambler tuning
     val atkBuffMin: Double? = null,
     val atkBuffMax: Double? = null,
+    val defBuffMin: Double? = null,
+    val defBuffMax: Double? = null,
     val speedBuffMin: Double? = null,
     val speedBuffMax: Double? = null,
     val shieldMin: Int? = null,
