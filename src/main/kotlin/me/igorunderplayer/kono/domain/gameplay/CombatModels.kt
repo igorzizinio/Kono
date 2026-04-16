@@ -12,7 +12,9 @@ data class Unit(
     val stats: MutableMap<Stat, Double>,
 
     val abilities: List<Ability>,
-    val tags: Set<String>
+    val tags: Set<String>,
+
+    val equipments: List<CardDefinition> = emptyList(),
 )
 
 data class Team(

@@ -13,15 +13,23 @@ class BuildUnitHandler(
     private val equippedCardsRepository: EquippedCardsRepository
 ) {
 
-    suspend fun executeByDiscordId(userId: Long): Unit {
+    sealed class Result {
+        data class Success(val unit: Unit): Result()
+        object UserNotFound: Result()
+        object NoActiveCard: Result()
+        data class CharacterNotFound(val activeCharacterId: Int): Result()
+
+    }
+
+    suspend fun executeByDiscordId(userId: Long): Result {
         val userRow = userRepository.getUserByDiscordId(userId)
-            ?: error("Usuário não encontrado")
+            ?: return Result.UserNotFound
 
         val activeCharacterId = userRow.activeCharacterInstanceId
-            ?: error("Nenhum personagem ativo selecionado. Use: setactive <instance_id>")
+            ?: return Result.NoActiveCard
 
         val character = cardInstanceRepository.getOwnedCharacterWithDefinition(userRow.id, activeCharacterId)
-            ?: error("Personagem ativo (#$activeCharacterId) não encontrado no banco de dados")
+            ?: return Result.CharacterNotFound(activeCharacterId)
 
         val (charInst, charDef) = character
 
@@ -58,13 +66,16 @@ class BuildUnitHandler(
         tags += charDef.tags
         equips.forEach { tags += it.tags }
 
-        return Unit(
-            id = charInst.id.toString(),
-            card = charDef,
-            hp = stats[Stat.HP] ?: 100.0,
-            stats = stats,
-            abilities = abilities,
-            tags = tags
+        return Result.Success(
+            Unit(
+                id = charInst.id.toString(),
+                card = charDef,
+                hp = stats[Stat.HP] ?: 100.0,
+                stats = stats,
+                abilities = abilities,
+                equipments = equips,
+                tags = tags
+            )
         )
     }
 }

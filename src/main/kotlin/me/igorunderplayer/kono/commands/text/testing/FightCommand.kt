@@ -48,23 +48,17 @@ class FightCommand(
             return
         }
 
-        // 🧠 build player
-        val player = try {
-            buildUnitHandler.executeByDiscordId(discordId)
-        } catch (e: Exception) {
-            println("errorr: ${e.message}")
-            println("Full stack: ${e.stackTraceToString()}")
-            event.message.channel.createMessage("❌ Você precisa selecionar um personagem ativo. Use: `setactive <instance_id>` (veja ids com `inventory perso`)\n\n**Erro interno:** ${e.message}")
-            return
-        }
+        val player = resolveUnitOrReply(
+            event = event,
+            discordId = discordId,
+            isEnemy = false
+        ) ?: return
 
-        // build enemy
-        val enemy = try {
-            buildUnitHandler.executeByDiscordId(enemyUser.id.value.toLong())
-        } catch (_: Exception) {
-            event.message.channel.createMessage("❌ Seu inimigo ainda não selecionou um personagem..")
-            return
-        }
+        val enemy = resolveUnitOrReply(
+            event = event,
+            discordId = enemyUser.id.value.toLong(),
+            isEnemy = true
+        ) ?: return
 
         val playerOwnerName = event.message.author?.username ?: "Jogador"
         val enemyOwnerName = enemyUser.username
@@ -87,13 +81,11 @@ class FightCommand(
             return
         }
 
-        // 🧠 build player
-        val player = try {
-            buildUnitHandler.executeByDiscordId(discordId)
-        } catch (_: Exception) {
-            event.message.channel.createMessage("❌ Você precisa selecionar um personagem ativo. Use: `setactive <instance_id>` (veja ids com `inventory perso`)")
-            return
-        }
+        val player = resolveUnitOrReply(
+            event = event,
+            discordId = discordId,
+            isEnemy = false
+        ) ?: return
 
 
 
@@ -130,6 +122,46 @@ class FightCommand(
             abilities = def.abilities.toList(),
             tags = def.tags
         )
+    }
+
+    private suspend fun resolveUnitOrReply(
+        event: MessageCreateEvent,
+        discordId: Long,
+        isEnemy: Boolean
+    ): Unit? {
+        return when (val result = buildUnitHandler.executeByDiscordId(discordId)) {
+            is BuildUnitHandler.Result.Success -> result.unit
+            BuildUnitHandler.Result.UserNotFound -> {
+                event.message.channel.createMessage(
+                    if (isEnemy) {
+                        "❌ Seu inimigo ainda não possui registro."
+                    } else {
+                        "❌ Você ainda não possui registro."
+                    }
+                )
+                null
+            }
+            BuildUnitHandler.Result.NoActiveCard -> {
+                event.message.channel.createMessage(
+                    if (isEnemy) {
+                        "❌ Seu inimigo ainda não selecionou um personagem ativo."
+                    } else {
+                        "❌ Você precisa selecionar um personagem ativo. Use: `setactive <instance_id>` (veja ids com `inventory char`)"
+                    }
+                )
+                null
+            }
+            is BuildUnitHandler.Result.CharacterNotFound -> {
+                event.message.channel.createMessage(
+                    if (isEnemy) {
+                        "❌ Não foi possível carregar o personagem ativo do seu inimigo (id ${result.activeCharacterId})."
+                    } else {
+                        "❌ Não foi possível carregar seu personagem ativo (id ${result.activeCharacterId}). Use `setactive <instance_id>` novamente."
+                    }
+                )
+                null
+            }
+        }
     }
 
     private suspend fun runCombatAndSendEmbeds(

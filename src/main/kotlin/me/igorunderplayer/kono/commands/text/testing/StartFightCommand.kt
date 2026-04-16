@@ -11,6 +11,7 @@ import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.engine.combat.CombatEngine
 import me.igorunderplayer.kono.domain.gameplay.CombatState
 import me.igorunderplayer.kono.domain.gameplay.Team
+import me.igorunderplayer.kono.domain.gameplay.Unit as CombatUnit
 import me.igorunderplayer.kono.domain.team.BuildUnitHandler
 import me.igorunderplayer.kono.utils.getMentionedUser
 import me.igorunderplayer.kono.utils.interaction.awaitButtonInteraction
@@ -27,19 +28,17 @@ class StartFightCommand(
         val enemyUser = getMentionedUser(event.message, args)
         if (enemyUser == null || enemyUser.id == event.message.author?.id) return
 
-        val playerUnit = try {
-            buildUnitHandler.executeByDiscordId(playerUser.id.value.toLong())
-        } catch (_: Exception) {
-            event.message.reply { content = "❌ Você precisa selecionar um personagem." }
-            return
-        }
+        val playerUnit = resolveUnitOrReply(
+            event = event,
+            discordId = playerUser.id.value.toLong(),
+            isEnemy = false
+        ) ?: return
 
-        val enemyUnit = try {
-            buildUnitHandler.executeByDiscordId(enemyUser.id.value.toLong())
-        } catch (_: Exception) {
-            event.message.reply { content = "❌ Seu inimigo ainda não selecionou um personagem." }
-            return
-        }
+        val enemyUnit = resolveUnitOrReply(
+            event = event,
+            discordId = enemyUser.id.value.toLong(),
+            isEnemy = true
+        ) ?: return
 
         val combatState = CombatState(
             teams = listOf(
@@ -121,6 +120,46 @@ class StartFightCommand(
             customButtonId,
         ) {
             label = "Próxima rodada"
+        }
+    }
+
+    private suspend fun resolveUnitOrReply(
+        event: MessageCreateEvent,
+        discordId: Long,
+        isEnemy: Boolean
+    ): CombatUnit? {
+        return when (val result = buildUnitHandler.executeByDiscordId(discordId)) {
+            is BuildUnitHandler.Result.Success -> result.unit
+            BuildUnitHandler.Result.UserNotFound -> {
+                event.message.reply {
+                    content = if (isEnemy) {
+                        "❌ Seu inimigo ainda não possui registro."
+                    } else {
+                        "❌ Você ainda não possui registro."
+                    }
+                }
+                null
+            }
+            BuildUnitHandler.Result.NoActiveCard -> {
+                event.message.reply {
+                    content = if (isEnemy) {
+                        "❌ Seu inimigo ainda não selecionou um personagem ativo."
+                    } else {
+                        "❌ Você precisa selecionar um personagem ativo."
+                    }
+                }
+                null
+            }
+            is BuildUnitHandler.Result.CharacterNotFound -> {
+                event.message.reply {
+                    content = if (isEnemy) {
+                        "❌ Não foi possível carregar o personagem ativo do seu inimigo (id ${result.activeCharacterId})."
+                    } else {
+                        "❌ Não foi possível carregar seu personagem ativo (id ${result.activeCharacterId})."
+                    }
+                }
+                null
+            }
         }
     }
 
