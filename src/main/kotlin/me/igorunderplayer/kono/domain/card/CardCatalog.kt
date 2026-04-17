@@ -372,26 +372,23 @@ object CardCatalog {
             rarity = Rarity.KONO,
             faction = "system",
             baseStats = mapOf(
-                Stat.HP to 1800.0,
-                Stat.ATK to 140.0,
-                Stat.DEF to 110.0,
-                Stat.CRIT_CHANCE to 0.30,
-                Stat.CRIT_DAMAGE to 2.8,
-                Stat.SPEED to 150.0
+                Stat.HP to 2450.0,
+                Stat.ATK to 270.0,
+                Stat.DEF to 180.0,
+                Stat.CRIT_CHANCE to 0.5,
+                Stat.CRIT_DAMAGE to 3.0,
+                Stat.SPEED to 180.0
             ),
             statsPerLevel = mapOf(
-                Stat.HP to 40.0,
-                Stat.ATK to 14.0,
-                Stat.DEF to 12.0,
-                Stat.SPEED to 6.0
+                Stat.HP to 80.0,
+                Stat.ATK to 28.0,
+                Stat.DEF to 24.0,
+                Stat.SPEED to 12.0
             ),
             tags = setOf(
                 "kono",
-                "sistema",
-                "unico",
-                "boss",
-                "realidade",
-                "glitch"
+                "system",
+                "boss"
             ),
             abilities = listOf(
                 Ability(
@@ -400,14 +397,13 @@ object CardCatalog {
                     trigger = AbilityTrigger.OnDamageTaken,
                     effects = listOf(
                         Effect.Heal(
-                            value = 70.0,
+                            value = 60.0,
                             target = AbilityTarget.SELF
                         ),
                         Effect.BuffStat(stat = Stat.ATK, value = 10.0),
                         Effect.BuffStat(stat = Stat.DEF, value = 8.0)
                     )
                 ),
-
                 Ability(
                     name = "Janela de Reversão",
                     type = AbilityType.PASSIVE,

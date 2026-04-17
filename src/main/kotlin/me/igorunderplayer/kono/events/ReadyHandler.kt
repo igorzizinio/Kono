@@ -22,7 +22,7 @@ class ReadyHandler(
 
     companion object {
         private const val KONO_DEFINITION_ID = "KONO"
-        private const val KONO_SIGNATURE_ITEM_DEFINITION_ID = "ALL_IN_EMBLEM"
+        private const val KONO_SIGNATURE_ITEM_DEFINITION_ID = "UNDEFINED"
         private const val SIGNATURE_ITEM_SLOT = 0
     }
 
