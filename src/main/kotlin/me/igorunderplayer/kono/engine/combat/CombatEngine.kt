@@ -32,7 +32,7 @@ class CombatEngine(
 
     private fun processTurn() {
 
-        state.combatLog += "🔄 Turno ${state.turn}"
+        state.combatLog += "\n🔄 ===== TURNO ${state.turn} ====="
 
         val units = state.teams
             .flatMap { it.units }
@@ -104,7 +104,7 @@ class CombatEngine(
                     val onceKey = onceAbilityKey(unit, ability)
                     if (ability.once && !state.onceTriggeredAbilityKeys.add(onceKey)) continue
 
-                    state.combatLog += "✨ ${unitLabel(unit, state)} ativou ${ability.name}."
+                    state.combatLog += "✨ ${unitLabel(unit, state)} ativou [${ability.name}] (${ability.trigger})"
 
                     ability.effects.forEach { effect ->
                         applyEffect(effect, unit, event)
@@ -159,8 +159,12 @@ class CombatEngine(
             is Effect.BuffStat -> {
                 val targets = resolveTargets(owner, effect.target, event)
                 for (target in targets) {
-                    target.stats[effect.stat] =
-                        (target.stats[effect.stat] ?: 0.0) + effect.value
+                    val before = target.stats[effect.stat] ?: 0.0
+                    val after = before + effect.value
+
+                    target.stats[effect.stat] = after
+
+                    state.combatLog += "📈 ${unitLabel(target, state)} ganhou +${effect.value} ${effect.stat} (${"%.1f".format(after)})"
                 }
             }
 
@@ -174,7 +178,7 @@ class CombatEngine(
                 if (granted <= 0) return
 
                 team.addCoins(granted)
-                state.combatLog += "💰 ${owner.card.name} gerou $granted moeda(s) para o time ${team.id}. Total: ${team.coins()}"
+                state.combatLog += "💰 ${unitLabel(owner, state)} gerou $granted moeda(s) (Time ${team.id}: ${team.coins()})"
             }
 
             is Effect.Random -> {
@@ -190,6 +194,8 @@ class CombatEngine(
             is CombatEvent.BattleStart -> {}
 
             is CombatEvent.Attack -> {
+                state.combatLog += "⚔️ ${unitLabel(event.attacker, state)} atacando ${unitLabel(event.target, state)}"
+
                 val damage = calculateDamage(event.attacker)
 
                 enqueue(
@@ -207,6 +213,8 @@ class CombatEngine(
 
                 event.target.hp -= finalDamage
 
+                state.combatLog += "💥 ${unitLabel(event.source, state)} causou ${"%.1f".format(finalDamage)} de dano em ${unitLabel(event.target, state)} (${"%.1f".format(event.target.hp.coerceAtLeast(0.0))} HP restante)"
+
                 enqueue(
                     CombatEvent.AfterDamage(
                         source = event.source,
@@ -218,6 +226,10 @@ class CombatEngine(
                 if (event.target.hp <= 0.0) {
                     enqueue(CombatEvent.Death(event.target))
                 }
+            }
+
+            is CombatEvent.Death -> {
+                state.combatLog += "☠️ ${unitLabel(event.unit, state)} foi derrotado!"
             }
 
             else -> {}
@@ -320,7 +332,13 @@ class CombatEngine(
 
     private fun heal(unit: Unit, amount: Double) {
         val maxHp = unit.stats[Stat.HP] ?: return
+        val before = unit.hp
         unit.hp = (unit.hp + amount).coerceAtMost(maxHp)
+        val healed = unit.hp - before
+
+        if (healed > 0) {
+            state.combatLog += "💚 ${unitLabel(unit, state)} curou ${"%.1f".format(healed)} HP (${"%.1f".format(unit.hp)} HP)"
+        }
     }
 
     private fun findTeam(unit: Unit) =
