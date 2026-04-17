@@ -6,7 +6,7 @@ import dev.kord.rest.builder.message.embed
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandCategory
 import me.igorunderplayer.kono.domain.card.CardType
-import me.igorunderplayer.kono.domain.card.Rarity
+import me.igorunderplayer.kono.domain.card.toDisplayEmoji
 import me.igorunderplayer.kono.services.GachaResult
 import me.igorunderplayer.kono.services.GachaService
 
@@ -28,7 +28,7 @@ class PullCommand(
                 event.message.reply {
                     embed {
                         title = "🎰 Você puxou:"
-                        description = "${resolveRarityEmoji(result.rarity)} **${result.cardName}** (${resolveCardType(result.type)})"
+                        description = "${result.rarity.toDisplayEmoji()} **${result.cardName}** (${resolveCardType(result.type)})"
                         footer {
                             text = "💎 Essence restante: ${result.remainingEssence}"
                         }
@@ -38,7 +38,7 @@ class PullCommand(
 
             is GachaResult.MultipePullSuccess -> {
                 val pulledCards = result.pulledCards.joinToString("\n") {
-                    "${resolveRarityEmoji(it.rarity)} **${it.cardName}** (${resolveCardType(it.type)})"
+                    "${it.rarity.toDisplayEmoji()} **${it.cardName}** (${resolveCardType(it.type)})"
                 }
                 event.message.reply {
                     embed {
@@ -67,14 +67,6 @@ class PullCommand(
                 event.message.reply { content = "Erro ao fazer pull." }
             }
         }
-    }
-
-    private fun resolveRarityEmoji(rarity: Rarity): String = when (rarity) {
-        Rarity.COMMON -> "▫️"
-        Rarity.RARE -> "🔹"
-        Rarity.EPIC -> "🟣"
-        Rarity.LEGENDARY -> "🟠"
-        Rarity.MYTHIC -> "🔥"
     }
 
     private fun resolveCardType(cardType: CardType): String = when (cardType) {

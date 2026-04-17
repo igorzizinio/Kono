@@ -7,7 +7,8 @@ enum class Rarity {
     RARE,
     EPIC,
     LEGENDARY,
-    MYTHIC
+    MYTHIC,
+    KONO
 }
 
 
@@ -18,6 +19,7 @@ fun Rarity.toDisplayName(): String {
         Rarity.EPIC -> "Épica"
         Rarity.LEGENDARY -> "Lendária"
         Rarity.MYTHIC -> "Mítica"
+        Rarity.KONO -> "Kono"
     }
 }
 
@@ -28,6 +30,7 @@ fun Rarity.toDisplayEmoji(): String {
         Rarity.EPIC -> "🟣"
         Rarity.LEGENDARY -> "🟠"
         Rarity.MYTHIC -> "🔥"
+        Rarity.KONO -> "\uD83C\uDF0C"
     }
 }
 
@@ -38,5 +41,6 @@ fun Rarity.colorDefinition(): Color {
         Rarity.EPIC -> Color(100, 0, 205)
         Rarity.LEGENDARY -> Color(255, 140, 0)
         Rarity.MYTHIC -> Color(255, 0, 75)
+        Rarity.KONO -> Color(255, 0, 60)
     }
 }
