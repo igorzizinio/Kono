@@ -7,6 +7,7 @@ import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.rest.builder.component.ActionRowBuilder
 import dev.kord.rest.builder.message.embed
 import me.igorunderplayer.kono.commands.BaseCommand
+import me.igorunderplayer.kono.commands.CommandCategory
 import me.igorunderplayer.kono.domain.card.prettyName
 import me.igorunderplayer.kono.domain.card.prettyValue
 import me.igorunderplayer.kono.domain.card.toDisplayEmoji
@@ -22,7 +23,8 @@ class CharacterCommand(
 ): BaseCommand(
     name = "character",
     description = "comandos relacionados ao personagem ativo em campo",
-    aliases = listOf("char", "personagem", "perso")
+    aliases = listOf("char", "personagem", "perso"),
+    category = CommandCategory.Game
 ) {
     override suspend fun run(event: MessageCreateEvent, args: Array<String>) {
         val userId = event.message.author?.id?.value ?: return

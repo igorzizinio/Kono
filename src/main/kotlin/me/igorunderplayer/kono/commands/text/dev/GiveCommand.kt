@@ -7,7 +7,6 @@ import me.igorunderplayer.kono.commands.CommandCategory
 import me.igorunderplayer.kono.data.repositories.CardInstanceRepository
 import me.igorunderplayer.kono.data.repositories.CardRepository
 import me.igorunderplayer.kono.data.repositories.UserRepository
-import me.igorunderplayer.kono.domain.card.CardType
 import me.igorunderplayer.kono.services.UserService
 import me.igorunderplayer.kono.utils.getMentionedUser
 
@@ -47,10 +46,10 @@ class GiveCommand(
         when (args[1].lowercase()) {
             "kono", "konos" -> giveKonos(event, targetUser.id, targetDiscordId, targetUser.konos, args[2])
             "essence", "essences" -> giveEssence(event, targetUser.id, targetDiscordId, targetUser.essence, args[2])
-            "item", "items", "equipment", "equip" -> giveItem(event, targetUser.id, targetDiscordId, args)
+            "card", "cards" -> giveCard(event, targetUser.id, targetDiscordId, args)
             else -> {
                 event.message.reply {
-                    content = "invalid type. use konos, essence or item."
+                    content = "invalid type. use konos, essence or card."
                 }
             }
         }
@@ -108,7 +107,7 @@ class GiveCommand(
         }
     }
 
-    private suspend fun giveItem(
+    private suspend fun giveCard(
         event: MessageCreateEvent,
         targetUserId: Int,
         targetDiscordId: Long,
@@ -127,11 +126,6 @@ class GiveCommand(
 
         if (definition == null) {
             event.message.reply { content = "item '$definitionId' not found." }
-            return
-        }
-
-        if (definition.type != CardType.EQUIPMENT) {
-            event.message.reply { content = "'$definitionId' is not an item/equipment card." }
             return
         }
 

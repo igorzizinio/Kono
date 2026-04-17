@@ -8,6 +8,7 @@ import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.rest.builder.component.ActionRowBuilder
 import dev.kord.rest.builder.message.embed
 import me.igorunderplayer.kono.commands.BaseCommand
+import me.igorunderplayer.kono.commands.CommandCategory
 import me.igorunderplayer.kono.engine.combat.CombatEngine
 import me.igorunderplayer.kono.domain.gameplay.CombatState
 import me.igorunderplayer.kono.domain.gameplay.Team
@@ -20,7 +21,8 @@ class StartFightCommand(
     private val buildUnitHandler: BuildUnitHandler,
 ): BaseCommand(
     "startfight",
-    description = "inicia uma batalha contra um oponente"
+    description = "inicia uma batalha contra um oponente",
+    category = CommandCategory.Game
 ) {
     override suspend fun run(event: MessageCreateEvent, args: Array<String>) {
         val playerUser = event.message.author ?: return

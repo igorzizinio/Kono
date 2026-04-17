@@ -366,7 +366,7 @@ object CardCatalog {
         ),
         CardDefinition(
             id = "KONO",
-            name = "KONO",
+            name = "Kono",
             description = "Uma entidade única do sistema. Quando ela entra em combate, as regras do jogo começam a se adaptar sozinhas a sua presença.",
             type = CardType.CHARACTER,
             rarity = Rarity.KONO,
