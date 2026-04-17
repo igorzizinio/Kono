@@ -45,7 +45,7 @@ object CardCatalog {
         ),
         CardDefinition(
             id = "IRON_ARMOR",
-            name = "Iron Armor",
+            name = "Armadura de ferro simples",
             description = "Armadura simples que reduz dano recebido.",
             type = CardType.EQUIPMENT,
             rarity = Rarity.COMMON,
@@ -60,7 +60,7 @@ object CardCatalog {
         ),
         CardDefinition(
             id = "HEAVY_IRON_ARMOR",
-            name = "Heavy Iron Armor",
+            name = "Armadura de ferro pesada",
             description = "Armadura pesada que reduz dano recebido.",
             type = CardType.EQUIPMENT,
             rarity = Rarity.RARE,
@@ -75,7 +75,7 @@ object CardCatalog {
         ),
         CardDefinition(
             id = "GAMBLER_CHARM",
-            name = "Gambler Charm",
+            name = "Talismã do apostador",
             description = "Um artefato caotico.",
             type = CardType.EQUIPMENT,
             rarity = Rarity.EPIC,
@@ -552,6 +552,34 @@ object CardCatalog {
                     trigger = AbilityTrigger.OnAttackAgainstTag("malignant"),
                     effects = listOf(
                         Effect.DamageIncreasePercent(value = 0.2)
+                    )
+                )
+            )
+        ),
+        CardDefinition(
+            id = "POLISHED_KATANA",
+            name = "Katana Polida",
+            description = "Uma Katana nova, polída, parece extremamente ágil e confiavel",
+            type = CardType.EQUIPMENT,
+            rarity = Rarity.EPIC,
+            baseStats = mapOf(
+                Stat.ATK to 15.0,
+                Stat.CRIT_CHANCE to 0.1,
+                Stat.SPEED to 8.0
+            ),
+            tags = setOf("steel", "speed", "crit", "polished"),
+            statsPerLevel = mapOf(
+                Stat.ATK to 2.0,
+                Stat.SPEED to 0.4,
+                Stat.CRIT_CHANCE to 0.01
+            ),
+            abilities = listOf(
+                Ability(
+                    name = "Corte rapido",
+                    type = AbilityType.PASSIVE,
+                    trigger = AbilityTrigger.OnAttack,
+                    effects = listOf(
+                        Effect.Damage(8.0)
                     )
                 )
             )
