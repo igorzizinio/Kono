@@ -182,7 +182,7 @@ object CardCatalog {
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnAttack,
                     effects = listOf(
-                        Effect.Damage(value = 10.0, target = AbilityTarget.ENEMY)
+                        Effect.Damage(value = 8.0, target = AbilityTarget.ENEMY)
                     )
                 )
             )
@@ -249,9 +249,9 @@ object CardCatalog {
                 Ability(
                     name = "Rajada Ritmica",
                     type = AbilityType.PASSIVE,
-                    trigger = AbilityTrigger.OnAttack,
+                    trigger = AbilityTrigger.OnAttackEvery(2),
                     effects = listOf(
-                        Effect.Damage(value = 8.0, target = AbilityTarget.ENEMY)
+                        Effect.Damage(value = 14.0, target = AbilityTarget.ENEMY)
                     )
                 ),
                 Ability(
@@ -292,7 +292,7 @@ object CardCatalog {
                 Ability(
                     name = "Flecha de Prata",
                     type = AbilityType.PASSIVE,
-                    trigger = AbilityTrigger.OnAttack,
+                    trigger = AbilityTrigger.OnAttackEvery(3),
                     effects = listOf(
                         Effect.Damage(value = 30.0, target = AbilityTarget.ENEMY)
                     )
@@ -403,7 +403,7 @@ object CardCatalog {
                     trigger = AbilityTrigger.OnDamageTaken,
                     effects = listOf(
                         Effect.Heal(
-                            value = 60.0,
+                            value = 40.0,
                             target = AbilityTarget.SELF
                         ),
                         Effect.BuffStat(stat = Stat.ATK, value = 10.0),
@@ -413,14 +413,25 @@ object CardCatalog {
                 Ability(
                     name = "Janela de Reversão",
                     type = AbilityType.PASSIVE,
-                    trigger = AbilityTrigger.OnTurnStart,
+                    trigger = AbilityTrigger.OnTurnEvery(3),
                     effects = listOf(
                         Effect.Heal(value = -120.0, target = AbilityTarget.ENEMY),
-                        Effect.BuffStat(stat = Stat.SPEED, value = -40.0, target = AbilityTarget.ENEMY),
+                        Effect.BuffStat(stat = Stat.SPEED, value = -25.0, target = AbilityTarget.ENEMY),
                         Effect.BuffStat(stat = Stat.ATK, value = -25.0, target = AbilityTarget.ENEMY),
                         Effect.Heal(value = 120.0, target = AbilityTarget.SELF),
-                        Effect.BuffStat(stat = Stat.SPEED, value = 40.0),
+                        Effect.BuffStat(stat = Stat.SPEED, value = 25.0),
                         Effect.BuffStat(stat = Stat.ATK, value = 25.0),
+                    )
+                ),
+                Ability(
+                    name = "Ruptura de Realidade",
+                    type = AbilityType.PASSIVE,
+                    trigger = AbilityTrigger.OnBellowHealth(0.15),
+                    once = true,
+                    effects = listOf(
+                        Effect.Damage(800.0, AbilityTarget.ALL_ENEMIES),
+                        Effect.BuffStat(Stat.ATK, -30.0, target = AbilityTarget.ALL_ENEMIES),
+                        Effect.BuffStat(Stat.SPEED, -20.0, target = AbilityTarget.ALL_ENEMIES)
                     )
                 )
             )
@@ -485,6 +496,62 @@ object CardCatalog {
                     trigger = AbilityTrigger.OnAttack,
                     effects = listOf(
                         Effect.Damage(4.0)
+                    )
+                )
+            )
+        ),
+        CardDefinition(
+            id = "UNLEASHED_JUNIOR_KNIGHT",
+            name = "Cavaleirinho, O Descendente de Deus",
+            rarity = Rarity.MYTHIC,
+            description = "Após sua mãe finalmente aprovar seu sonho de se tornar um cavaleiro, o Cavaleirinho treinou incansavelmente.\n" +
+                    "Agora, em sua forma final, ele se ergue como um guerreiro nobre — de coração puro e determinação inabalável.",
+            type = CardType.CHARACTER,
+            baseStats = mapOf(
+                Stat.HP to 980.0,
+                Stat.DEF to 88.0,
+                Stat.ATK to 112.0,
+                Stat.SPEED to 90.0,
+                Stat.CRIT_CHANCE to 0.3,
+                Stat.CRIT_DAMAGE to 2.0,
+            ),
+            statsPerLevel = mapOf(
+                Stat.ATK to 16.0,
+                Stat.SPEED to 4.0,
+                Stat.CRIT_CHANCE to 0.02,
+                Stat.DEF to 14.0,
+            ),
+            tags = setOf("knight"),
+            abilities = listOf(
+                Ability(
+                    name = "Presença inabalável",
+                    type = AbilityType.PASSIVE,
+                    trigger = AbilityTrigger.OnBellowHealth(0.4), // quadndo abaixo de 40% de vida, dobrar def
+                    effects = listOf(
+                        Effect.StatIncreaseWhileBelowHealth(
+                            stat = Stat.DEF,
+                            value = 88.0,
+                            threshold = 0.4
+                        )
+                    )
+                ),
+                Ability(
+                    name = "Benção do Escudo Sagrado", // a cada 4 rounds
+                    type = AbilityType.PASSIVE,
+                    trigger = AbilityTrigger.OnTurnEvery(4),
+                    effects = listOf(
+                        Effect.Heal(
+                            value = 240.0
+                        )
+                    )
+                ),
+                Ability(
+                    name = "Senso de justiça",
+                    // description = "Causa 20% de dano extra em inimigos malignos"
+                    type = AbilityType.PASSIVE,
+                    trigger = AbilityTrigger.OnAttackAgainstTag("malignant"),
+                    effects = listOf(
+                        Effect.DamageIncreasePercent(value = 0.2)
                     )
                 )
             )

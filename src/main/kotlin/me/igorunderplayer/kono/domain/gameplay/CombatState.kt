@@ -26,6 +26,8 @@ class CombatState(
 
     // 🎯 ABILITIES STATE
     val hitCounterByAbilityKey: MutableMap<String, Int> = mutableMapOf()
+    val conditionalEffectStatesByKey: MutableMap<String, Boolean> = mutableMapOf()
+    val onceTriggeredAbilityKeys: MutableSet<String> = mutableSetOf()
 
     // 💰 ECONOMY (team-based, 3x3 ready)
     val coinsByTeamId: MutableMap<String, Int> = mutableMapOf()

@@ -5,5 +5,6 @@ data class Ability(
     val name: String,
     val type: AbilityType,
     val trigger: AbilityTrigger,
-    val effects: List<Effect>
+    val effects: List<Effect>,
+    val once: Boolean = false
 )

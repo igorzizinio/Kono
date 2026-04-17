@@ -94,10 +94,15 @@ class CombatEngine(
 
                 if (unit.hp <= 0) continue
 
+                syncConditionalEffects(unit)
+
                 for (ability in unit.abilities) {
 
                     if (ability.type != AbilityType.PASSIVE) continue
-                    if (!isTriggeredForOwner(ability.trigger, unit, event)) continue
+                    if (!isTriggeredForOwner(ability.trigger, unit, ability.name, event)) continue
+
+                    val onceKey = onceAbilityKey(unit, ability)
+                    if (ability.once && !state.onceTriggeredAbilityKeys.add(onceKey)) continue
 
                     state.combatLog += "✨ ${unitLabel(unit, state)} ativou ${ability.name}."
 
@@ -129,6 +134,21 @@ class CombatEngine(
                 }
             }
 
+            is Effect.DamageIncreasePercent -> {
+                val targets = resolveTargets(owner, effect.target, event)
+                val damage = (calculateDamage(owner) * effect.value).coerceAtLeast(0.0)
+
+                for (target in targets) {
+                    enqueue(
+                        CombatEvent.BeforeDamage(
+                            source = owner,
+                            target = target,
+                            damage = damage
+                        )
+                    )
+                }
+            }
+
             is Effect.Heal -> {
                 val targets = resolveTargets(owner, effect.target, event)
                 for (target in targets) {
@@ -142,6 +162,10 @@ class CombatEngine(
                     target.stats[effect.stat] =
                         (target.stats[effect.stat] ?: 0.0) + effect.value
                 }
+            }
+
+            is Effect.StatIncreaseWhileBelowHealth -> {
+                syncConditionalStatIncrease(owner, effect)
             }
 
             is Effect.AddCoins -> {
@@ -200,16 +224,98 @@ class CombatEngine(
         }
     }
 
-    private fun isTriggeredForOwner(trigger: AbilityTrigger, owner: Unit, event: CombatEvent): Boolean {
+    private fun isTriggeredForOwner(
+        trigger: AbilityTrigger,
+        owner: Unit,
+        abilityName: String,
+        event: CombatEvent
+    ): Boolean {
         return when (trigger) {
             AbilityTrigger.OnBattleStart -> event is CombatEvent.BattleStart
             AbilityTrigger.OnTurnStart -> event is CombatEvent.TurnStart && event.unit == owner
+            is AbilityTrigger.OnTurnEvery -> {
+                event is CombatEvent.TurnStart && event.unit == owner && state.turn % trigger.turns.coerceAtLeast(1) == 0
+            }
             AbilityTrigger.OnAttack -> event is CombatEvent.Attack && event.attacker == owner
+            is AbilityTrigger.OnAttackEvery -> {
+                if (event !is CombatEvent.Attack || event.attacker != owner) {
+                    false
+                } else {
+                    val interval = trigger.attacks.coerceAtLeast(1)
+                    val key = "attack:${owner.id}:$abilityName"
+                    val currentCount = (state.hitCounterByAbilityKey[key] ?: 0) + 1
+                    state.hitCounterByAbilityKey[key] = currentCount
+                    currentCount % interval == 0
+                }
+            }
+            is AbilityTrigger.OnAttackAgainstTag -> {
+                if (event !is CombatEvent.Attack || event.attacker != owner) {
+                    false
+                } else {
+                    event.target.tags.any { it.equals(trigger.tag, ignoreCase = true) }
+                }
+            }
             AbilityTrigger.OnDamageTaken -> event is CombatEvent.BeforeDamage && event.target == owner
             AbilityTrigger.OnDamageDealt -> event is CombatEvent.AfterDamage && event.source == owner
+            is AbilityTrigger.OnBellowHealth -> {
+                if (event !is CombatEvent.AfterDamage || event.target != owner) {
+                    false
+                } else {
+                    val maxHp = owner.stats[Stat.HP] ?: return false
+                    if (maxHp <= 0.0) return false
+
+                    val alreadyTriggeredKey = "triggered:${owner.id}:$abilityName"
+                    if (state.globalFlags[alreadyTriggeredKey] == true) {
+                        false
+                    } else {
+                        val ratio = owner.hp / maxHp
+                        val shouldTrigger = ratio <= trigger.threshold
+                        if (shouldTrigger) {
+                            state.globalFlags[alreadyTriggeredKey] = true
+                        }
+                        shouldTrigger
+                    }
+                }
+            }
             AbilityTrigger.OnDeath -> event is CombatEvent.Death && event.unit == owner
             AbilityTrigger.Manual -> false
         }
+    }
+
+    private fun syncConditionalEffects(unit: Unit) {
+        for (ability in unit.abilities) {
+            for (effect in ability.effects) {
+                if (effect is Effect.StatIncreaseWhileBelowHealth) {
+                    syncConditionalStatIncrease(unit, effect, ability.name)
+                }
+            }
+        }
+    }
+
+    private fun syncConditionalStatIncrease(
+        owner: Unit,
+        effect: Effect.StatIncreaseWhileBelowHealth,
+        abilityName: String? = null
+    ) {
+        val maxHp = owner.stats[Stat.HP] ?: return
+        if (maxHp <= 0.0) return
+
+        val shouldBeActive = (owner.hp / maxHp) <= effect.threshold
+        val key = "cond:${owner.id}:${abilityName ?: effect.stat.name}:${effect.stat.name}"
+        val isActive = state.conditionalEffectStatesByKey[key] == true
+
+        if (shouldBeActive == isActive) return
+
+        val current = owner.stats[effect.stat] ?: 0.0
+        owner.stats[effect.stat] = if (shouldBeActive) current + effect.value else current - effect.value
+        state.conditionalEffectStatesByKey[key] = shouldBeActive
+
+        val status = if (shouldBeActive) "ativou" else "desativou"
+        state.combatLog += "✨ ${unitLabel(owner, state)} $status ${abilityName ?: effect.stat.name}."
+    }
+
+    private fun onceAbilityKey(unit: Unit, ability: me.igorunderplayer.kono.domain.card.ability.Ability): String {
+        return "once:${unit.id}:${unit.card.id}:${ability.name}"
     }
 
     private fun heal(unit: Unit, amount: Double) {

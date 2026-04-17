@@ -9,6 +9,17 @@ sealed class Effect {
         val target: AbilityTarget = AbilityTarget.ENEMY
     ) : Effect()
 
+    data class DamageIncreasePercent(
+        val value: Double,
+        val target: AbilityTarget = AbilityTarget.ENEMY
+    ) : Effect()
+
+    data class StatIncreaseWhileBelowHealth(
+        val stat: Stat,
+        val value: Double,
+        val threshold: Double
+    ) : Effect()
+
     data class Heal(
         val value: Double,
         val target: AbilityTarget = AbilityTarget.SELF
