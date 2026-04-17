@@ -142,7 +142,19 @@ class InventoryCommand(
                     val count = levelInstances.size
                     val equippedCount = levelInstances.count { it.id in equippedIds }
                     val suffix = if (equippedCount > 0) " (${equippedCount} equipado(s))" else ""
-                    appendLine("   • ${count}x Lv.${level}$suffix")
+
+                    val idsText = levelInstances
+                        .sortedBy { it.id }
+                        .map { it.id }
+                        .let { ids ->
+                            val visibleIds = ids.take(3).joinToString(", ") {
+                                "`$it`"
+                            }
+                            if (ids.size > 3) "$visibleIds, ..." else visibleIds
+                        }
+
+                    append("   • ${count}x Lv.${level}$suffix")
+                    appendLine("    -   **IDs**: $idsText")
                 }
             }
 
