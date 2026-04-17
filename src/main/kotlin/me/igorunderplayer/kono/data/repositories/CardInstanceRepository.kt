@@ -5,12 +5,12 @@ package me.igorunderplayer.kono.data.repositories
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import me.igorunderplayer.kono.data.DatabaseManager
-import me.igorunderplayer.kono.data.entities.CardDefinition
-import me.igorunderplayer.kono.data.entities.CardDefinitions
 import me.igorunderplayer.kono.data.entities.CardInstance
 import me.igorunderplayer.kono.data.entities.CardInstances
 import me.igorunderplayer.kono.data.entities.EquippedCards
 import me.igorunderplayer.kono.data.entities.Users
+import me.igorunderplayer.kono.domain.card.CardCatalog
+import me.igorunderplayer.kono.domain.card.CardDefinition
 import me.igorunderplayer.kono.domain.card.CardType
 import me.igorunderplayer.kono.domain.card.Rarity
 import org.ktorm.database.Database
@@ -83,56 +83,97 @@ class CardInstanceRepository(
 
         database.from(EquippedCards)
             .innerJoin(CardInstances, on = EquippedCards.cardInstanceId eq CardInstances.id)
-            .innerJoin(CardDefinitions, on = CardInstances.definitionId eq CardDefinitions.id)
             .select(
                 EquippedCards.slot,
                 EquippedCards.cardInstanceId,
-                CardDefinitions.id,
-                CardDefinitions.name,
-                CardDefinitions.rarity,
-                CardDefinitions.type
+                CardInstances.definitionId
             )
             .where { EquippedCards.characterInstanceId eq characterId }
-            .map { row ->
+            .mapNotNull { row ->
+                val definitionId = row[CardInstances.definitionId] ?: return@mapNotNull null
+                val definition = CardCatalog.getById(definitionId) ?: return@mapNotNull null
+
                 EquippedItemView(
                     slot = row[EquippedCards.slot]!!,
                     cardInstanceId = row[EquippedCards.cardInstanceId]!!,
-                    definitionId = row[CardDefinitions.id]!!,
-                    name = row[CardDefinitions.name]!!,
-                    rarity = row[CardDefinitions.rarity]!!,
-                    type = row[CardDefinitions.type]!!
+                    definitionId = definition.id,
+                    name = definition.name,
+                    rarity = definition.rarity,
+                    type = definition.type
                 )
             }
             .sortedBy { it.slot }
     }
 
     suspend fun isOwnedEquipmentInstance(userId: Int, instanceId: Int): Boolean = withContext(Dispatchers.IO) {
-        database.from(CardInstances)
-            .innerJoin(CardDefinitions, on = CardInstances.definitionId eq CardDefinitions.id)
-            .select(CardInstances.id)
-            .where {
-                (CardInstances.id eq instanceId) and
-                        (CardInstances.userId eq userId) and
-                        (CardDefinitions.type eq CardType.EQUIPMENT)
-            }
-            .totalRecordsInAllPages > 0
+        val instance = database.sequenceOf(CardInstances)
+            .find {
+                (it.id eq instanceId) and (it.userId eq userId)
+            } ?: return@withContext false
+
+        val definition = CardCatalog.getById(instance.definitionId) ?: return@withContext false
+        definition.type == CardType.EQUIPMENT
     }
 
     suspend fun getOwnedCharacterWithDefinition(userId: Int, instanceId: Int): Pair<CardInstance, CardDefinition>? = withContext(Dispatchers.IO) {
+        val instance = database.sequenceOf(CardInstances)
+            .find {
+                (it.userId eq userId) and (it.id eq instanceId)
+            } ?: return@withContext null
+
+        val definition = CardCatalog.getById(instance.definitionId)
+            ?: return@withContext null
+
+        if (definition.type != CardType.CHARACTER) return@withContext null
+
+        instance to definition
+    }
+
+    suspend fun countOwnedDefinitionInstances(userId: Int, definitionId: String): Int = withContext(Dispatchers.IO) {
         database.from(CardInstances)
-            .innerJoin(CardDefinitions, on = CardInstances.definitionId eq CardDefinitions.id)
-            .select()
+            .select(CardInstances.id)
             .where {
                 (CardInstances.userId eq userId) and
-                        (CardInstances.id eq instanceId) and
-                        (CardDefinitions.type eq CardType.CHARACTER)
+                    (CardInstances.definitionId eq definitionId)
             }
-            .map { row ->
-                val instance = CardInstances.createEntity(row)
-                val definition = CardDefinitions.createEntity(row)
-                instance to definition
+            .totalRecordsInAllPages
+    }
+
+    suspend fun consumeDefinitionCopies(
+        userId: Int,
+        definitionId: String,
+        exceptInstanceId: Int,
+        amount: Int
+    ): Int = withContext(Dispatchers.IO) {
+        if (amount <= 0) return@withContext 0
+
+        val idsToDelete = database.from(CardInstances)
+            .select(CardInstances.id)
+            .where {
+                (CardInstances.userId eq userId) and
+                    (CardInstances.definitionId eq definitionId) and
+                    (CardInstances.id notEq exceptInstanceId)
             }
-            .firstOrNull()
+            .orderBy(CardInstances.id.asc())
+            .limit(amount)
+            .mapNotNull { it[CardInstances.id] }
+
+        if (idsToDelete.size < amount) return@withContext 0
+
+        var deleted = 0
+        idsToDelete.forEach { id ->
+            deleted += database.delete(CardInstances) { it.id eq id }
+        }
+
+        deleted
+    }
+
+    suspend fun updateCharacterLevel(instanceId: Int, newLevel: Int): Boolean = withContext(Dispatchers.IO) {
+        database.update(CardInstances) {
+            set(it.level, newLevel)
+            set(it.upgraded, newLevel > 1)
+            where { it.id eq instanceId }
+        } > 0
     }
 
 }

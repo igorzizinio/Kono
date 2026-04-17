@@ -41,6 +41,6 @@ fun Rarity.colorDefinition(): Color {
         Rarity.EPIC -> Color(100, 0, 205)
         Rarity.LEGENDARY -> Color(255, 140, 0)
         Rarity.MYTHIC -> Color(255, 0, 75)
-        Rarity.KONO -> Color(255, 0, 60)
+        Rarity.KONO -> Color(255, 0, 185)
     }
 }

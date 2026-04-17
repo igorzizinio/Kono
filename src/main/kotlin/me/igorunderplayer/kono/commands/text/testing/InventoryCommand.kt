@@ -5,13 +5,13 @@ import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.rest.builder.message.embed
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandCategory
-import me.igorunderplayer.kono.data.entities.CardDefinition
 import me.igorunderplayer.kono.data.entities.CardInstance
 import me.igorunderplayer.kono.data.entities.EquippedCard
 import me.igorunderplayer.kono.data.repositories.CardInstanceRepository
 import me.igorunderplayer.kono.data.repositories.CardRepository
 import me.igorunderplayer.kono.data.repositories.EquippedCardsRepository
 import me.igorunderplayer.kono.domain.card.CardType
+import me.igorunderplayer.kono.domain.card.CardDefinition
 import me.igorunderplayer.kono.domain.card.toDisplayEmoji
 import me.igorunderplayer.kono.domain.card.toDisplayName
 import me.igorunderplayer.kono.services.UserService
@@ -29,6 +29,7 @@ class InventoryCommand(
 ) {
 
     private val PAGE_SIZE = 5
+    private val EMBED_DESCRIPTION_LIMIT = 3500
 
     private data class InventoryEntry(
         val definition: CardDefinition,
@@ -126,24 +127,32 @@ class InventoryCommand(
             .drop((safePage - 1) * PAGE_SIZE)
             .take(PAGE_SIZE)
 
-        val body = buildString {
+        val rawBody = buildString {
             pageItems.forEach { entry ->
                 val rarityEmoji = entry.definition.rarity.toDisplayEmoji()
                 appendLine("$rarityEmoji **${entry.definition.name}** (${entry.definition.rarity.toDisplayName()}) x${entry.count}")
 
-                entry.instances.forEach { instance ->
-                    val equipStatus = equipped.find {
-                        it.cardInstanceId == instance.id
-                    }
+                val equippedIds = equipped.map { it.cardInstanceId }.toSet()
 
-                    val status = if (equipStatus == null) "livre" else {
-                        "**equipado** por **#${equipStatus.characterInstanceId}** (Slot ${equipStatus.slot})"
-                    }
+                val groupsByLevel = entry.instances
+                    .groupBy { it.level }
+                    .toSortedMap(compareByDescending { it })
 
-                    appendLine("   • #${instance.id} • Lv.${instance.level} • $status")
+                groupsByLevel.forEach { (level, levelInstances) ->
+                    val count = levelInstances.size
+                    val equippedCount = levelInstances.count { it.id in equippedIds }
+                    val suffix = if (equippedCount > 0) " (${equippedCount} equipado(s))" else ""
+                    appendLine("   • ${count}x Lv.${level}$suffix")
                 }
             }
+
         }.trimEnd()
+
+        val body = if (rawBody.length <= EMBED_DESCRIPTION_LIMIT) {
+            rawBody
+        } else {
+            rawBody.take(EMBED_DESCRIPTION_LIMIT - 40).trimEnd() + "\n...e mais itens nesta pagina"
+        }
 
         return SectionResult(body = body, safePage = safePage, totalPages = totalPages)
     }

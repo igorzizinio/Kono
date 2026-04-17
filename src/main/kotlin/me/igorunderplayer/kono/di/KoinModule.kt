@@ -46,6 +46,7 @@ import me.igorunderplayer.kono.domain.team.BuildUnitHandler
 import me.igorunderplayer.kono.domain.team.EquipItemHandler
 import me.igorunderplayer.kono.domain.team.SetActiveCharacterHandler
 import me.igorunderplayer.kono.domain.team.UnequipItemHandler
+import me.igorunderplayer.kono.domain.team.UpgradeCharacterHandler
 
 val appModule = module {
 
@@ -99,6 +100,7 @@ val appModule = module {
     singleOf(::EquipItemHandler)
     singleOf(::SetActiveCharacterHandler)
     singleOf(::UnequipItemHandler)
+    singleOf(::UpgradeCharacterHandler)
 
     // ========================
     // TEXT COMMANDS

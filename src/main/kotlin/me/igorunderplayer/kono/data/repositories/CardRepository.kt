@@ -2,47 +2,30 @@ package me.igorunderplayer.kono.data.repositories
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import me.igorunderplayer.kono.data.DatabaseManager
-import me.igorunderplayer.kono.data.entities.CardDefinition
-import me.igorunderplayer.kono.data.entities.CardDefinitions
 import me.igorunderplayer.kono.domain.card.CardType
+import me.igorunderplayer.kono.domain.card.CardCatalog
+import me.igorunderplayer.kono.domain.card.CardDefinition
 import me.igorunderplayer.kono.domain.card.Rarity
-import org.ktorm.database.Database
-import org.ktorm.dsl.eq
-import org.ktorm.entity.filter
-import org.ktorm.entity.find
-import org.ktorm.entity.sequenceOf
-import org.ktorm.entity.toList
 
-class CardRepository(
-    private val databaseManager: DatabaseManager
-) {
-    private val database: Database
-        get() = databaseManager.db
+class CardRepository() {
 
     suspend fun getDefinition(id: String): CardDefinition? = withContext(Dispatchers.IO) {
-        database.sequenceOf(CardDefinitions)
-            .find { it.id eq id }
+        CardCatalog.getById(id)
     }
 
     suspend fun getAll(): List<CardDefinition> = withContext(Dispatchers.IO) {
-        database.sequenceOf(CardDefinitions).toList()
+        CardCatalog.all
     }
 
     suspend fun getByRarity(rarity: Rarity): List<CardDefinition> = withContext(Dispatchers.IO) {
-        database.sequenceOf(CardDefinitions)
-            .filter { it.rarity eq rarity }
-            .toList()
+        CardCatalog.all.filter { it.rarity == rarity }
     }
 
     suspend fun getByType(type: CardType): List<CardDefinition> = withContext(Dispatchers.IO) {
-        database.sequenceOf(CardDefinitions)
-            .filter { it.type eq type }
-            .toList()
+        CardCatalog.all.filter { it.type == type }
     }
 
     suspend fun getByName(name: String): CardDefinition? = withContext(Dispatchers.IO) {
-        database.sequenceOf(CardDefinitions)
-            .find { it.name eq name }
+        CardCatalog.all.firstOrNull { it.name.equals(name, ignoreCase = true) }
     }
 }

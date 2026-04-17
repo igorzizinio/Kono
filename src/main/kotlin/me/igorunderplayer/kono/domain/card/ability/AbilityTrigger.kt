@@ -1,12 +1,15 @@
 package me.igorunderplayer.kono.domain.card.ability
 
-import kotlinx.serialization.Serializable
 
-@Serializable
-enum class AbilityTrigger {
-    ON_ATTACK,
-    ON_TURN_START,
-    ON_HIT,
-    ON_DAMAGE_TAKEN,
-    PASSIVE
+sealed class AbilityTrigger {
+
+    data object OnBattleStart : AbilityTrigger() {}
+
+    data object OnTurnStart : AbilityTrigger()
+    data object OnAttack : AbilityTrigger()
+    data object OnDamageDealt : AbilityTrigger()
+    data object OnDamageTaken : AbilityTrigger()
+    data object OnDeath : AbilityTrigger()
+
+    data object Manual : AbilityTrigger()
 }

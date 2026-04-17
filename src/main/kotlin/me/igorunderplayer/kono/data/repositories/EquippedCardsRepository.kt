@@ -3,11 +3,11 @@ package me.igorunderplayer.kono.data.repositories
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import me.igorunderplayer.kono.data.DatabaseManager
-import me.igorunderplayer.kono.data.entities.CardDefinition
-import me.igorunderplayer.kono.data.entities.CardDefinitions
 import me.igorunderplayer.kono.data.entities.CardInstances
 import me.igorunderplayer.kono.data.entities.EquippedCard
 import me.igorunderplayer.kono.data.entities.EquippedCards
+import me.igorunderplayer.kono.domain.card.CardCatalog
+import me.igorunderplayer.kono.domain.card.CardDefinition
 import org.ktorm.dsl.*
 
 class EquippedCardsRepository(
@@ -72,11 +72,12 @@ class EquippedCardsRepository(
     suspend fun getEquippedDefinitionsForCharacter(characterId: Int): List<CardDefinition> = withContext(Dispatchers.IO) {
         database.from(EquippedCards)
             .innerJoin(CardInstances, on = EquippedCards.cardInstanceId eq CardInstances.id)
-            .innerJoin(CardDefinitions, on = CardInstances.definitionId eq CardDefinitions.id)
-            .select()
+            .select(EquippedCards.slot, CardInstances.definitionId)
             .where { EquippedCards.characterInstanceId eq characterId }
-            .map { row ->
-                CardDefinitions.createEntity(row) to (row[EquippedCards.slot] ?: Int.MAX_VALUE)
+            .mapNotNull { row ->
+                val definitionId = row[CardInstances.definitionId] ?: return@mapNotNull null
+                val definition = CardCatalog.getById(definitionId) ?: return@mapNotNull null
+                definition to (row[EquippedCards.slot] ?: Int.MAX_VALUE)
             }
             .sortedBy { it.second }
             .map { it.first }

@@ -46,6 +46,7 @@ class StartFightCommand(
                 Team("enemy", mutableListOf(enemyUnit))
             )
         )
+        val engine = CombatEngine(combatState)
 
         val customButtonId = "${event.message.channelId}-${event.message.id}-${System.currentTimeMillis()}"
 
@@ -79,7 +80,7 @@ class StartFightCommand(
             }
 
             combatState.combatLog.clear()
-            CombatEngine.processState(combatState)
+            engine.processNextTurn()
 
             val isFinished = combatState.isFinished()
             val title = if (isFinished) {

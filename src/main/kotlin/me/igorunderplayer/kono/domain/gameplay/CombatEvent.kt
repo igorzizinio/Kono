@@ -4,6 +4,8 @@ import me.igorunderplayer.kono.domain.card.ability.AbilityType
 
 sealed class CombatEvent {
 
+    data object BattleStart : CombatEvent()
+
     data class TurnStart(val unit: Unit) : CombatEvent()
 
     data class Attack(

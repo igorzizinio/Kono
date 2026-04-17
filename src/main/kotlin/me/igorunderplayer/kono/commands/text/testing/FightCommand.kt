@@ -10,9 +10,9 @@ import dev.kord.rest.builder.message.embed
 import kotlinx.coroutines.time.delay
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandCategory
-import me.igorunderplayer.kono.data.entities.CardDefinition
 import me.igorunderplayer.kono.data.repositories.CardRepository
 import me.igorunderplayer.kono.domain.card.CardType
+import me.igorunderplayer.kono.domain.card.CardDefinition
 import me.igorunderplayer.kono.domain.card.Stat
 import me.igorunderplayer.kono.domain.gameplay.CombatState
 import me.igorunderplayer.kono.domain.gameplay.Team
@@ -192,7 +192,9 @@ class FightCommand(
         val playerStartHp = player.hp
         val enemyStartHp = enemy.hp
 
-        val result = CombatEngine.runAutonomous(state)
+        val engine = CombatEngine(state)
+        engine.run()
+        val result = state
         val playerAlive = result.teams[0].units.any { it.hp > 0 }
 
         val summary = buildCombatSummaryEmbed(
