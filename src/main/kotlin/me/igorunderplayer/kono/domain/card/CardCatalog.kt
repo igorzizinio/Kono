@@ -23,7 +23,7 @@ object CardCatalog {
             rarity = Rarity.COMMON,
             faction = "slime",
             baseStats = mapOf(
-                Stat.HP to 580.0,
+                Stat.HP to 590.0,
                 Stat.ATK to 38.0,
                 Stat.DEF to 8.0,
                 Stat.CRIT_CHANCE to 0.05,
@@ -38,7 +38,7 @@ object CardCatalog {
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnAttack,
                     effects = listOf(
-                        Effect.Damage(value = 12.0, target = AbilityTarget.SELF)
+                        Effect.Damage(value = 8.0, target = AbilityTarget.SELF)
                     )
                 )
             )
@@ -46,11 +46,11 @@ object CardCatalog {
         CardDefinition(
             id = "IRON_ARMOR",
             name = "Iron Armor",
-            description = "Armadura que reduz dano recebido.",
+            description = "Armadura simples que reduz dano recebido.",
             type = CardType.EQUIPMENT,
             rarity = Rarity.COMMON,
             baseStats = mapOf(
-                Stat.HP to 180.0,
+                Stat.HP to 60.0,
                 Stat.DEF to 15.0,
                 Stat.SPEED to -5.0
             ),
@@ -65,8 +65,8 @@ object CardCatalog {
             type = CardType.EQUIPMENT,
             rarity = Rarity.RARE,
             baseStats = mapOf(
-                Stat.HP to 110.0,
-                Stat.DEF to 60.0,
+                Stat.HP to 90.0,
+                Stat.DEF to 40.0,
                 Stat.SPEED to -20.0
             ),
             statsPerLevel = defaultStatsPerLevel,
@@ -171,7 +171,7 @@ object CardCatalog {
                 Stat.ATK to 36.0,
                 Stat.DEF to 14.0,
                 Stat.CRIT_CHANCE to 0.10,
-                Stat.CRIT_DAMAGE to 1.4,
+                Stat.CRIT_DAMAGE to 1.3,
                 Stat.SPEED to 115.0
             ),
             statsPerLevel = defaultStatsPerLevel,
@@ -202,7 +202,13 @@ object CardCatalog {
                 Stat.CRIT_DAMAGE to 1.5,
                 Stat.SPEED to 110.0
             ),
-            statsPerLevel = defaultStatsPerLevel,
+            statsPerLevel = mapOf(
+                Stat.HP to 6.0,
+                Stat.ATK to 4.0,
+                Stat.DEF to 2.0,
+                Stat.CRIT_CHANCE to 0.01,
+                Stat.CRIT_DAMAGE to 0.02,
+            ),
             tags = setOf("rng", "gambler", "risk", "chaos", "scaling", "boss"),
             abilities = listOf(
                 Ability(
@@ -265,7 +271,7 @@ object CardCatalog {
             description = "Uma espada simples para iniciantes.",
             type = CardType.EQUIPMENT,
             rarity = Rarity.COMMON,
-            baseStats = mapOf(Stat.ATK to 15.0),
+            baseStats = mapOf(Stat.ATK to 12.0),
             statsPerLevel = defaultStatsPerLevel,
             tags = setOf("starter"),
             abilities = emptyList()
@@ -415,6 +421,70 @@ object CardCatalog {
                         Effect.Heal(value = 120.0, target = AbilityTarget.SELF),
                         Effect.BuffStat(stat = Stat.SPEED, value = 40.0),
                         Effect.BuffStat(stat = Stat.ATK, value = 25.0),
+                    )
+                )
+            )
+        ),
+        CardDefinition(
+            id = "IRON_SWORD",
+            name = "Espada de Ferro",
+            type = CardType.EQUIPMENT,
+            rarity = Rarity.RARE,
+            description = "Uma espada de ferro simples, concede um dano bom",
+            baseStats = mapOf(
+                Stat.ATK to 22.0,
+                Stat.SPEED to -2.0,
+            ),
+            statsPerLevel = mapOf(
+                Stat.ATK to 2.0
+            ),
+            tags = setOf("weapon", "starter", "iron"),
+            abilities = emptyList()
+        ),
+        CardDefinition(
+            id = "IRON_SHIELD",
+            name = "Escudo de Ferro",
+            type = CardType.EQUIPMENT,
+            rarity = Rarity.RARE,
+            description = "Um escudo relativamente pesado, feito de ferro com madeira",
+            baseStats = mapOf(
+                Stat.DEF to 26.0,
+                Stat.SPEED to -6.0,
+                Stat.ATK to -4.0,
+                Stat.HP to 80.0,
+            ),
+            statsPerLevel = mapOf(
+                Stat.DEF to 2.0,
+                Stat.HP to 8.0,
+            ),
+            tags = setOf("shield", "starter", "iron"),
+            abilities = emptyList()
+        ),
+        CardDefinition(
+            id = "KATANA",
+            name = "Katana Simples",
+            type = CardType.EQUIPMENT,
+            rarity = Rarity.RARE,
+            description = "Uma velha katana. Leve, rápida porém com pouco dano.",
+            baseStats = mapOf(
+                Stat.ATK to 12.0,
+                Stat.SPEED to 4.0,
+                Stat.CRIT_CHANCE to 0.08,
+                Stat.DEF to -4.0,
+            ),
+            statsPerLevel = mapOf(
+                Stat.ATK to 0.6,
+                Stat.SPEED to 0.2,
+                Stat.CRIT_CHANCE to 0.01
+            ),
+            tags = setOf("iron", "speed", "crit"),
+            abilities = listOf(
+                Ability(
+                    name = "Corte rapido",
+                    type = AbilityType.PASSIVE,
+                    trigger = AbilityTrigger.OnAttack,
+                    effects = listOf(
+                        Effect.Damage(4.0)
                     )
                 )
             )
