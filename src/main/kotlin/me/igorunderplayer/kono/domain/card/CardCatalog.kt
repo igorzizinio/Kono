@@ -80,16 +80,22 @@ object CardCatalog {
             description = "Um artefato caotico.",
             type = CardType.EQUIPMENT,
             rarity = Rarity.EPIC,
-            baseStats = emptyMap(),
-            statsPerLevel = defaultStatsPerLevel,
+            baseStats = mapOf(
+                Stat.CRIT_CHANCE to 0.05,
+                Stat.CRIT_DAMAGE to 0.15
+            ),
+            statsPerLevel = mapOf(
+                Stat.CRIT_CHANCE to 0.01,
+                Stat.CRIT_DAMAGE to 0.02
+            ),
             tags = setOf("gambler", "chaos"),
             abilities = listOf(
                 Ability(
                     name = "Roleta Caotica",
-                    description = "A cada turno, um efeito aleatório acontece. Pode ser algo bom... ou ruim.",
+                    description = "A cada turno, roleta caotica é ativada, causando dano ou curando o portador.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnTurnStart,
-                    effects = listOf(Effect.Random(profile = "DEFAULT"))
+                    effects = listOf(Effect.Random(profile = "GAMBLER_CHARM"))
                 )
             )
         ),
