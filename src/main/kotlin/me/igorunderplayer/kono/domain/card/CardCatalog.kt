@@ -198,7 +198,7 @@ object CardCatalog {
             description = "Cada turno vira uma aposta. Risco alto, recompensa alta.",
             type = CardType.CHARACTER,
             rarity = Rarity.LEGENDARY,
-            faction = "gambler",
+            faction = "markus_gang",
             baseStats = mapOf(
                 Stat.HP to 720.0,
                 Stat.ATK to 58.0,
@@ -214,7 +214,7 @@ object CardCatalog {
                 Stat.CRIT_CHANCE to 0.01,
                 Stat.CRIT_DAMAGE to 0.02,
             ),
-            tags = setOf("rng", "gambler", "risk", "chaos", "scaling", "boss"),
+            tags = setOf("rng", "gambler", "risk", "chaos", "scaling", "boss", "markus_gang", "malignant"),
             abilities = listOf(
                 Ability(
                     name = "Mestre da Mesa",
@@ -234,7 +234,7 @@ object CardCatalog {
             description = "Besteiro de Markus. Quanto mais ritmo, maior a pressao.",
             type = CardType.CHARACTER,
             rarity = Rarity.EPIC,
-            faction = "gambler",
+            faction = "markus_gang",
             baseStats = mapOf(
                 Stat.HP to 490.0,
                 Stat.ATK to 42.0,
@@ -314,7 +314,7 @@ object CardCatalog {
             description = "Escudeiro de Markus. Sustento e controle de ritmo.",
             type = CardType.CHARACTER,
             rarity = Rarity.EPIC,
-            faction = "gambler",
+            faction = "markus_gang",
             baseStats = mapOf(
                 Stat.HP to 680.0,
                 Stat.ATK to 28.0,
