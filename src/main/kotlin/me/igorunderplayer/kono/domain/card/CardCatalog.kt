@@ -412,7 +412,7 @@ object CardCatalog {
             abilities = listOf(
                 Ability(
                     name = "Resposta Paradoxal",
-                    description = "Kono se adapta a cada ataque recebido, curando parte do dano e fortalecendo-se para resistir melhor a ataques futuros.",
+                    description = "A cada golpe recebido, Kono distorce a realidade, curando-se e fortalecendo seu próprio poder.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnDamageTaken,
                     effects = listOf(
@@ -426,7 +426,7 @@ object CardCatalog {
                 ),
                 Ability(
                     name = "Janela de Reversão",
-                    description = "A cada 3 turnos, Kono ativa uma janela de reversão temporal, onde ele reverte o estado do combate para o que era 2 turnos atrás, mas com as condições atuais de vida e buffs/debuffs. Isso pode ser usado para desfazer danos recebidos ou ataques falhos, mas também pode reverter buffs benéficos ou curas recebidas.",
+                    description = "A cada 3 turnos, Kono reescreve o fluxo do combate, enfraquecendo inimigos e fortalecendo a si mesmo.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnTurnEvery(3),
                     effects = listOf(
@@ -440,7 +440,7 @@ object CardCatalog {
                 ),
                 Ability(
                     name = "Ruptura de Realidade",
-                    description = "Quando Kono fica abaixo de 15% de vida, ele sofre uma ruptura de realidade, onde a linha entre o real e o virtual se torna tênue. Ele causa uma explosão de energia caótica que causa dano massivo a todos os inimigos, e aplica um debuff que reduz significativamente o ataque e a velocidade dos inimigos por um tempo limitado. Essa habilidade só pode ser ativada uma vez por combate.",
+                    description = "Ao cair abaixo de 15% de vida, Kono rompe a realidade, liberando energia caótica que devasta inimigos e os enfraquece profundamente. Só pode ocorrer uma vez.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnBellowHealth(0.15),
                     once = true,
