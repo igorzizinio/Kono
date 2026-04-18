@@ -1,6 +1,7 @@
 package me.igorunderplayer.kono.engine.combat
 
 import me.igorunderplayer.kono.domain.card.Stat
+import me.igorunderplayer.kono.domain.card.StatSource
 import me.igorunderplayer.kono.domain.card.ability.AbilityTarget
 import me.igorunderplayer.kono.domain.card.ability.AbilityTrigger
 import me.igorunderplayer.kono.domain.card.ability.AbilityType
@@ -134,11 +135,18 @@ class CombatEngine(
                 }
             }
 
-            is Effect.DamageIncreasePercent -> {
+            is Effect.DamageBasedOnStat -> {
                 val targets = resolveTargets(owner, effect.target, event)
-                val damage = (calculateDamage(owner) * effect.value).coerceAtLeast(0.0)
 
                 for (target in targets) {
+                    val statValue = when (effect.statSource) {
+                        StatSource.SELF -> owner.stats[effect.stat]
+                        StatSource.TARGET -> target.stats[effect.stat]
+                    } ?: 0.0
+
+                    val damage = statValue * effect.scaling
+                    if (damage <= 0) continue
+
                     enqueue(
                         CombatEvent.BeforeDamage(
                             source = owner,
@@ -147,6 +155,19 @@ class CombatEngine(
                         )
                     )
                 }
+            }
+            is Effect.DamageIncreasePercent -> {
+                if (event !is CombatEvent.BeforeDamage) return
+
+                val increased = event.damage * (1 + effect.value)
+
+                enqueue(
+                    CombatEvent.BeforeDamage(
+                        source = event.source,
+                        target = event.target,
+                        damage = increased
+                    )
+                )
             }
 
             is Effect.Heal -> {
@@ -165,6 +186,19 @@ class CombatEngine(
                     target.stats[effect.stat] = after
 
                     state.combatLog += "📈 ${unitLabel(target, state)} ganhou +${effect.value} ${effect.stat} (${"%.1f".format(after)})"
+                }
+            }
+
+            is Effect.StatIncreasePercent -> {
+                val targets = resolveTargets(owner, effect.target, event)
+                for (target in targets) {
+                    val before = target.stats[effect.stat] ?: 0.0
+                    val bonus = before * effect.percent
+                    val after = before + bonus
+
+                    target.stats[effect.stat] = after
+
+                    state.combatLog += "📈 ${unitLabel(target, state)} ganhou +${effect.percent * 100}% ${effect.stat} (${"%.1f".format(after)})"
                 }
             }
 
@@ -498,7 +532,7 @@ class CombatEngine(
     }
 
     private fun calculateDamage(unit: Unit): Double {
-        return unit.stats[Stat.ATK] ?: 10.0
+        return (unit.stats[Stat.ATK] ?: 0.0).coerceAtLeast(0.0)
     }
 }
 

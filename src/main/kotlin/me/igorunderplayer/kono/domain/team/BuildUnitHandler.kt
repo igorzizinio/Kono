@@ -33,7 +33,8 @@ class BuildUnitHandler(
 
         val (charInst, charDef) = character
 
-        val equips = equippedCardsRepository.getEquippedDefinitionsForCharacter(charInst.id)
+        val equippedWithLevel = equippedCardsRepository.getEquippedDefinitionsWithLevelForCharacter(charInst.id)
+        val equips = equippedWithLevel.map { it.definition }
 
         // stats base
         val stats = charDef.baseStats.toMutableMap()
@@ -50,9 +51,13 @@ class BuildUnitHandler(
         }
 
         // soma stats dos equips
-        for (equip in equips) {
-            for ((stat, value) in equip.baseStats) {
-                stats[stat] = (stats[stat] ?: 0.0) + value
+        for (equipData in equippedWithLevel) {
+            val equip = equipData.definition
+            val equipLevel = equipData.level
+
+            for ((stat, baseValue) in equip.baseStats) {
+                val scaledValue = baseValue + ((equip.statsPerLevel[stat] ?: 0.0) * (equipLevel - 1))
+                stats[stat] = (stats[stat] ?: 0.0) + scaledValue
             }
         }
 

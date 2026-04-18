@@ -35,6 +35,7 @@ object CardCatalog {
             abilities = listOf(
                 Ability(
                     name = "Gelatina Instavel",
+                    description = "A cada ataque, Slime perde um pouco de sua gorma e recebe dano de si mesmo.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnAttack,
                     effects = listOf(
@@ -85,6 +86,7 @@ object CardCatalog {
             abilities = listOf(
                 Ability(
                     name = "Roleta Caotica",
+                    description = "A cada turno, um efeito aleatório acontece. Pode ser algo bom... ou ruim.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnTurnStart,
                     effects = listOf(Effect.Random(profile = "DEFAULT"))
@@ -104,6 +106,7 @@ object CardCatalog {
             abilities = listOf(
                 Ability(
                     name = "Sifao de Sangue",
+                    description = "Cada ataque cura o portador por em 10% do dano causado.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnDamageDealt,
                     effects = listOf(Effect.Heal(value = 10.0, target = AbilityTarget.SELF))
@@ -135,7 +138,8 @@ object CardCatalog {
             tags = setOf("bug", "chaos"),
             abilities = listOf(
                 Ability(
-                    name = "Undefined Bug",
+                    name = "Bug",
+                    description = "`fatal error: could not get description for NULL BUG`",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnTurnStart,
                     effects = listOf(Effect.Random(profile = "UNDEFINED_BUG"))
@@ -179,6 +183,7 @@ object CardCatalog {
             abilities = listOf(
                 Ability(
                     name = "Injusto",
+                    description = "Bandido vê uma brecha na defesa do inimigo e a explora, causando dano adicional.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnAttack,
                     effects = listOf(
@@ -213,6 +218,7 @@ object CardCatalog {
             abilities = listOf(
                 Ability(
                     name = "Mestre da Mesa",
+                    description = "A cada rodada, Markus gera moedas de cassino para a equipe, e aposta usando elas para obter efeitos aleatórios. Quanto mais moedas, melhores os efeitos serão.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnTurnStart,
                     effects = listOf(
@@ -248,6 +254,7 @@ object CardCatalog {
             abilities = listOf(
                 Ability(
                     name = "Rajada Ritmica",
+                    description = "Cada disparo de Veyn aumenta o ritmo de sua arma, causando 2 ataques adicionais a cada 2 tiros.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnAttackEvery(2),
                     effects = listOf(
@@ -256,6 +263,7 @@ object CardCatalog {
                 ),
                 Ability(
                     name = "Ritmo de Cassino",
+                    description = "A cada turno, Veyn gera moedas de cassino para a equipe, e aposta usando elas para obter efeitos aleatórios. Quanto mais moedas, melhores os efeitos serão.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnTurnStart,
                     effects = listOf(
@@ -291,6 +299,7 @@ object CardCatalog {
             abilities = listOf(
                 Ability(
                     name = "Flecha de Prata",
+                    description = "Cada 3 ataques, a besta dispara uma flecha de prata que causa dano extra ignorando a defesa do inimigo.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnAttackEvery(3),
                     effects = listOf(
@@ -319,6 +328,7 @@ object CardCatalog {
             abilities = listOf(
                 Ability(
                     name = "Apoio de Escudo",
+                    description = "Quando Jorge recebe dano, ele usa seu escudo e concede cura a todos os seus aliados próximos.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnDamageTaken,
                     effects = listOf(
@@ -327,6 +337,7 @@ object CardCatalog {
                 ),
                 Ability(
                     name = "Roleta de Protecao",
+                    description = "A cada turno, Jorge gera moedas de cassino para a equipe, e aposta usando elas para obter efeitos aleatórios. Quanto mais moedas, melhores os efeitos serão.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnTurnStart,
                     effects = listOf(
@@ -353,6 +364,7 @@ object CardCatalog {
             abilities = listOf(
                 Ability(
                     name = "Rajada All-In",
+                    description = "Cada ataque, dá um dano extra por sua ousadia e coragem.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnAttack,
                     effects = listOf(
@@ -361,6 +373,7 @@ object CardCatalog {
                 ),
                 Ability(
                     name = "A Casa Sempre Ganha",
+                    description = "A cada turno, o portador do emblema gera moedas de cassino para a equipe, e aposta usando elas para obter efeitos aleatórios. Quanto mais moedas, melhores os efeitos serão.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnTurnStart,
                     effects = listOf(
@@ -399,6 +412,7 @@ object CardCatalog {
             abilities = listOf(
                 Ability(
                     name = "Resposta Paradoxal",
+                    description = "Kono se adapta a cada ataque recebido, curando parte do dano e fortalecendo-se para resistir melhor a ataques futuros.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnDamageTaken,
                     effects = listOf(
@@ -412,6 +426,7 @@ object CardCatalog {
                 ),
                 Ability(
                     name = "Janela de Reversão",
+                    description = "A cada 3 turnos, Kono ativa uma janela de reversão temporal, onde ele reverte o estado do combate para o que era 2 turnos atrás, mas com as condições atuais de vida e buffs/debuffs. Isso pode ser usado para desfazer danos recebidos ou ataques falhos, mas também pode reverter buffs benéficos ou curas recebidas.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnTurnEvery(3),
                     effects = listOf(
@@ -425,6 +440,7 @@ object CardCatalog {
                 ),
                 Ability(
                     name = "Ruptura de Realidade",
+                    description = "Quando Kono fica abaixo de 15% de vida, ele sofre uma ruptura de realidade, onde a linha entre o real e o virtual se torna tênue. Ele causa uma explosão de energia caótica que causa dano massivo a todos os inimigos, e aplica um debuff que reduz significativamente o ataque e a velocidade dos inimigos por um tempo limitado. Essa habilidade só pode ser ativada uma vez por combate.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnBellowHealth(0.15),
                     once = true,
@@ -492,6 +508,7 @@ object CardCatalog {
             abilities = listOf(
                 Ability(
                     name = "Corte rapido",
+                    description = "Cada ataque com a katana causa um ataque extra aplicando um dano fixo ao inimigo.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnAttack,
                     effects = listOf(
@@ -525,8 +542,9 @@ object CardCatalog {
             abilities = listOf(
                 Ability(
                     name = "Presença inabalável",
+                    description = "O Cavaleirinho se torna mais resistente quando está com pouca vida, sua determinação e coragem o fortalecem para resistir a ataques que poderiam derrubá-lo.",
                     type = AbilityType.PASSIVE,
-                    trigger = AbilityTrigger.OnBellowHealth(0.4), // quadndo abaixo de 40% de vida, dobrar def
+                    trigger = AbilityTrigger.OnBellowHealth(0.4),
                     effects = listOf(
                         Effect.StatIncreaseWhileBelowHealth(
                             stat = Stat.DEF,
@@ -537,6 +555,7 @@ object CardCatalog {
                 ),
                 Ability(
                     name = "Benção do Escudo Sagrado", // a cada 4 rounds
+                    description = "A cada 4 turnos, o Cavaleirinho recebe a benção do escudo sagrado, curando uma parte de sua vida se fortalecendo. A proteção divina do escudo sagrado ajuda o Cavaleirinho a resistir a ataques poderosos e a se manter firme em batalha.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnTurnEvery(4),
                     effects = listOf(
@@ -547,7 +566,7 @@ object CardCatalog {
                 ),
                 Ability(
                     name = "Senso de justiça",
-                    // description = "Causa 20% de dano extra em inimigos malignos"
+                    description = "Causa 20% de dano extra em inimigos \"malignos\"",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnAttackAgainstTag("malignant"),
                     effects = listOf(
@@ -569,17 +588,53 @@ object CardCatalog {
             ),
             tags = setOf("steel", "speed", "crit", "polished"),
             statsPerLevel = mapOf(
-                Stat.ATK to 2.0,
+                Stat.ATK to 1.5,
                 Stat.SPEED to 0.4,
                 Stat.CRIT_CHANCE to 0.01
             ),
             abilities = listOf(
                 Ability(
                     name = "Corte rapido",
+                    description = "Cada ataque com a katana causa um ataque extra aplicando um dano fixo ao inimigo.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnAttack,
                     effects = listOf(
                         Effect.Damage(8.0)
+                    )
+                )
+            )
+        ),
+        CardDefinition(
+            id = "GREATSWORD",
+            name = "Espada Grande",
+            rarity = Rarity.EPIC,
+            description = "Uma espada grande e pesada, extremamente pesada, mas efetiva",
+            type = CardType.EQUIPMENT,
+            baseStats = mapOf(
+                Stat.ATK to 32.0,
+                Stat.SPEED to -12.0
+            ),
+            statsPerLevel = mapOf(
+                Stat.ATK to 4.0
+            ),
+            tags = setOf("iron", "great", "heavy"),
+            abilities = listOf(
+                Ability(
+                    name = "Golpes pesados",
+                    description = "O peso dessa enorme espada recompensa aqueles fortes suficientes para ergue-lá, ganhando aumento de 20% de ataque no inicio da batalha",
+                    trigger = AbilityTrigger.OnBattleStart,
+                    type = AbilityType.PASSIVE,
+                    effects = listOf(
+                        Effect.StatIncreasePercent(Stat.ATK, 0.2)
+                    )
+                ),
+                Ability(
+                    name = "Golpe Colossal",
+                    description = "Cada 3 ataques, o portador da espada desferi um golpe colossal, causando um dano massivo que escala com seu ataque atual.",
+                    trigger = AbilityTrigger.OnAttackEvery(3),
+                    type = AbilityType.PASSIVE,
+                    effects = listOf(
+                        Effect.DamageBasedOnStat(Stat.ATK, 1.4)
                     )
                 )
             )
