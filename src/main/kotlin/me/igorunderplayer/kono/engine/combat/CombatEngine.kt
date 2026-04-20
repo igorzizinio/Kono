@@ -856,7 +856,7 @@ class CombatEngine(
         when {
             enemy != null && state.rng.nextDouble() < 0.5 -> {
                 val damage = 18.0 + (coins * 0.8)
-                enqueue(CombatEvent.BeforeDamage(source = owner, target = enemy, damage = damage, damageType = DamageType.MAGIC))
+                enqueue(CombatEvent.BeforeDamage(source = owner, target = enemy, damage = damage))
                 state.combatLog += "🎰 ${owner.card.name} converteu moedas em ${damage.toInt()} dano mágico."
             }
             state.rng.nextDouble() < 0.8 -> {
