@@ -82,7 +82,7 @@ object CardCatalog {
             ),
             statsPerLevel = mapOf(
                 Stat.CRIT_CHANCE to 0.01,
-                Stat.CRIT_DAMAGE to 0.02
+                Stat.CRIT_DAMAGE to 0.03
             ),
             tags = setOf("gambler", "chaos"),
             abilities = listOf(
@@ -244,7 +244,7 @@ object CardCatalog {
                 Stat.SPEED to 120.0
             ),
             statsPerLevel = mapOf(
-                Stat.HP to 2.5,
+                Stat.HP to 3.0,
                 Stat.ATK to 2.0,
                 Stat.DEF to 1.4,
                 Stat.CRIT_CHANCE to 0.01,
