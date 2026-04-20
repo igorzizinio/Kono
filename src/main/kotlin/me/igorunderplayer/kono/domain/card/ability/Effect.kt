@@ -7,9 +7,6 @@ import me.igorunderplayer.kono.domain.gameplay.Unit as CombatUnit
 
 
 sealed class Effect {
-
-
-
     data class Damage(
         val value: Double,
         val target: AbilityTarget = AbilityTarget.ENEMY,

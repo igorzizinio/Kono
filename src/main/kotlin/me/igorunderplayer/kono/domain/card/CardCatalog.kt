@@ -850,6 +850,7 @@ object CardCatalog {
             abilities = listOf(
                 Ability(
                     name = "Graça Contínua",
+                    description = "Concede cura para todos os aliados de Lumina com base em seu ATK",
                     trigger = AbilityTrigger.OnTurnStart,
                     type = AbilityType.PASSIVE,
                     effects = listOf(
@@ -877,6 +878,7 @@ object CardCatalog {
                 ),
                 Ability(
                     name = "Bênção da Aurora",
+                    description = "Concede um buff global para equipe de ATK e DEF, escalando com ATK de Lumina",
                     trigger = AbilityTrigger.OnTurnEvery(3),
                     type = AbilityType.PASSIVE,
                     effects = listOf(
@@ -922,6 +924,7 @@ object CardCatalog {
                 ),
                 Ability(
                     name = "Fé Crescente",
+                    description = "Lumina aumenta seu poder de ATK  e HP todo começo de rodada através de sua fé",
                     trigger = AbilityTrigger.OnTurnStart,
                     type = AbilityType.PASSIVE,
                     effects = listOf(
