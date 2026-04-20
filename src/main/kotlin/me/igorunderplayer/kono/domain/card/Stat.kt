@@ -35,6 +35,7 @@ fun prettyValue(stat: Stat, value: Double): String {
     return when (stat) {
         Stat.CRIT_CHANCE -> "${(value * 100).roundToInt()}%"
         Stat.CRIT_DAMAGE -> "+${((value - 1) * 100).roundToInt()}%"
+        Stat.LIFESTEAL -> "${(value * 100).roundToInt()}%"
         else -> {
             if (value % 1.0 == 0.0) value.toInt().toString()
             else "%.1f".format(Locale.US, value)
