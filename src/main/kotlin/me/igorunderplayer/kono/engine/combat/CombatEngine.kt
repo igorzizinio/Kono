@@ -298,6 +298,12 @@ class CombatEngine(
             is Effect.Random -> {
                 processRandom(effect.profile, owner)
             }
+
+            is Effect.Custom -> {
+                val targets = resolveTargets(owner, AbilityTarget.ENEMY, event)
+                val target = targets.firstOrNull()
+                effect.action(owner, target, state)
+            }
         }
     }
 
@@ -703,7 +709,7 @@ class CombatEngine(
         }
     }
 
-    private fun applyTemporaryStatModifier(
+    fun applyTemporaryStatModifier(
         target: Unit,
         stat: Stat,
         delta: Double,

@@ -1,6 +1,7 @@
 package me.igorunderplayer.kono.domain.card
 
 import me.igorunderplayer.kono.domain.card.ability.*
+import me.igorunderplayer.kono.domain.gameplay.TemporaryStatModifier
 
 object CardCatalog {
 
@@ -553,6 +554,7 @@ object CardCatalog {
             description = "Após sua mãe finalmente aprovar seu sonho de se tornar cavaleiro, o Cavaleirinho treinou sem parar.\n" +
                     "Agora, em sua forma final, ele se ergue como um guerreiro nobre — de coração puro e determinação inabalável.",
             type = CardType.CHARACTER,
+            faction = "faith",
             baseStats = mapOf(
                 Stat.HP to 980.0,
                 Stat.DEF to 88.0,
@@ -791,6 +793,347 @@ object CardCatalog {
                         Effect.ExecuteBellowHealth(
                             threshold = 0.15,
                         )
+                    )
+                )
+            )
+        ),
+        CardDefinition(
+            id = "VAMPIRE_RING",
+            name = "Anel de Vampiro",
+            description = "Um anel roubado de um vampiro, concede roubo de vida",
+            type = CardType.EQUIPMENT,
+            rarity = Rarity.RARE,
+            baseStats = mapOf(
+              Stat.LIFESTEAL to 0.05
+            ),
+            statsPerLevel = mapOf(
+                Stat.LIFESTEAL to 0.01
+            ),
+            tags = setOf("lifesteal", "vampire"),
+            abilities = emptyList()
+        ),
+        CardDefinition(
+            id = "DAGGER",
+            name = "Adaga",
+            type = CardType.EQUIPMENT,
+            description = "Uma adaga básica simples",
+            rarity = Rarity.COMMON,
+            baseStats = mapOf(
+                Stat.ATK to 6.0,
+                Stat.SPEED to 2.0
+            ),
+            statsPerLevel = mapOf(
+                Stat.ATK to 1.0,
+                Stat.SPEED to 0.5
+            ),
+            tags = setOf("starter"),
+            abilities = emptyList()
+        ),
+        CardDefinition(
+            id = "LUMINA",
+            name = "Lumina",
+            description = "Uma sacerdotisa cuja fé fortalece todos ao seu redor, curando e abençoando aliados continuamente.",
+            type = CardType.CHARACTER,
+            rarity = Rarity.EPIC,
+            faction = "faith",
+            baseStats = mapOf(
+                Stat.HP to 720.0,
+                Stat.ATK to 82.0,
+                Stat.DEF to 44.0,
+                Stat.SPEED to 100.0
+            ),
+            statsPerLevel = mapOf(
+                Stat.HP to 20.0,
+                Stat.ATK to 6.0,
+                Stat.DEF to 4.0,
+            ),
+            abilities = listOf(
+                Ability(
+                    name = "Graça Contínua",
+                    trigger = AbilityTrigger.OnTurnStart,
+                    type = AbilityType.PASSIVE,
+                    effects = listOf(
+                        Effect.Custom("Cura todos os aliados baseado no ATK") { self, _, state ->
+                            val healAmount = (self.stats[Stat.ATK] ?: 0.0) * 0.20
+                            if (healAmount <= 0) return@Custom
+
+                            val team = state.teams.firstOrNull { it.units.contains(self) } ?: return@Custom
+
+                            team.units
+                                .filter { it.hp > 0 }
+                                .forEach { ally ->
+                                    val maxHp = ally.stats[Stat.HP] ?: return@forEach
+                                    val before = ally.hp
+
+                                    ally.hp = (ally.hp + healAmount).coerceAtMost(maxHp)
+                                    val healed = ally.hp - before
+
+                                    if (healed > 0) {
+                                        state.combatLog += "✨ ${ally.card.name} foi curado em ${"%.1f".format(healed)} por Lumina."
+                                    }
+                                }
+                        }
+                    )
+                ),
+                Ability(
+                    name = "Bênção da Aurora",
+                    trigger = AbilityTrigger.OnTurnEvery(3),
+                    type = AbilityType.PASSIVE,
+                    effects = listOf(
+                        Effect.Custom("Global Buff Scaling") { self, _, state ->
+
+                            val atk = self.stats[Stat.ATK] ?: 0.0
+                            val def = self.stats[Stat.DEF] ?: 0.0
+
+                            val atkBuff = atk * 0.25
+                            val defBuff = def * 0.25
+
+                            val team = state.teams.firstOrNull { it.units.contains(self) } ?: return@Custom
+
+                            team.units
+                                .filter { it.hp > 0 }
+                                .forEach { ally ->
+                                    val currentAtk = ally.stats[Stat.ATK] ?: 0.0
+                                    ally.stats[Stat.ATK] = currentAtk + atkBuff
+
+                                    val currentDef = ally.stats[Stat.DEF] ?: 0.0
+                                    ally.stats[Stat.DEF] = currentDef + defBuff
+
+                                    state.temporaryStatModifiers += TemporaryStatModifier(
+                                        unitId = ally.id,
+                                        stat = Stat.ATK,
+                                        delta = atkBuff,
+                                        remainingRounds = 2,
+                                        source = "LUMINA_BUFF"
+                                    )
+
+                                    state.temporaryStatModifiers += TemporaryStatModifier(
+                                        unitId = ally.id,
+                                        stat = Stat.DEF,
+                                        delta = defBuff,
+                                        remainingRounds = 2,
+                                        source = "LUMINA_BUFF"
+                                    )
+
+                                    state.combatLog += "🌅 ${ally.card.name} recebeu +${atkBuff.toInt()} ATK e +${defBuff.toInt()} DEF."
+                                }
+                        }
+                    )
+                ),
+                Ability(
+                    name = "Fé Crescente",
+                    trigger = AbilityTrigger.OnTurnStart,
+                    type = AbilityType.PASSIVE,
+                    effects = listOf(
+                        Effect.Custom("Self Scaling") { self, _, state ->
+                            val atkGain = 4.0
+                            val hpGain = 20.0
+
+                            self.stats[Stat.ATK] = (self.stats[Stat.ATK] ?: 0.0) + atkGain
+                            self.stats[Stat.HP] = (self.stats[Stat.HP] ?: 0.0) + hpGain
+
+                            state.combatLog += "🙏 ${self.card.name} aumentou seu poder com fé (+\${atkGain.toInt()} ATK, +\${hpGain.toInt()} HP)."
+                        }
+                    )
+                )
+            )
+        ),
+        CardDefinition(
+            id = "DEVOTION_STAFF",
+            name = "Cetro da Devoção",
+            description = "Um cetro sagrado que amplifica a fé do portador, fortalecendo aliados — especialmente aqueles que compartilham da mesma devoção.",
+            type = CardType.EQUIPMENT,
+            rarity = Rarity.EPIC,
+            faction = "faith",
+            baseStats = mapOf(
+                Stat.ATK to 50.0,
+                Stat.SPEED to -12.0
+            ),
+            statsPerLevel = mapOf(
+                Stat.ATK to 5.0
+            ),
+            tags = setOf("faith", "support", "scaling"),
+            abilities = listOf(
+                Ability(
+                    name = "Conversão Divina",
+                    description = "Converte parte do ATK em cura adicional. Aliados da fé recebem mais.",
+                    type = AbilityType.PASSIVE,
+                    trigger = AbilityTrigger.OnTurnStart,
+                    effects = listOf(
+                        Effect.Custom("Faith Heal Scaling") { self, _, state ->
+
+                            val atk = self.stats[Stat.ATK] ?: 0.0
+
+                            val team = state.teams.firstOrNull { it.units.contains(self) } ?: return@Custom
+
+                            team.units
+                                .filter { it.hp > 0 }
+                                .forEach { ally ->
+
+                                    val isFaith = ally.card.faction == "faith"
+
+                                    val ratio = if (isFaith) 0.14 else 0.08
+                                    val healAmount = atk * ratio
+
+                                    val maxHp = ally.stats[Stat.HP] ?: return@forEach
+                                    val before = ally.hp
+
+                                    ally.hp = (ally.hp + healAmount).coerceAtMost(maxHp)
+                                    val healed = ally.hp - before
+
+                                    if (healed > 0) {
+                                        state.combatLog += "✨ ${ally.card.name} recebeu ${"%.1f".format(healed)} de cura (${if (isFaith) "fé" else "normal"})."
+                                    }
+                                }
+                        }
+                    )
+                ),
+                Ability(
+                    name = "Proteção Sagrada",
+                    description = "Aliados recebem escudos temporários. Membros da fé recebem escudos mais fortes.",
+                    type = AbilityType.PASSIVE,
+                    trigger = AbilityTrigger.OnTurnEvery(2),
+                    effects = listOf(
+                        Effect.Custom("Faith Shield") { self, _, state ->
+
+                            val atk = self.stats[Stat.ATK] ?: 0.0
+
+                            val team = state.teams.firstOrNull { it.units.contains(self) } ?: return@Custom
+
+                            team.units
+                                .filter { it.hp > 0 }
+                                .forEach { ally ->
+
+                                    val isFaith = ally.card.faction == "faith"
+
+                                    val ratio = if (isFaith) 0.20 else 0.10
+                                    val shieldValue = atk * ratio
+
+                                    state.temporaryStatModifiers += TemporaryStatModifier(
+                                        unitId = ally.id,
+                                        stat = Stat.HP,
+                                        delta = shieldValue,
+                                        remainingRounds = 1,
+                                        source = "DEVOTION_SHIELD"
+                                    )
+
+                                    state.combatLog += "🛡️ ${ally.card.name} recebeu ${shieldValue.toInt()} de escudo (${if (isFaith) "fé" else "normal"})."
+                                }
+                        }
+                    )
+                )
+            )
+        ),
+        CardDefinition(
+            id = "SOLAR_PALADIN",
+            name = "Paladino Solar",
+            description = "Um guerreiro sagrado que transforma sua força em proteção divina, sustentando-se em combate através da fé.",
+            type = CardType.CHARACTER,
+            rarity = Rarity.LEGENDARY,
+            faction = "faith",
+            tags = setOf("tank", "bruiser", "faith", "scaling", "sustain"),
+            baseStats = mapOf(
+                Stat.HP to 920.0,
+                Stat.ATK to 62.0,
+                Stat.DEF to 64.0,
+                Stat.SPEED to 70.0,
+                Stat.CRIT_CHANCE to 0.15,
+                Stat.CRIT_DAMAGE to 1.5
+            ),
+            statsPerLevel = mapOf(
+                Stat.HP to 28.0,
+                Stat.ATK to 5.0,
+                Stat.DEF to 6.0
+            ),
+            abilities = listOf(
+                Ability(
+                    name = "Corpo Consagrado",
+                    description = "Parte do ATK do paladino é convertido continuamente em resistência e regeneração.",
+                    type = AbilityType.PASSIVE,
+                    trigger = AbilityTrigger.OnTurnStart,
+                    effects = listOf(
+                        Effect.Custom("Atk to sustain") { self, _, state ->
+
+                            val atk = self.stats[Stat.ATK] ?: 0.0
+
+                            val heal = atk * 0.25
+                            val defBonus = atk * 0.15
+
+                            val maxHp = self.stats[Stat.HP] ?: return@Custom
+                            val before = self.hp
+
+                            self.hp = (self.hp + heal).coerceAtMost(maxHp)
+
+                            self.stats[Stat.DEF] = (self.stats[Stat.DEF] ?: 0.0) + defBonus
+
+                            val healed = self.hp - before
+
+                            if (healed > 0) {
+                                state.combatLog += "☀️ ${self.card.name} converteu força em ${"%.1f".format(healed)} de cura."
+                            }
+                        }
+                    )
+                ),
+
+                // 🛡️ ESCUDO BASEADO EM ATK
+                Ability(
+                    name = "Égide da Fé",
+                    description = "A cada 3 turnos, cria um escudo baseado em seu ATK.",
+                    type = AbilityType.PASSIVE,
+                    trigger = AbilityTrigger.OnTurnEvery(3),
+                    effects = listOf(
+                        Effect.Custom("Shield from atk") { self, _, state ->
+
+                            val atk = self.stats[Stat.ATK] ?: 0.0
+                            val shield = atk * 1.2
+
+                            val maxHp = self.stats[Stat.HP] ?: return@Custom
+                            val before = self.hp
+
+                            self.hp = (self.hp + shield).coerceAtMost(maxHp)
+
+                            val gained = self.hp - before
+
+                            if (gained > 0) {
+                                state.combatLog += "🛡️ ${self.card.name} ganhou ${gained.toInt()} de proteção divina."
+                            }
+                        }
+                    )
+                ),
+
+                // ✝️ SINERGIA COM FÉ
+                Ability(
+                    name = "Juramento Sagrado",
+                    description = "Enquanto houver aliados da facção faith, o paladino recebe bônus e compartilha sua resistência.",
+                    type = AbilityType.PASSIVE,
+                    trigger = AbilityTrigger.OnTurnStart,
+                    effects = listOf(
+                        Effect.Custom("Faith synergy") { self, _, state ->
+
+                            val team = state.teams.firstOrNull { it.units.contains(self) } ?: return@Custom
+
+                            val faithAllies = team.units.count { it.card.faction == "faith" && it.hp > 0 }
+
+                            if (faithAllies <= 1) return@Custom
+
+                            val bonusDef = 6.0 * faithAllies
+
+                            self.stats[Stat.DEF] = (self.stats[Stat.DEF] ?: 0.0) + bonusDef
+
+                            team.units
+                                .filter { it.id != self.id && it.hp > 0 }
+                                .forEach { ally ->
+                                    state.temporaryStatModifiers += TemporaryStatModifier(
+                                        unitId = ally.id,
+                                        stat = Stat.DEF,
+                                        delta = bonusDef * 0.5,
+                                        remainingRounds = 1,
+                                        source = "PALADIN_FAITH"
+                                    )
+                                }
+
+                            state.combatLog += "✝️ ${self.card.name} fortaleceu o time com fé (${faithAllies} aliados)."
+                        }
                     )
                 )
             )
