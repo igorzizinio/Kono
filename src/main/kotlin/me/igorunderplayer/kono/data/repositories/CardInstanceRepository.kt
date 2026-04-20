@@ -129,6 +129,20 @@ class CardInstanceRepository(
         instance to definition
     }
 
+    suspend fun getOwnedEquipmentWithDefinition(userId: Int, instanceId: Int): Pair<CardInstance, CardDefinition>? = withContext(Dispatchers.IO) {
+        val instance = database.sequenceOf(CardInstances)
+            .find {
+                (it.userId eq userId) and (it.id eq instanceId)
+            } ?: return@withContext null
+
+        val definition = CardCatalog.getById(instance.definitionId)
+            ?: return@withContext null
+
+        if (definition.type != CardType.EQUIPMENT) return@withContext null
+
+        instance to definition
+    }
+
     suspend fun countOwnedDefinitionInstances(userId: Int, definitionId: String): Int = withContext(Dispatchers.IO) {
         database.from(CardInstances)
             .select(CardInstances.id)
@@ -168,7 +182,63 @@ class CardInstanceRepository(
         deleted
     }
 
+    suspend fun countUnequippedDefinitionCopiesForUpgrade(
+        userId: Int,
+        definitionId: String,
+        exceptInstanceId: Int
+    ): Int = withContext(Dispatchers.IO) {
+        database.from(CardInstances)
+            .leftJoin(EquippedCards, on = CardInstances.id eq EquippedCards.cardInstanceId)
+            .select(CardInstances.id)
+            .where {
+                (CardInstances.userId eq userId) and
+                    (CardInstances.definitionId eq definitionId) and
+                    (CardInstances.id notEq exceptInstanceId) and
+                    (EquippedCards.id.isNull())
+            }
+            .totalRecordsInAllPages
+    }
+
+    suspend fun consumeUnequippedDefinitionCopies(
+        userId: Int,
+        definitionId: String,
+        exceptInstanceId: Int,
+        amount: Int
+    ): Int = withContext(Dispatchers.IO) {
+        if (amount <= 0) return@withContext 0
+
+        val idsToDelete = database.from(CardInstances)
+            .leftJoin(EquippedCards, on = CardInstances.id eq EquippedCards.cardInstanceId)
+            .select(CardInstances.id)
+            .where {
+                (CardInstances.userId eq userId) and
+                    (CardInstances.definitionId eq definitionId) and
+                    (CardInstances.id notEq exceptInstanceId) and
+                    (EquippedCards.id.isNull())
+            }
+            .orderBy(CardInstances.id.asc())
+            .limit(amount)
+            .mapNotNull { it[CardInstances.id] }
+
+        if (idsToDelete.size < amount) return@withContext 0
+
+        var deleted = 0
+        idsToDelete.forEach { id ->
+            deleted += database.delete(CardInstances) { it.id eq id }
+        }
+
+        deleted
+    }
+
     suspend fun updateCharacterLevel(instanceId: Int, newLevel: Int): Boolean = withContext(Dispatchers.IO) {
+        database.update(CardInstances) {
+            set(it.level, newLevel)
+            set(it.upgraded, newLevel > 1)
+            where { it.id eq instanceId }
+        } > 0
+    }
+
+    suspend fun updateEquipmentLevel(instanceId: Int, newLevel: Int): Boolean = withContext(Dispatchers.IO) {
         database.update(CardInstances) {
             set(it.level, newLevel)
             set(it.upgraded, newLevel > 1)

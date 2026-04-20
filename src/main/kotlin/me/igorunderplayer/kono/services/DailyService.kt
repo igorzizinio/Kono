@@ -5,7 +5,7 @@ import java.time.Duration
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
-const val DAILY_AMOUNT = 50
+const val DAILY_AMOUNT = 60
 const val WEEKLY_BONUS = 180
 
 sealed class DailyResult {

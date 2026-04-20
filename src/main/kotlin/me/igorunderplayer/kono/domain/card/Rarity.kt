@@ -29,7 +29,7 @@ fun Rarity.toDisplayEmoji(): String {
         Rarity.RARE -> "🔹"
         Rarity.EPIC -> "🟣"
         Rarity.LEGENDARY -> "🟠"
-        Rarity.MYTHIC -> "🔥"
+        Rarity.MYTHIC -> "\uD83C\uDFB2"
         Rarity.KONO -> "\uD83C\uDF0C"
     }
 }

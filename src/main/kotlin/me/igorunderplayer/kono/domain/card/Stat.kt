@@ -12,6 +12,11 @@ enum class Stat {
     SPEED
 }
 
+enum class StatSource {
+    SELF,
+    TARGET
+}
+
 
 fun Stat.prettyName(): String {
     return when (this) {

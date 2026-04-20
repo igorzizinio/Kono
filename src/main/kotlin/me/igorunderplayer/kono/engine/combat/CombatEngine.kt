@@ -1,6 +1,7 @@
 package me.igorunderplayer.kono.engine.combat
 
 import me.igorunderplayer.kono.domain.card.Stat
+import me.igorunderplayer.kono.domain.card.StatSource
 import me.igorunderplayer.kono.domain.card.ability.AbilityTarget
 import me.igorunderplayer.kono.domain.card.ability.AbilityTrigger
 import me.igorunderplayer.kono.domain.card.ability.AbilityType
@@ -32,7 +33,7 @@ class CombatEngine(
 
     private fun processTurn() {
 
-        state.combatLog += "🔄 Turno ${state.turn}"
+        state.combatLog += "\n🔄 ===== TURNO ${state.turn} ====="
 
         val units = state.teams
             .flatMap { it.units }
@@ -56,6 +57,8 @@ class CombatEngine(
 
             if (state.isFinished()) return
         }
+
+        processTemporaryModifiersEndOfRound()
 
         state.turn++
     }
@@ -104,7 +107,7 @@ class CombatEngine(
                     val onceKey = onceAbilityKey(unit, ability)
                     if (ability.once && !state.onceTriggeredAbilityKeys.add(onceKey)) continue
 
-                    state.combatLog += "✨ ${unitLabel(unit, state)} ativou ${ability.name}."
+                    state.combatLog += "✨ ${unitLabel(unit, state)} ativou [${ability.name}] (${ability.trigger})"
 
                     ability.effects.forEach { effect ->
                         applyEffect(effect, unit, event, ability.name)
@@ -135,11 +138,18 @@ class CombatEngine(
                 }
             }
 
-            is Effect.DamageIncreasePercent -> {
+            is Effect.DamageBasedOnStat -> {
                 val targets = resolveTargets(owner, effect.target, event)
-                val damage = (calculateDamage(owner) * effect.value).coerceAtLeast(0.0)
 
                 for (target in targets) {
+                    val statValue = when (effect.statSource) {
+                        StatSource.SELF -> owner.stats[effect.stat]
+                        StatSource.TARGET -> target.stats[effect.stat]
+                    } ?: 0.0
+
+                    val damage = statValue * effect.scaling
+                    if (damage <= 0) continue
+
                     enqueue(
                         CombatEvent.BeforeDamage(
                             source = owner,
@@ -148,6 +158,19 @@ class CombatEngine(
                         )
                     )
                 }
+            }
+            is Effect.DamageIncreasePercent -> {
+                if (event !is CombatEvent.BeforeDamage) return
+
+                val increased = event.damage * (1 + effect.value)
+
+                enqueue(
+                    CombatEvent.BeforeDamage(
+                        source = event.source,
+                        target = event.target,
+                        damage = increased
+                    )
+                )
             }
 
             is Effect.Heal -> {
@@ -160,8 +183,25 @@ class CombatEngine(
             is Effect.BuffStat -> {
                 val targets = resolveTargets(owner, effect.target, event)
                 for (target in targets) {
-                    target.stats[effect.stat] =
-                        (target.stats[effect.stat] ?: 0.0) + effect.value
+                    val before = target.stats[effect.stat] ?: 0.0
+                    val after = before + effect.value
+
+                    target.stats[effect.stat] = after
+
+                    state.combatLog += "📈 ${unitLabel(target, state)} ganhou +${effect.value} ${effect.stat} (${"%.1f".format(after)})"
+                }
+            }
+
+            is Effect.StatIncreasePercent -> {
+                val targets = resolveTargets(owner, effect.target, event)
+                for (target in targets) {
+                    val before = target.stats[effect.stat] ?: 0.0
+                    val bonus = before * effect.percent
+                    val after = before + bonus
+
+                    target.stats[effect.stat] = after
+
+                    state.combatLog += "📈 ${unitLabel(target, state)} ganhou +${effect.percent * 100}% ${effect.stat} (${"%.1f".format(after)})"
                 }
             }
 
@@ -175,7 +215,7 @@ class CombatEngine(
                 if (granted <= 0) return
 
                 team.addCoins(granted)
-                state.combatLog += "💰 ${owner.card.name} gerou $granted moeda(s) para o time ${team.id}. Total: ${team.coins()}"
+                state.combatLog += "💰 ${unitLabel(owner, state)} gerou $granted moeda(s) (Time ${team.id}: ${team.coins()})"
             }
 
             is Effect.AddCoinsScaling -> {
@@ -235,6 +275,8 @@ class CombatEngine(
             is CombatEvent.Attack -> {
                 state.attackCountByUnitId[event.attacker.id] = (state.attackCountByUnitId[event.attacker.id] ?: 0) + 1
 
+                state.combatLog += "⚔️ ${unitLabel(event.attacker, state)} atacando ${unitLabel(event.target, state)}"
+
                 val damage = calculateDamage(event.attacker)
 
                 enqueue(
@@ -285,6 +327,15 @@ class CombatEngine(
                 damage = finalDamage
             )
         )
+                state.combatLog += "💥 ${unitLabel(event.source, state)} causou ${"%.1f".format(finalDamage)} de dano em ${unitLabel(event.target, state)} (${"%.1f".format(event.target.hp.coerceAtLeast(0.0))} HP restante)"
+
+                enqueue(
+                    CombatEvent.AfterDamage(
+                        source = event.source,
+                        target = event.target,
+                        damage = finalDamage
+                    )
+                )
 
         val sourceTeam = findTeam(source)
         val targetTeam = findTeam(target)
@@ -295,6 +346,11 @@ class CombatEngine(
 
         if (target.hp <= 0.0) {
             enqueue(CombatEvent.Death(target))
+            is CombatEvent.Death -> {
+                state.combatLog += "☠️ ${unitLabel(event.unit, state)} foi derrotado!"
+            }
+
+            else -> {}
         }
     }
 
@@ -394,7 +450,13 @@ class CombatEngine(
 
     private fun heal(unit: Unit, amount: Double) {
         val maxHp = unit.stats[Stat.HP] ?: return
+        val before = unit.hp
         unit.hp = (unit.hp + amount).coerceAtMost(maxHp)
+        val healed = unit.hp - before
+
+        if (healed > 0) {
+            state.combatLog += "💚 ${unitLabel(unit, state)} curou ${"%.1f".format(healed)} HP (${"%.1f".format(unit.hp)} HP)"
+        }
     }
 
     private fun findTeam(unit: Unit) =
@@ -482,18 +544,150 @@ class CombatEngine(
         when (profile.uppercase()) {
             "MARKUS_GAMBLER" -> processMarkusRandom(owner)
             "UNDEFINED_BUG" -> processUndefinedRandom(owner)
+            "GAMBLER_CHARM" -> processGamblerCharmRandom(owner)
             else -> processDefaultRandom(owner)
         }
     }
 
     private fun processDefaultRandom(owner: Unit) {
+        val hpAmount = 20.0
+
         if (state.rng.nextDouble() < 0.5) {
-            heal(owner, 10.0)
-            state.combatLog += "🎲 ${owner.card.name} rolou sorte e curou 10 HP."
+            heal(owner, hpAmount)
+            state.combatLog += "🎲 ${owner.card.name} rolou sorte e curou $hpAmount HP."
         } else {
-            owner.hp -= 5.0
-            state.combatLog += "🎲 ${owner.card.name} rolou azar e perdeu 5 HP."
+            owner.hp -= hpAmount
+            state.combatLog += "🎲 ${owner.card.name} rolou azar e perdeu $hpAmount HP."
         }
+    }
+
+    private fun processGamblerCharmRandom(owner: Unit) {
+        val enemy = findTarget(owner)
+
+        // escolhe alvo aleatório (owner ou enemy)
+        val target = if (enemy != null && state.rng.nextBoolean()) enemy else owner
+
+        val roll = state.rng.nextDouble()
+
+        when {
+            // 🟢 Cura
+            roll < 0.25 -> {
+                val healAmount = 60.0
+                heal(target, healAmount)
+                state.combatLog += "🍀 ${owner.card.name} girou a roleta e ${if (target == owner) "se curou" else "curou o inimigo"} em $healAmount HP."
+            }
+
+            // 🔴 Dano
+            roll < 0.50 -> {
+                if (enemy != null) {
+                    val damage = 55.0
+                    enqueue(CombatEvent.BeforeDamage(source = owner, target = target, damage = damage))
+                    state.combatLog += "🍀 ${owner.card.name} causou $damage de dano em ${if (target == owner) "si mesmo" else "o inimigo"}."
+                }
+            }
+
+            // 💪 Buff ATK
+            roll < 0.70 -> {
+                val percent = 0.30
+                val current = target.stats[Stat.ATK] ?: 0.0
+                val bonus = current * percent
+
+                applyTemporaryStatModifier(
+                    target = target,
+                    stat = Stat.ATK,
+                    delta = bonus,
+                    durationRounds = 1,
+                    source = "GAMBLER_CHARM_ATK"
+                )
+
+                state.combatLog += "🍀 ${owner.card.name} aumentou ATK de ${unitLabel(target, state)} em +${(percent * 100).toInt()}% por 1 rodada."
+            }
+
+            // 🛡️ Buff DEF
+            roll < 0.85 -> {
+                val percent = 0.30
+                val current = target.stats[Stat.DEF] ?: 0.0
+                val bonus = current * percent
+
+                applyTemporaryStatModifier(
+                    target = target,
+                    stat = Stat.DEF,
+                    delta = bonus,
+                    durationRounds = 1,
+                    source = "GAMBLER_CHARM_DEF"
+                )
+
+                state.combatLog += "🍀 ${owner.card.name} aumentou DEF de ${unitLabel(target, state)} em +${(percent * 100).toInt()}% por 1 rodada."
+            }
+
+            // ☠️ Debuff DEF
+            else -> {
+                val percent = 0.35
+                val current = target.stats[Stat.DEF] ?: 0.0
+                val reduction = current * percent
+                val appliedReduction = reduction.coerceAtMost(current)
+
+                applyTemporaryStatModifier(
+                    target = target,
+                    stat = Stat.DEF,
+                    delta = -appliedReduction,
+                    durationRounds = 1,
+                    source = "GAMBLER_CHARM_DEF_DEBUFF"
+                )
+
+                state.combatLog += "🍀 ${owner.card.name} reduziu DEF de ${unitLabel(target, state)} em -${(percent * 100).toInt()}% por 1 rodada!"
+            }
+        }
+    }
+
+    private fun applyTemporaryStatModifier(
+        target: Unit,
+        stat: Stat,
+        delta: Double,
+        durationRounds: Int,
+        source: String
+    ) {
+        if (delta == 0.0) return
+
+        val safeDuration = durationRounds.coerceAtLeast(1)
+        val current = target.stats[stat] ?: 0.0
+        target.stats[stat] = current + delta
+
+        state.temporaryStatModifiers += me.igorunderplayer.kono.domain.gameplay.TemporaryStatModifier(
+            unitId = target.id,
+            stat = stat,
+            delta = delta,
+            remainingRounds = safeDuration,
+            source = source
+        )
+    }
+
+    private fun processTemporaryModifiersEndOfRound() {
+        if (state.temporaryStatModifiers.isEmpty()) return
+
+        val iterator = state.temporaryStatModifiers.iterator()
+        while (iterator.hasNext()) {
+            val modifier = iterator.next()
+            modifier.remainingRounds -= 1
+
+            if (modifier.remainingRounds > 0) continue
+
+            val unit = findUnitById(modifier.unitId)
+            if (unit != null) {
+                val current = unit.stats[modifier.stat] ?: 0.0
+                unit.stats[modifier.stat] = current - modifier.delta
+
+                state.combatLog += "⌛ ${unitLabel(unit, state)} perdeu o efeito temporario de ${modifier.stat}."
+            }
+
+            iterator.remove()
+        }
+    }
+
+    private fun findUnitById(unitId: String): Unit? {
+        return state.teams
+            .flatMap { it.units }
+            .firstOrNull { it.id == unitId }
     }
 
     private fun processUndefinedRandom(owner: Unit) {
@@ -616,7 +810,7 @@ class CombatEngine(
     }
 
     private fun calculateDamage(unit: Unit): Double {
-        return unit.stats[Stat.ATK] ?: 10.0
+        return (unit.stats[Stat.ATK] ?: 0.0).coerceAtLeast(0.0)
     }
 }
 

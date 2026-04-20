@@ -10,6 +10,12 @@ import me.igorunderplayer.kono.domain.card.CardCatalog
 import me.igorunderplayer.kono.domain.card.CardDefinition
 import org.ktorm.dsl.*
 
+data class EquippedDefinitionWithLevel(
+    val definition: CardDefinition,
+    val level: Int,
+    val slot: Int
+)
+
 class EquippedCardsRepository(
     private val databaseManager: DatabaseManager
 ) {
@@ -81,5 +87,22 @@ class EquippedCardsRepository(
             }
             .sortedBy { it.second }
             .map { it.first }
+    }
+
+    suspend fun getEquippedDefinitionsWithLevelForCharacter(characterId: Int): List<EquippedDefinitionWithLevel> = withContext(Dispatchers.IO) {
+        database.from(EquippedCards)
+            .innerJoin(CardInstances, on = EquippedCards.cardInstanceId eq CardInstances.id)
+            .select(EquippedCards.slot, CardInstances.definitionId, CardInstances.level)
+            .where { EquippedCards.characterInstanceId eq characterId }
+            .mapNotNull { row ->
+                val definitionId = row[CardInstances.definitionId] ?: return@mapNotNull null
+                val definition = CardCatalog.getById(definitionId) ?: return@mapNotNull null
+                EquippedDefinitionWithLevel(
+                    definition = definition,
+                    level = row[CardInstances.level] ?: 1,
+                    slot = row[EquippedCards.slot] ?: Int.MAX_VALUE
+                )
+            }
+            .sortedBy { it.slot }
     }
 }
