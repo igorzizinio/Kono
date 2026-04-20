@@ -9,7 +9,8 @@ enum class Stat {
     DEF,
     CRIT_CHANCE,
     CRIT_DAMAGE,
-    SPEED
+    SPEED,
+    LIFESTEAL
 }
 
 enum class StatSource {
@@ -20,12 +21,13 @@ enum class StatSource {
 
 fun Stat.prettyName(): String {
     return when (this) {
-        Stat.HP -> "🩸 HP"
+        Stat.HP -> "\uD83D\uDC9A HP"
         Stat.ATK -> "⚔️ ATK"
         Stat.DEF -> "🛡️ DEF"
         Stat.CRIT_CHANCE -> "🎯 Crit Chance"
         Stat.CRIT_DAMAGE -> "💥 Crit Damage"
         Stat.SPEED -> "💨 Speed"
+        Stat.LIFESTEAL -> "🩸 Roubo de vida"
     }
 }
 

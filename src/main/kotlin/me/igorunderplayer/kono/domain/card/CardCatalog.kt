@@ -102,22 +102,20 @@ object CardCatalog {
         CardDefinition(
             id = "VAMPIRE_CORE",
             name = "Nucleo Vampirico",
-            description = "Rouba vida ao atacar e fortalece o portador com o sangue drenado.",
+            description = "Rouba vida ao atacar.",
             type = CardType.EQUIPMENT,
             rarity = Rarity.EPIC,
             faction = "vampire",
-            baseStats = emptyMap(),
-            statsPerLevel = defaultStatsPerLevel,
+            baseStats = mapOf(
+                Stat.ATK to 16.0,
+                Stat.LIFESTEAL to .15,
+            ),
+            statsPerLevel = mapOf(
+                Stat.ATK to 2.0,
+                Stat.LIFESTEAL to .01
+            ),
             tags = setOf("vampire", "lifesteal"),
-            abilities = listOf(
-                Ability(
-                    name = "Sifao de Sangue",
-                    description = "Cada ataque cura o portador em 10% do dano causado.",
-                    type = AbilityType.PASSIVE,
-                    trigger = AbilityTrigger.OnDamageDealt,
-                    effects = listOf(Effect.Heal(value = 10.0, target = AbilityTarget.SELF))
-                )
-            )
+            abilities = emptyList()
         ),
         CardDefinition(
             id = "CRITFISH",

@@ -272,6 +272,8 @@ class CombatEngine(
 
             is CombatEvent.BattleStart -> {}
 
+            is CombatEvent.TurnStart -> {}
+
             is CombatEvent.Attack -> {
                 state.attackCountByUnitId[event.attacker.id] = (state.attackCountByUnitId[event.attacker.id] ?: 0) + 1
 
@@ -305,13 +307,22 @@ class CombatEngine(
                 }
             }
 
+            is CombatEvent.AfterDamage -> {
+                val damage = event.damage.coerceAtMost(0.0)
+
+                event.source.stats[Stat.LIFESTEAL]?.let {
+                    if (it > 0.0) {
+                        val healAmount = damage * it
+                        heal(event.source, healAmount)
+                    }
+                }
+            }
+
             is CombatEvent.Death -> {
                 state.protectorShareByUnitId.remove(event.unit.id)
                 state.tauntByUnitId.remove(event.unit.id)
                 state.combatLog += "☠️ ${unitLabel(event.unit, state)} foi derrotado!"
             }
-
-            else -> {}
         }
     }
 
