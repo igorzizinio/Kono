@@ -19,7 +19,6 @@ import org.ktorm.entity.filter
 import org.ktorm.entity.find
 import org.ktorm.entity.sequenceOf
 import org.ktorm.entity.toList
-import kotlin.collections.emptyList
 
 data class EquippedItemView(
     val slot: Int,
@@ -77,33 +76,34 @@ class CardInstanceRepository(
             .toSet()
     }
 
-    suspend fun getEquippedItemsForActiveCharacter(discordId: Long): List<EquippedItemView> = withContext(Dispatchers.IO) {
-        val characterId = getActiveCharacterId(discordId)
-            ?: return@withContext emptyList()
+    suspend fun getEquippedItemsForActiveCharacter(discordId: Long): List<EquippedItemView> =
+        withContext(Dispatchers.IO) {
+            val characterId = getActiveCharacterId(discordId)
+                ?: return@withContext emptyList()
 
-        database.from(EquippedCards)
-            .innerJoin(CardInstances, on = EquippedCards.cardInstanceId eq CardInstances.id)
-            .select(
-                EquippedCards.slot,
-                EquippedCards.cardInstanceId,
-                CardInstances.definitionId
-            )
-            .where { EquippedCards.characterInstanceId eq characterId }
-            .mapNotNull { row ->
-                val definitionId = row[CardInstances.definitionId] ?: return@mapNotNull null
-                val definition = CardCatalog.getById(definitionId) ?: return@mapNotNull null
-
-                EquippedItemView(
-                    slot = row[EquippedCards.slot]!!,
-                    cardInstanceId = row[EquippedCards.cardInstanceId]!!,
-                    definitionId = definition.id,
-                    name = definition.name,
-                    rarity = definition.rarity,
-                    type = definition.type
+            database.from(EquippedCards)
+                .innerJoin(CardInstances, on = EquippedCards.cardInstanceId eq CardInstances.id)
+                .select(
+                    EquippedCards.slot,
+                    EquippedCards.cardInstanceId,
+                    CardInstances.definitionId
                 )
-            }
-            .sortedBy { it.slot }
-    }
+                .where { EquippedCards.characterInstanceId eq characterId }
+                .mapNotNull { row ->
+                    val definitionId = row[CardInstances.definitionId] ?: return@mapNotNull null
+                    val definition = CardCatalog.getById(definitionId) ?: return@mapNotNull null
+
+                    EquippedItemView(
+                        slot = row[EquippedCards.slot]!!,
+                        cardInstanceId = row[EquippedCards.cardInstanceId]!!,
+                        definitionId = definition.id,
+                        name = definition.name,
+                        rarity = definition.rarity,
+                        type = definition.type
+                    )
+                }
+                .sortedBy { it.slot }
+        }
 
     suspend fun isOwnedEquipmentInstance(userId: Int, instanceId: Int): Boolean = withContext(Dispatchers.IO) {
         val instance = database.sequenceOf(CardInstances)
@@ -115,40 +115,42 @@ class CardInstanceRepository(
         definition.type == CardType.EQUIPMENT
     }
 
-    suspend fun getOwnedCharacterWithDefinition(userId: Int, instanceId: Int): Pair<CardInstance, CardDefinition>? = withContext(Dispatchers.IO) {
-        val instance = database.sequenceOf(CardInstances)
-            .find {
-                (it.userId eq userId) and (it.id eq instanceId)
-            } ?: return@withContext null
+    suspend fun getOwnedCharacterWithDefinition(userId: Int, instanceId: Int): Pair<CardInstance, CardDefinition>? =
+        withContext(Dispatchers.IO) {
+            val instance = database.sequenceOf(CardInstances)
+                .find {
+                    (it.userId eq userId) and (it.id eq instanceId)
+                } ?: return@withContext null
 
-        val definition = CardCatalog.getById(instance.definitionId)
-            ?: return@withContext null
+            val definition = CardCatalog.getById(instance.definitionId)
+                ?: return@withContext null
 
-        if (definition.type != CardType.CHARACTER) return@withContext null
+            if (definition.type != CardType.CHARACTER) return@withContext null
 
-        instance to definition
-    }
+            instance to definition
+        }
 
-    suspend fun getOwnedEquipmentWithDefinition(userId: Int, instanceId: Int): Pair<CardInstance, CardDefinition>? = withContext(Dispatchers.IO) {
-        val instance = database.sequenceOf(CardInstances)
-            .find {
-                (it.userId eq userId) and (it.id eq instanceId)
-            } ?: return@withContext null
+    suspend fun getOwnedEquipmentWithDefinition(userId: Int, instanceId: Int): Pair<CardInstance, CardDefinition>? =
+        withContext(Dispatchers.IO) {
+            val instance = database.sequenceOf(CardInstances)
+                .find {
+                    (it.userId eq userId) and (it.id eq instanceId)
+                } ?: return@withContext null
 
-        val definition = CardCatalog.getById(instance.definitionId)
-            ?: return@withContext null
+            val definition = CardCatalog.getById(instance.definitionId)
+                ?: return@withContext null
 
-        if (definition.type != CardType.EQUIPMENT) return@withContext null
+            if (definition.type != CardType.EQUIPMENT) return@withContext null
 
-        instance to definition
-    }
+            instance to definition
+        }
 
     suspend fun countOwnedDefinitionInstances(userId: Int, definitionId: String): Int = withContext(Dispatchers.IO) {
         database.from(CardInstances)
             .select(CardInstances.id)
             .where {
                 (CardInstances.userId eq userId) and
-                    (CardInstances.definitionId eq definitionId)
+                        (CardInstances.definitionId eq definitionId)
             }
             .totalRecordsInAllPages
     }
@@ -165,8 +167,8 @@ class CardInstanceRepository(
             .select(CardInstances.id)
             .where {
                 (CardInstances.userId eq userId) and
-                    (CardInstances.definitionId eq definitionId) and
-                    (CardInstances.id notEq exceptInstanceId)
+                        (CardInstances.definitionId eq definitionId) and
+                        (CardInstances.id notEq exceptInstanceId)
             }
             .orderBy(CardInstances.id.asc())
             .limit(amount)
@@ -192,9 +194,9 @@ class CardInstanceRepository(
             .select(CardInstances.id)
             .where {
                 (CardInstances.userId eq userId) and
-                    (CardInstances.definitionId eq definitionId) and
-                    (CardInstances.id notEq exceptInstanceId) and
-                    (EquippedCards.id.isNull())
+                        (CardInstances.definitionId eq definitionId) and
+                        (CardInstances.id notEq exceptInstanceId) and
+                        (EquippedCards.id.isNull())
             }
             .totalRecordsInAllPages
     }
@@ -212,9 +214,9 @@ class CardInstanceRepository(
             .select(CardInstances.id)
             .where {
                 (CardInstances.userId eq userId) and
-                    (CardInstances.definitionId eq definitionId) and
-                    (CardInstances.id notEq exceptInstanceId) and
-                    (EquippedCards.id.isNull())
+                        (CardInstances.definitionId eq definitionId) and
+                        (CardInstances.id notEq exceptInstanceId) and
+                        (EquippedCards.id.isNull())
             }
             .orderBy(CardInstances.id.asc())
             .limit(amount)

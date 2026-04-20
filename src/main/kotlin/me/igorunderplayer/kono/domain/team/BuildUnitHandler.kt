@@ -12,10 +12,10 @@ class BuildUnitHandler(
 ) {
 
     sealed class Result {
-        data class Success(val unit: Unit): Result()
-        object UserNotFound: Result()
-        object NoActiveCard: Result()
-        data class CharacterNotFound(val activeCharacterId: Int): Result()
+        data class Success(val unit: Unit) : Result()
+        object UserNotFound : Result()
+        object NoActiveCard : Result()
+        data class CharacterNotFound(val activeCharacterId: Int) : Result()
 
     }
 

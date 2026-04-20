@@ -2,8 +2,8 @@ package me.igorunderplayer.kono.domain.team
 
 import me.igorunderplayer.kono.data.repositories.CardInstanceRepository
 import me.igorunderplayer.kono.data.repositories.UserRepository
-import me.igorunderplayer.kono.domain.card.Rarity
 import me.igorunderplayer.kono.domain.card.CardType
+import me.igorunderplayer.kono.domain.card.Rarity
 import kotlin.math.max
 import kotlin.math.pow
 import kotlin.math.roundToInt

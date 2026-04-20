@@ -1,5 +1,6 @@
 package me.igorunderplayer.kono.domain.gameplay
 
+import me.igorunderplayer.kono.domain.card.ability.Effect.DamageType
 import me.igorunderplayer.kono.domain.card.ability.AbilityType
 
 sealed class CombatEvent {
@@ -17,7 +18,7 @@ sealed class CombatEvent {
         val source: Unit,
         val target: Unit,
         var damage: Double,
-        val isTrueDamage: Boolean = false,
+        val damageType: DamageType = DamageType.PHYSICAL,
         val canCrit: Boolean = true,
         val canBeDodged: Boolean = true,
         val sourceAbilityType: AbilityType? = null
@@ -27,7 +28,7 @@ sealed class CombatEvent {
         val source: Unit,
         val target: Unit,
         val damage: Double,
-        val isTrueDamage: Boolean = false,
+        val damageType: DamageType = DamageType.PHYSICAL,
         val wasCritical: Boolean = false,
         val sourceAbilityType: AbilityType? = null
     ) : CombatEvent()

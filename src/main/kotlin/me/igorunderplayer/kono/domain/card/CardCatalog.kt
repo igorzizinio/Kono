@@ -1,10 +1,6 @@
 package me.igorunderplayer.kono.domain.card
 
-import me.igorunderplayer.kono.domain.card.ability.Ability
-import me.igorunderplayer.kono.domain.card.ability.AbilityTarget
-import me.igorunderplayer.kono.domain.card.ability.AbilityTrigger
-import me.igorunderplayer.kono.domain.card.ability.AbilityType
-import me.igorunderplayer.kono.domain.card.ability.Effect
+import me.igorunderplayer.kono.domain.card.ability.*
 
 object CardCatalog {
 
@@ -291,7 +287,7 @@ object CardCatalog {
         CardDefinition(
             id = "DEMON_HUNTER_CROSSBOW",
             name = "Besta da Cacadora de Demonios",
-            description = "A cada poucos acertos, libera um disparo destrutivo.",
+            description = "A cada poucos acertos, dispara uma flecha de prata que causa dano verdadeiro baseado no HP máximo do alvo.",
             type = CardType.EQUIPMENT,
             rarity = Rarity.LEGENDARY,
             baseStats = mapOf(
@@ -303,11 +299,17 @@ object CardCatalog {
             abilities = listOf(
                 Ability(
                     name = "Flecha de Prata",
-                    description = "A cada 3 ataques, a besta dispara uma flecha de prata que causa dano extra ao inimigo.",
+                    description = "A cada 3 ataques, a besta dispara uma flecha de prata que causa 8% do HP máximo do alvo como dano verdadeiro.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnAttackEvery(3),
                     effects = listOf(
-                        Effect.Damage(value = 30.0, target = AbilityTarget.ENEMY)
+                        Effect.DamageBasedOnStat(
+                            stat = Stat.HP,
+                            scaling = 0.08,
+                            statSource = StatSource.TARGET,
+                            target = AbilityTarget.ENEMY,
+                            damageType = Effect.DamageType.TRUE
+                        )
                     )
                 )
             )

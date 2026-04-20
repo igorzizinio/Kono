@@ -1,6 +1,6 @@
 package me.igorunderplayer.kono.domain.card
 
-import java.util.Locale
+import java.util.*
 import kotlin.math.roundToInt
 
 enum class Stat {

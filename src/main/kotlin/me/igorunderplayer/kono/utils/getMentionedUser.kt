@@ -12,9 +12,9 @@ suspend fun getMentionedUser(message: Message, args: Array<String>): User? {
 
     val user = if (args.isNotEmpty()) {
         message.mentionedUsers.filter { it.id != message.kord.selfId || countSelf }
-            .firstOrNull()  ?: message.kord.getUser(
-                 Snowflake(args[0].toULongOrNull() ?: ULong.MIN_VALUE)
-            )?.asUserOrNull()
+            .firstOrNull() ?: message.kord.getUser(
+            Snowflake(args[0].toULongOrNull() ?: ULong.MIN_VALUE)
+        )?.asUserOrNull()
     } else {
         null
     }

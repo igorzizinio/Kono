@@ -10,11 +10,13 @@ fun formatNumber(number: Int): String {
 
             "${value}M"
         }
+
         number >= thousand -> {
             val value = number / thousand
 
             "${value}K"
         }
+
         else -> number.toString()
     }
 }

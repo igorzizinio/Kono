@@ -11,9 +11,16 @@ sealed class Effect {
         HIGHEST_ONLY
     }
 
+    enum class DamageType {
+        PHYSICAL,
+        MAGIC,
+        TRUE
+    }
+
     data class Damage(
         val value: Double,
-        val target: AbilityTarget = AbilityTarget.ENEMY
+        val target: AbilityTarget = AbilityTarget.ENEMY,
+        val damageType: DamageType = DamageType.PHYSICAL
     ) : Effect()
 
     data class DamageIncreasePercent(
@@ -25,7 +32,8 @@ sealed class Effect {
         val stat: Stat,
         val scaling: Double,
         val statSource: StatSource = StatSource.SELF,
-        val target: AbilityTarget = AbilityTarget.ENEMY
+        val target: AbilityTarget = AbilityTarget.ENEMY,
+        val damageType: DamageType = DamageType.PHYSICAL
     ) : Effect()
 
     data class StatIncreaseWhileBelowHealth(

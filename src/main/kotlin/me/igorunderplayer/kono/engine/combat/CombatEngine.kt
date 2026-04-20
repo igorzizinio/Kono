@@ -128,11 +128,20 @@ class CombatEngine(
             is Effect.Damage -> {
                 val targets = resolveTargets(owner, effect.target, event)
                 for (target in targets) {
+                    val damage = when (effect.damageType) {
+                        Effect.DamageType.PHYSICAL,
+                        Effect.DamageType.MAGIC,
+                        Effect.DamageType.TRUE -> effect.value
+                    }
+
                     enqueue(
                         CombatEvent.BeforeDamage(
                             source = owner,
                             target = target,
-                            damage = effect.value
+                            damage = damage,
+                            damageType = effect.damageType,
+                            canCrit = effect.damageType == Effect.DamageType.PHYSICAL || effect.damageType == Effect.DamageType.MAGIC,
+                            canBeDodged = effect.damageType == Effect.DamageType.PHYSICAL || effect.damageType == Effect.DamageType.MAGIC
                         )
                     )
                 }
@@ -154,7 +163,10 @@ class CombatEngine(
                         CombatEvent.BeforeDamage(
                             source = owner,
                             target = target,
-                            damage = damage
+                            damage = damage,
+                            damageType = effect.damageType,
+                            canCrit = effect.damageType == Effect.DamageType.PHYSICAL || effect.damageType == Effect.DamageType.MAGIC,
+                            canBeDodged = effect.damageType == Effect.DamageType.PHYSICAL || effect.damageType == Effect.DamageType.MAGIC
                         )
                     )
                 }
@@ -168,7 +180,11 @@ class CombatEngine(
                     CombatEvent.BeforeDamage(
                         source = event.source,
                         target = event.target,
-                        damage = increased
+                        damage = increased,
+                        damageType = event.damageType,
+                        canCrit = event.canCrit,
+                        canBeDodged = event.canBeDodged,
+                        sourceAbilityType = event.sourceAbilityType
                     )
                 )
             }
@@ -285,13 +301,14 @@ class CombatEngine(
                     CombatEvent.BeforeDamage(
                         source = event.attacker,
                         target = event.target,
-                        damage = damage
+                        damage = damage,
+                        damageType = Effect.DamageType.PHYSICAL
                     )
                 )
             }
 
             is CombatEvent.BeforeDamage -> {
-                val incomingDamage = event.damage.coerceAtLeast(0.0)
+                val incomingDamage = resolveMitigatedDamage(event.damage, event.target, event.damageType)
                 if (incomingDamage <= 0.0) return
 
                 val guardian = resolveGuardianFor(event.target)
@@ -299,16 +316,28 @@ class CombatEngine(
                 val redirectedDamage = (incomingDamage * share).coerceAtMost(incomingDamage)
                 val targetDamage = (incomingDamage - redirectedDamage).coerceAtLeast(0.0)
 
-                applyDamageInstance(source = event.source, target = event.target, damage = targetDamage)
+                applyDamageInstance(
+                    source = event.source,
+                    target = event.target,
+                    damage = targetDamage,
+                    damageType = event.damageType,
+                    sourceAbilityType = event.sourceAbilityType
+                )
 
                 if (guardian != null && redirectedDamage > 0.0) {
                     state.combatLog += "🛡️ ${guardian.card.name} interceptou ${redirectedDamage.toInt()} de dano para proteger ${event.target.card.name}."
-                    applyDamageInstance(source = event.source, target = guardian, damage = redirectedDamage)
+                    applyDamageInstance(
+                        source = event.source,
+                        target = guardian,
+                        damage = redirectedDamage,
+                        damageType = event.damageType,
+                        sourceAbilityType = event.sourceAbilityType
+                    )
                 }
             }
 
             is CombatEvent.AfterDamage -> {
-                val damage = event.damage.coerceAtMost(0.0)
+                val damage = event.damage.coerceAtLeast(0.0)
 
                 event.source.stats[Stat.LIFESTEAL]?.let {
                     if (it > 0.0) {
@@ -326,19 +355,32 @@ class CombatEngine(
         }
     }
 
-    private fun applyDamageInstance(source: Unit, target: Unit, damage: Double) {
+    private fun applyDamageInstance(
+        source: Unit,
+        target: Unit,
+        damage: Double,
+        damageType: Effect.DamageType = Effect.DamageType.PHYSICAL,
+        sourceAbilityType: AbilityType? = null
+    ) {
         val finalDamage = damage.coerceAtLeast(0.0)
         if (finalDamage <= 0.0 || target.hp <= 0.0) return
 
         target.hp -= finalDamage
 
-        state.combatLog += "💥 ${unitLabel(source, state)} causou ${"%.1f".format(finalDamage)} de dano em ${unitLabel(target, state)} (${"%.1f".format(target.hp.coerceAtLeast(0.0))} HP restante)"
+        val damageLabel = when (damageType) {
+            Effect.DamageType.PHYSICAL -> "dano físico"
+            Effect.DamageType.MAGIC -> "dano mágico"
+            Effect.DamageType.TRUE -> "dano verdadeiro"
+        }
+        state.combatLog += "💥 ${unitLabel(source, state)} causou ${"%.1f".format(finalDamage)} de $damageLabel em ${unitLabel(target, state)} (${"%.1f".format(target.hp.coerceAtLeast(0.0))} HP restante)"
 
         enqueue(
             CombatEvent.AfterDamage(
                 source = source,
                 target = target,
-                damage = finalDamage
+                damage = finalDamage,
+                damageType = damageType,
+                sourceAbilityType = sourceAbilityType
             )
         )
 
@@ -811,6 +853,20 @@ class CombatEngine(
 
     private fun calculateDamage(unit: Unit): Double {
         return (unit.stats[Stat.ATK] ?: 0.0).coerceAtLeast(0.0)
+    }
+
+    private fun resolveMitigatedDamage(
+        rawDamage: Double,
+        target: Unit,
+        damageType: Effect.DamageType
+    ): Double {
+        val damage = rawDamage.coerceAtLeast(0.0)
+        if (damage <= 0.0) return 0.0
+        if (damageType != Effect.DamageType.PHYSICAL) return damage
+
+        val defense = (target.stats[Stat.DEF] ?: 0.0).coerceAtLeast(-90.0)
+        val mitigationMultiplier = 100.0 / (100.0 + defense)
+        return damage * mitigationMultiplier
     }
 }
 

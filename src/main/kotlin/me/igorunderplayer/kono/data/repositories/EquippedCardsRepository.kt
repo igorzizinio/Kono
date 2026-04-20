@@ -75,34 +75,36 @@ class EquippedCardsRepository(
         } > 0
     }
 
-    suspend fun getEquippedDefinitionsForCharacter(characterId: Int): List<CardDefinition> = withContext(Dispatchers.IO) {
-        database.from(EquippedCards)
-            .innerJoin(CardInstances, on = EquippedCards.cardInstanceId eq CardInstances.id)
-            .select(EquippedCards.slot, CardInstances.definitionId)
-            .where { EquippedCards.characterInstanceId eq characterId }
-            .mapNotNull { row ->
-                val definitionId = row[CardInstances.definitionId] ?: return@mapNotNull null
-                val definition = CardCatalog.getById(definitionId) ?: return@mapNotNull null
-                definition to (row[EquippedCards.slot] ?: Int.MAX_VALUE)
-            }
-            .sortedBy { it.second }
-            .map { it.first }
-    }
+    suspend fun getEquippedDefinitionsForCharacter(characterId: Int): List<CardDefinition> =
+        withContext(Dispatchers.IO) {
+            database.from(EquippedCards)
+                .innerJoin(CardInstances, on = EquippedCards.cardInstanceId eq CardInstances.id)
+                .select(EquippedCards.slot, CardInstances.definitionId)
+                .where { EquippedCards.characterInstanceId eq characterId }
+                .mapNotNull { row ->
+                    val definitionId = row[CardInstances.definitionId] ?: return@mapNotNull null
+                    val definition = CardCatalog.getById(definitionId) ?: return@mapNotNull null
+                    definition to (row[EquippedCards.slot] ?: Int.MAX_VALUE)
+                }
+                .sortedBy { it.second }
+                .map { it.first }
+        }
 
-    suspend fun getEquippedDefinitionsWithLevelForCharacter(characterId: Int): List<EquippedDefinitionWithLevel> = withContext(Dispatchers.IO) {
-        database.from(EquippedCards)
-            .innerJoin(CardInstances, on = EquippedCards.cardInstanceId eq CardInstances.id)
-            .select(EquippedCards.slot, CardInstances.definitionId, CardInstances.level)
-            .where { EquippedCards.characterInstanceId eq characterId }
-            .mapNotNull { row ->
-                val definitionId = row[CardInstances.definitionId] ?: return@mapNotNull null
-                val definition = CardCatalog.getById(definitionId) ?: return@mapNotNull null
-                EquippedDefinitionWithLevel(
-                    definition = definition,
-                    level = row[CardInstances.level] ?: 1,
-                    slot = row[EquippedCards.slot] ?: Int.MAX_VALUE
-                )
-            }
-            .sortedBy { it.slot }
-    }
+    suspend fun getEquippedDefinitionsWithLevelForCharacter(characterId: Int): List<EquippedDefinitionWithLevel> =
+        withContext(Dispatchers.IO) {
+            database.from(EquippedCards)
+                .innerJoin(CardInstances, on = EquippedCards.cardInstanceId eq CardInstances.id)
+                .select(EquippedCards.slot, CardInstances.definitionId, CardInstances.level)
+                .where { EquippedCards.characterInstanceId eq characterId }
+                .mapNotNull { row ->
+                    val definitionId = row[CardInstances.definitionId] ?: return@mapNotNull null
+                    val definition = CardCatalog.getById(definitionId) ?: return@mapNotNull null
+                    EquippedDefinitionWithLevel(
+                        definition = definition,
+                        level = row[CardInstances.level] ?: 1,
+                        slot = row[EquippedCards.slot] ?: Int.MAX_VALUE
+                    )
+                }
+                .sortedBy { it.slot }
+        }
 }

@@ -128,9 +128,9 @@ class CardCommand(
 
     private fun formatEffect(effect: Effect): String {
         return when (effect) {
-            is Effect.Damage -> "• 💥 Causa ${effect.value} de dano"
+            is Effect.Damage -> "• 💥 Causa ${effect.value} de dano (${damageTypeLabel(effect.damageType)})"
             is Effect.DamageBasedOnStat ->
-                "• 💥 Causa ${effect.scaling}x ${effect.stat.prettyName()}"
+                "• 💥 Causa ${effect.scaling}x ${effect.stat.prettyName()} (${damageTypeLabel(effect.damageType)})"
             is Effect.DamageIncreasePercent ->
                 "• 💥 +${effect.value * 100}% de dano"
             is Effect.Heal ->
@@ -146,6 +146,14 @@ class CardCommand(
             is Effect.StatIncreaseWhileBelowHealth ->
                 "• ⚠️ +${effect.value} ${effect.stat.prettyName()} abaixo de ${(effect.threshold * 100).toInt()}% HP"
             else -> "• ❓ Efeito desconhecido"
+        }
+    }
+
+    private fun damageTypeLabel(damageType: Effect.DamageType): String {
+        return when (damageType) {
+            Effect.DamageType.PHYSICAL -> "físico"
+            Effect.DamageType.MAGIC -> "mágico"
+            Effect.DamageType.TRUE -> "verdadeiro"
         }
     }
 }

@@ -2,11 +2,7 @@ package me.igorunderplayer.kono.data.entities
 
 
 import org.ktorm.entity.Entity
-import org.ktorm.schema.Table
-import org.ktorm.schema.int
-import org.ktorm.schema.long
-import org.ktorm.schema.text
-import org.ktorm.schema.timestamp
+import org.ktorm.schema.*
 import java.time.Instant
 
 interface User : Entity<User> {

@@ -23,16 +23,17 @@ class BattleVictoryRepository(
             .totalRecordsInAllPages > 0
     }
 
-    suspend fun registerVictory(userId: Int, enemyId: String, essenceReward: Int): Boolean = withContext(Dispatchers.IO) {
-        if (hasVictory(userId, enemyId)) return@withContext false
+    suspend fun registerVictory(userId: Int, enemyId: String, essenceReward: Int): Boolean =
+        withContext(Dispatchers.IO) {
+            if (hasVictory(userId, enemyId)) return@withContext false
 
-        database.insert(BattleVictories) {
-            set(it.userId, userId)
-            set(it.enemyId, enemyId)
-            set(it.essenceReward, essenceReward)
-            set(it.firstWonAt, Instant.now())
-        } > 0
-    }
+            database.insert(BattleVictories) {
+                set(it.userId, userId)
+                set(it.enemyId, enemyId)
+                set(it.essenceReward, essenceReward)
+                set(it.firstWonAt, Instant.now())
+            } > 0
+        }
 }
 
 

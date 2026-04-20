@@ -6,25 +6,13 @@ import me.igorunderplayer.kono.data.DatabaseManager
 import me.igorunderplayer.kono.data.entities.User
 import me.igorunderplayer.kono.data.entities.Users
 import org.ktorm.database.Database
-import org.ktorm.dsl.and
-import org.ktorm.dsl.eq
-import org.ktorm.dsl.from
-import org.ktorm.dsl.insertAndGenerateKey
-import org.ktorm.dsl.isNull
-import org.ktorm.dsl.less
-import org.ktorm.dsl.limit
-import org.ktorm.dsl.map
-import org.ktorm.dsl.offset
-import org.ktorm.dsl.or
-import org.ktorm.dsl.orderBy
-import org.ktorm.dsl.select
-import org.ktorm.dsl.update
+import org.ktorm.dsl.*
 import org.ktorm.entity.find
 import org.ktorm.entity.sequenceOf
 import org.ktorm.expression.OrderByExpression
 import java.time.Instant
 
-class UserRepository(private val databaseManager: DatabaseManager)  {
+class UserRepository(private val databaseManager: DatabaseManager) {
 
     private val database: Database
         get() = databaseManager.db
@@ -40,13 +28,14 @@ class UserRepository(private val databaseManager: DatabaseManager)  {
             .map { row -> Users.createEntity(row) }
     }
 
-    suspend fun getUsers(count: Int, orderBy: OrderByExpression, startAt: Int): List<User> = withContext(Dispatchers.IO) {
-        database.from(Users).select()
-            .orderBy(orderBy)
-            .offset(startAt)
-            .limit(count)
-            .map { row -> Users.createEntity(row) }
-    }
+    suspend fun getUsers(count: Int, orderBy: OrderByExpression, startAt: Int): List<User> =
+        withContext(Dispatchers.IO) {
+            database.from(Users).select()
+                .orderBy(orderBy)
+                .offset(startAt)
+                .limit(count)
+                .map { row -> Users.createEntity(row) }
+        }
 
     suspend fun getUserById(userId: Int): User? = withContext(Dispatchers.IO) {
         database.sequenceOf(Users).find { it.id eq userId }
@@ -65,13 +54,14 @@ class UserRepository(private val databaseManager: DatabaseManager)  {
         return@withContext getUserById(generatedId)
     }
 
-    suspend fun assignRiotAccountToUser(userId: Int, riotPuuid: String, riotRegion: String): Boolean = withContext(Dispatchers.IO) {
-        database.update(Users) {
-            set(it.riotPuuid, riotPuuid)
-            set(it.riotRegion, riotRegion)
-            where { it.id eq userId }
-        } > 0
-    }
+    suspend fun assignRiotAccountToUser(userId: Int, riotPuuid: String, riotRegion: String): Boolean =
+        withContext(Dispatchers.IO) {
+            database.update(Users) {
+                set(it.riotPuuid, riotPuuid)
+                set(it.riotRegion, riotRegion)
+                where { it.id eq userId }
+            } > 0
+        }
 
     suspend fun updateDaily(
         userId: Int,
@@ -128,14 +118,15 @@ class UserRepository(private val databaseManager: DatabaseManager)  {
         updated > 0
     }
 
-    suspend fun updateActiveCharacter(userId: Int, activeCharacterInstanceId: Int): Boolean = withContext(Dispatchers.IO) {
-        val updated = database.update(Users) {
-            set(it.activeCharacterInstanceId, activeCharacterInstanceId)
-            where { it.id eq userId }
-        }
+    suspend fun updateActiveCharacter(userId: Int, activeCharacterInstanceId: Int): Boolean =
+        withContext(Dispatchers.IO) {
+            val updated = database.update(Users) {
+                set(it.activeCharacterInstanceId, activeCharacterInstanceId)
+                where { it.id eq userId }
+            }
 
-        updated > 0
-    }
+            updated > 0
+        }
 
     suspend fun updatePity(userId: Int, epic: Int, legendary: Int): Boolean = withContext(Dispatchers.IO) {
         val updated = database.update(Users) {
