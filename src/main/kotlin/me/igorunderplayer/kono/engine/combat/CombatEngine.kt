@@ -308,6 +308,7 @@ class CombatEngine(
             is CombatEvent.Death -> {
                 state.protectorShareByUnitId.remove(event.unit.id)
                 state.tauntByUnitId.remove(event.unit.id)
+                state.combatLog += "☠️ ${unitLabel(event.unit, state)} foi derrotado!"
             }
 
             else -> {}
@@ -320,6 +321,8 @@ class CombatEngine(
 
         target.hp -= finalDamage
 
+        state.combatLog += "💥 ${unitLabel(source, state)} causou ${"%.1f".format(finalDamage)} de dano em ${unitLabel(target, state)} (${"%.1f".format(target.hp.coerceAtLeast(0.0))} HP restante)"
+
         enqueue(
             CombatEvent.AfterDamage(
                 source = source,
@@ -327,15 +330,6 @@ class CombatEngine(
                 damage = finalDamage
             )
         )
-                state.combatLog += "💥 ${unitLabel(event.source, state)} causou ${"%.1f".format(finalDamage)} de dano em ${unitLabel(event.target, state)} (${"%.1f".format(event.target.hp.coerceAtLeast(0.0))} HP restante)"
-
-                enqueue(
-                    CombatEvent.AfterDamage(
-                        source = event.source,
-                        target = event.target,
-                        damage = finalDamage
-                    )
-                )
 
         val sourceTeam = findTeam(source)
         val targetTeam = findTeam(target)
@@ -346,11 +340,6 @@ class CombatEngine(
 
         if (target.hp <= 0.0) {
             enqueue(CombatEvent.Death(target))
-            is CombatEvent.Death -> {
-                state.combatLog += "☠️ ${unitLabel(event.unit, state)} foi derrotado!"
-            }
-
-            else -> {}
         }
     }
 

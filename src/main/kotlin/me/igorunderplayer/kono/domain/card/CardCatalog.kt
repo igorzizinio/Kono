@@ -18,7 +18,7 @@ object CardCatalog {
         CardDefinition(
             id = "SLIME",
             name = "Slime",
-            description = "Uma criatura gelatinosa basica. Muita durabilidade, porem pouco dano.",
+            description = "Uma criatura gelatinosa e básica. Aguenta bastante pancada, mas causa pouco dano.",
             type = CardType.CHARACTER,
             rarity = Rarity.COMMON,
             faction = "slime",
@@ -35,7 +35,7 @@ object CardCatalog {
             abilities = listOf(
                 Ability(
                     name = "Gelatina Instavel",
-                    description = "A cada ataque, Slime perde um pouco de sua gorma e recebe dano de si mesmo.",
+                    description = "Sempre que ataca, o Slime perde um pouco de sua massa gelatinosa e sofre dano em si mesmo.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnAttack,
                     effects = listOf(
@@ -77,7 +77,7 @@ object CardCatalog {
         CardDefinition(
             id = "GAMBLER_CHARM",
             name = "Talismã do apostador",
-            description = "Um artefato caotico.",
+            description = "Um artefato caótico que recompensa quem confia no acaso.",
             type = CardType.EQUIPMENT,
             rarity = Rarity.EPIC,
             baseStats = mapOf(
@@ -92,7 +92,7 @@ object CardCatalog {
             abilities = listOf(
                 Ability(
                     name = "Roleta Caotica",
-                    description = "A cada turno, roleta caotica é ativada, causando dano ou curando o portador.",
+                    description = "A cada turno, a roleta caótica é ativada e pode causar dano ou curar o portador.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnTurnStart,
                     effects = listOf(Effect.Random(profile = "GAMBLER_CHARM"))
@@ -102,7 +102,7 @@ object CardCatalog {
         CardDefinition(
             id = "VAMPIRE_CORE",
             name = "Nucleo Vampirico",
-            description = "Rouba vida ao atacar.",
+            description = "Rouba vida ao atacar e fortalece o portador com o sangue drenado.",
             type = CardType.EQUIPMENT,
             rarity = Rarity.EPIC,
             faction = "vampire",
@@ -112,7 +112,7 @@ object CardCatalog {
             abilities = listOf(
                 Ability(
                     name = "Sifao de Sangue",
-                    description = "Cada ataque cura o portador por em 10% do dano causado.",
+                    description = "Cada ataque cura o portador em 10% do dano causado.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnDamageDealt,
                     effects = listOf(Effect.Heal(value = 10.0, target = AbilityTarget.SELF))
@@ -136,7 +136,7 @@ object CardCatalog {
         CardDefinition(
             id = "UNDEFINED",
             name = "undefined",
-            description = "error: undefined is not an item",
+            description = "erro: undefined não é um item",
             type = CardType.EQUIPMENT,
             rarity = Rarity.MYTHIC,
             baseStats = emptyMap(),
@@ -145,7 +145,7 @@ object CardCatalog {
             abilities = listOf(
                 Ability(
                     name = "Bug",
-                    description = "`fatal error: could not get description for NULL BUG`",
+                    description = "`fatal error: não foi possível obter a descrição do NULL BUG`",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnTurnStart,
                     effects = listOf(Effect.Random(profile = "UNDEFINED_BUG"))
@@ -155,7 +155,7 @@ object CardCatalog {
         CardDefinition(
             id = "JUNIOR_KNIGHT",
             name = "Cavaleirinho",
-            description = "Um jovem aprendiz com armadura e espada de madeira.",
+            description = "Um jovem aprendiz com armadura simples e uma espada de madeira.",
             type = CardType.CHARACTER,
             rarity = Rarity.COMMON,
             baseStats = mapOf(
@@ -173,7 +173,7 @@ object CardCatalog {
         CardDefinition(
             id = "THIEF",
             name = "Bandido",
-            description = "Agil e oportunista. Causa dano adicional ao acertar.",
+            description = "Ágil e oportunista. Ganha vantagem em aberturas e pressiona com golpes extras.",
             type = CardType.CHARACTER,
             rarity = Rarity.RARE,
             baseStats = mapOf(
@@ -189,7 +189,7 @@ object CardCatalog {
             abilities = listOf(
                 Ability(
                     name = "Injusto",
-                    description = "Bandido vê uma brecha na defesa do inimigo e a explora, causando dano adicional.",
+                    description = "O Bandido vê uma brecha na defesa do inimigo e a explora, causando dano adicional.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnAttack,
                     effects = listOf(
@@ -201,7 +201,7 @@ object CardCatalog {
         CardDefinition(
             id = "MARKUS",
             name = "Markus, Mestre das Apostas",
-            description = "Cada turno vira uma aposta. Risco alto, recompensa alta.",
+            description = "Cada turno vira uma aposta. Risco alto, recompensa ainda maior.",
             type = CardType.CHARACTER,
             rarity = Rarity.LEGENDARY,
             faction = "markus_gang",
@@ -224,7 +224,7 @@ object CardCatalog {
             abilities = listOf(
                 Ability(
                     name = "Mestre da Mesa",
-                    description = "A cada rodada, Markus gera moedas de cassino para a equipe, e aposta usando elas para obter efeitos aleatórios. Quanto mais moedas, melhores os efeitos serão.",
+                    description = "A cada rodada, Markus gera 2 moedas de cassino para a equipe e aposta com elas para obter efeitos aleatórios. Quanto mais moedas, melhores os efeitos.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnTurnStart,
                     effects = listOf(
@@ -237,7 +237,7 @@ object CardCatalog {
         CardDefinition(
             id = "VEYN",
             name = "Veyn",
-            description = "Besteiro de Markus. Quanto mais ritmo, maior a pressao.",
+            description = "Besteiro de Markus. Quanto mais ritmo, maior a pressão sobre o alvo.",
             type = CardType.CHARACTER,
             rarity = Rarity.EPIC,
             faction = "markus_gang",
@@ -260,7 +260,7 @@ object CardCatalog {
             abilities = listOf(
                 Ability(
                     name = "Rajada Ritmica",
-                    description = "Cada disparo de Veyn aumenta o ritmo de sua arma, causando 2 ataques adicionais a cada 2 tiros.",
+                    description = "A cada 2 disparos, Veyn libera uma rajada rítmica e causa um ataque extra no alvo.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnAttackEvery(2),
                     effects = listOf(
@@ -269,7 +269,7 @@ object CardCatalog {
                 ),
                 Ability(
                     name = "Ritmo de Cassino",
-                    description = "A cada turno, Veyn gera moedas de cassino para a equipe, e aposta usando elas para obter efeitos aleatórios. Quanto mais moedas, melhores os efeitos serão.",
+                    description = "A cada turno, Veyn gera 1 moeda de cassino para a equipe e aposta com ela para obter efeitos aleatórios.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnTurnStart,
                     effects = listOf(
@@ -293,7 +293,7 @@ object CardCatalog {
         CardDefinition(
             id = "DEMON_HUNTER_CROSSBOW",
             name = "Besta da Cacadora de Demonios",
-            description = "A cada poucos acertos, libera um golpe destrutivo.",
+            description = "A cada poucos acertos, libera um disparo destrutivo.",
             type = CardType.EQUIPMENT,
             rarity = Rarity.LEGENDARY,
             baseStats = mapOf(
@@ -305,7 +305,7 @@ object CardCatalog {
             abilities = listOf(
                 Ability(
                     name = "Flecha de Prata",
-                    description = "Cada 3 ataques, a besta dispara uma flecha de prata que causa dano extra ignorando a defesa do inimigo.",
+                    description = "A cada 3 ataques, a besta dispara uma flecha de prata que causa dano extra ao inimigo.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnAttackEvery(3),
                     effects = listOf(
@@ -317,7 +317,7 @@ object CardCatalog {
         CardDefinition(
             id = "JORGE",
             name = "Jorge",
-            description = "Escudeiro de Markus. Um guardião que intercepta dano e segura a linha de frente.",
+            description = "Escudeiro de Markus. Um guardião que protege aliados, intercepta dano e segura a linha de frente.",
             type = CardType.CHARACTER,
             rarity = Rarity.EPIC,
             faction = "markus_gang",
@@ -334,6 +334,7 @@ object CardCatalog {
             abilities = listOf(
                 Ability(
                     name = "Guarda Juramentada",
+                    description = "No início da batalha, Jorge assume a linha de frente, provoca os inimigos e protege o time dividindo parte do dano recebido.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnBattleStart,
                     effects = listOf(
@@ -343,7 +344,7 @@ object CardCatalog {
                 ),
                 Ability(
                     name = "Fortaleza Viva",
-                    description = "Quando Jorge recebe dano, ele usa seu escudo e concede cura a todos os seus aliados próximos.",
+                    description = "Quando Jorge recebe dano, ele fortalece sua resistência e se cura para continuar protegendo o time.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnDamageTaken,
                     effects = listOf(
@@ -352,7 +353,7 @@ object CardCatalog {
                 ),
                 Ability(
                     name = "Muralha do Esquadrão",
-                    description = "A cada turno, Jorge gera moedas de cassino para a equipe, e aposta usando elas para obter efeitos aleatórios. Quanto mais moedas, melhores os efeitos serão.",
+                    description = "A cada turno, Jorge reforça sua defesa e cura todos os aliados do time.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnTurnStart,
                     effects = listOf(
@@ -365,7 +366,7 @@ object CardCatalog {
         CardDefinition(
             id = "ALL_IN_EMBLEM",
             name = "Emblema do All-In",
-            description = "Um emblema exclusivo de Markus. Pressao e risco no mesmo pacote.",
+            description = "Um emblema exclusivo de Markus. Pressão e risco no mesmo pacote.",
             type = CardType.EQUIPMENT,
             rarity = Rarity.LEGENDARY,
             faction = "markus_gang",
@@ -379,7 +380,7 @@ object CardCatalog {
             abilities = listOf(
                 Ability(
                     name = "Rajada All-In",
-                    description = "Cada ataque, dá um dano extra por sua ousadia e coragem.",
+                    description = "Cada ataque causa dano extra pela ousadia do portador.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnAttack,
                     effects = listOf(
@@ -388,7 +389,7 @@ object CardCatalog {
                 ),
                 Ability(
                     name = "A Casa Sempre Ganha",
-                    description = "A cada turno, o portador do emblema gera moedas de cassino para a equipe, e aposta usando elas para obter efeitos aleatórios. Quanto mais moedas, melhores os efeitos serão.",
+                    description = "A cada turno, o portador do emblema gera 1 moeda de cassino para a equipe e aposta com ela para obter efeitos aleatórios.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnTurnStart,
                     effects = listOf(
@@ -401,7 +402,7 @@ object CardCatalog {
         CardDefinition(
             id = "KONO",
             name = "Kono",
-            description = "Uma entidade única do sistema. Quando ela entra em combate, as regras do jogo começam a se adaptar sozinhas a sua presença.",
+            description = "Uma entidade única do sistema. Quando entra em combate, as regras do jogo se adaptam à sua presença.",
             type = CardType.CHARACTER,
             rarity = Rarity.KONO,
             faction = "system",
@@ -427,7 +428,7 @@ object CardCatalog {
             abilities = listOf(
                 Ability(
                     name = "Resposta Paradoxal",
-                    description = "A cada golpe recebido, Kono distorce a realidade, curando-se e fortalecendo seu próprio poder.",
+                    description = "A cada golpe recebido, Kono distorce a realidade, se cura e fortalece o próprio poder.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnDamageTaken,
                     effects = listOf(
@@ -441,7 +442,7 @@ object CardCatalog {
                 ),
                 Ability(
                     name = "Janela de Reversão",
-                    description = "A cada 3 turnos, Kono reescreve o fluxo do combate, enfraquecendo inimigos e fortalecendo a si mesmo.",
+                    description = "A cada 3 turnos, Kono reescreve o fluxo do combate, enfraquecendo inimigos e se fortalecendo.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnTurnEvery(3),
                     effects = listOf(
@@ -455,7 +456,7 @@ object CardCatalog {
                 ),
                 Ability(
                     name = "Ruptura de Realidade",
-                    description = "Ao cair abaixo de 15% de vida, Kono rompe a realidade, liberando energia caótica que devasta inimigos e os enfraquece profundamente. Só pode ocorrer uma vez.",
+                    description = "Ao cair abaixo de 15% de vida, Kono rompe a realidade, libera energia caótica e enfraquece profundamente os inimigos. Só pode ocorrer uma vez.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnBellowHealth(0.15),
                     once = true,
@@ -467,6 +468,7 @@ object CardCatalog {
                 ),
                 Ability(
                     name = "Quebra de código",
+                    description = "Ao morrer, Kono quebra o código do combate e tenta levar o campo de batalha junto com ele.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnDeath,
                     once = true,
@@ -546,7 +548,7 @@ object CardCatalog {
             id = "UNLEASHED_JUNIOR_KNIGHT",
             name = "Cavaleirinho, O Descendente de Deus",
             rarity = Rarity.MYTHIC,
-            description = "Após sua mãe finalmente aprovar seu sonho de se tornar um cavaleiro, o Cavaleirinho treinou incansavelmente.\n" +
+            description = "Após sua mãe finalmente aprovar seu sonho de se tornar cavaleiro, o Cavaleirinho treinou sem parar.\n" +
                     "Agora, em sua forma final, ele se ergue como um guerreiro nobre — de coração puro e determinação inabalável.",
             type = CardType.CHARACTER,
             baseStats = mapOf(
@@ -567,7 +569,7 @@ object CardCatalog {
             abilities = listOf(
                 Ability(
                     name = "Presença inabalável",
-                    description = "O Cavaleirinho se torna mais resistente quando está com pouca vida, sua determinação e coragem o fortalecem para resistir a ataques que poderiam derrubá-lo.",
+                    description = "O Cavaleirinho fica mais resistente quando está com pouca vida; sua determinação o fortalece para resistir a golpes que poderiam derrubá-lo.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnBellowHealth(0.4),
                     effects = listOf(
@@ -580,7 +582,7 @@ object CardCatalog {
                 ),
                 Ability(
                     name = "Benção do Escudo Sagrado", // a cada 4 rounds
-                    description = "A cada 4 turnos, o Cavaleirinho recebe a benção do escudo sagrado, curando uma parte de sua vida se fortalecendo. A proteção divina do escudo sagrado ajuda o Cavaleirinho a resistir a ataques poderosos e a se manter firme em batalha.",
+                    description = "A cada 4 turnos, o Cavaleirinho recebe a bênção do escudo sagrado, recuperando vida e se fortalecendo. A proteção divina ajuda a resistir a ataques poderosos e a se manter firme em batalha.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnTurnEvery(4),
                     effects = listOf(
@@ -591,7 +593,7 @@ object CardCatalog {
                 ),
                 Ability(
                     name = "Senso de justiça",
-                    description = "Causa 20% de dano extra em inimigos \"malignos\"",
+                    description = "Causa 20% de dano extra em inimigos malignos.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnAttackAgainstTag("malignant"),
                     effects = listOf(
@@ -667,7 +669,7 @@ object CardCatalog {
         CardDefinition(
             id = "AURUM",
             name = "Aurum",
-            description = "Converte economia do time em poder crescente ao longo do combate.",
+            description = "Converte a economia do time em poder crescente ao longo do combate.",
             type = CardType.CHARACTER,
             faction = "markus_gang",
             rarity = Rarity.EPIC,
@@ -684,7 +686,7 @@ object CardCatalog {
             abilities = listOf(
                 Ability(
                     name = "Geração de Riqueza",
-                    // description = "Gera 1 moeda por turno. A cada 10 moedas acumuladas, aumenta sua geração em +1. Se houver 2 ou mais aliados da Markus Gang: Geração base passa a ser 2 moedas por turno
+                    description = "Gera 1 moeda por turno; se houver pelo menos um aliado da facção gambler, passa a gerar 2. A cada 10 moedas acumuladas, gera +1 moeda adicional.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnTurnStart,
                     effects = listOf(
@@ -700,7 +702,7 @@ object CardCatalog {
                 ),
                 Ability(
                     name = "Investimento Crescente",
-                    // description = "Prove buffs de ATK, SPEED, DEF e CRIT_DMG baseado na quantidade de moedas acumuladas"
+                    description = "Ganha bônus de ATK, SPEED, DEF e DANO CRÍTICO com base na quantidade de moedas acumuladas pelo time.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnTurnStart,
                     effects = listOf(
