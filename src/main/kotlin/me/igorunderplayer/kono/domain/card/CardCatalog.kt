@@ -371,11 +371,13 @@ object CardCatalog {
             rarity = Rarity.LEGENDARY,
             faction = "markus_gang",
             baseStats = mapOf(
-                Stat.ATK to 15.0,
-                Stat.SPEED to 6.0,
-                Stat.CRIT_CHANCE to 0.03
+                Stat.ATK to 20.0,
+                Stat.CRIT_CHANCE to 0.08
             ),
-            statsPerLevel = defaultStatsPerLevel,
+            statsPerLevel = mapOf(
+                Stat.ATK to 3.0,
+                Stat.CRIT_CHANCE to 0.01
+            ),
             tags = setOf("gambler", "markus", "signature", "weapon", "risk", "chaos"),
             abilities = listOf(
                 Ability(
