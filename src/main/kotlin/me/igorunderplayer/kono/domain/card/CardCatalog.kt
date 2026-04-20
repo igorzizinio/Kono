@@ -294,7 +294,7 @@ object CardCatalog {
                 Stat.SPEED to 15.0,
                 Stat.ATK to 15.0
             ),
-            statsPerLevel = mapOf(Stat.SPEED to 2.0),
+            statsPerLevel = mapOf(Stat.SPEED to 2.5),
             tags = setOf("speed"),
             abilities = listOf(
                 Ability(
@@ -305,7 +305,7 @@ object CardCatalog {
                     effects = listOf(
                         Effect.DamageBasedOnStat(
                             stat = Stat.HP,
-                            scaling = 0.08,
+                            scaling = 0.06,
                             statSource = StatSource.TARGET,
                             target = AbilityTarget.ENEMY,
                             damageType = Effect.DamageType.TRUE
@@ -322,9 +322,9 @@ object CardCatalog {
             rarity = Rarity.EPIC,
             faction = "markus_gang",
             baseStats = mapOf(
-                Stat.HP to 840.0,
+                Stat.HP to 780.0,
                 Stat.ATK to 24.0,
-                Stat.DEF to 48.0,
+                Stat.DEF to 42.0,
                 Stat.CRIT_CHANCE to 0.10,
                 Stat.CRIT_DAMAGE to 1.35,
                 Stat.SPEED to 62.0
@@ -372,7 +372,7 @@ object CardCatalog {
             faction = "markus_gang",
             baseStats = mapOf(
                 Stat.ATK to 20.0,
-                Stat.CRIT_CHANCE to 0.08
+                Stat.CRIT_CHANCE to 0.1
             ),
             statsPerLevel = mapOf(
                 Stat.ATK to 3.0,
@@ -731,6 +731,72 @@ object CardCatalog {
                     )
                 )
             ),
+        ),
+        CardDefinition(
+            id = "SUN_GOD_GREATSWORD",
+            name = "A Grande Espada do Deus Sol",
+            description = "Uma lâmina sagrada que cresce em poder conforme a fé de seu portador é testada em batalha.",
+            type = CardType.EQUIPMENT,
+            faction = "god",
+            rarity = Rarity.MYTHIC,
+            baseStats = mapOf(
+                Stat.HP to 240.0,
+                Stat.ATK to 64.0,
+                Stat.DEF to 22.0,
+                Stat.CRIT_CHANCE to 0.15,
+                Stat.CRIT_DAMAGE to 0.5,
+                Stat.SPEED to -20.0
+            ),
+            statsPerLevel = mapOf(
+                Stat.HP to 40.0,
+                Stat.ATK to 32.0,
+                Stat.DEF to 22.0,
+                Stat.CRIT_CHANCE to 0.05,
+                Stat.CRIT_DAMAGE to 0.15
+            ),
+            abilities = listOf(
+                Ability(
+                    name = "Fé Ardente",
+                    description = "A cada ataque, o portador fortalece sua fé, aumentando permanentemente seu poder.",
+                    trigger = AbilityTrigger.OnAttack,
+                    type = AbilityType.PASSIVE,
+                    effects = listOf(
+                        Effect.BuffStat(Stat.ATK, 3.0),
+                        Effect.StatIncreasePercent(Stat.ATK, 0.015)
+                    )
+                ),
+
+                Ability(
+                    name = "Provação Divina",
+                    description = "Ao receber dano, sua fé é testada, aumentando ainda mais seu poder.",
+                    trigger = AbilityTrigger.OnDamageTaken,
+                    type = AbilityType.PASSIVE,
+                    effects = listOf(
+                        Effect.BuffStat(Stat.ATK, 4.0)
+                    )
+                ),
+                Ability(
+                    name = "Chama do Escolhido",
+                    description = "Quando abaixo de 40% de vida, o portador recebe poder divino, aumentando drasticamente seu ataque.",
+                    trigger = AbilityTrigger.OnBellowHealth(0.4),
+                    type = AbilityType.PASSIVE,
+                    effects = listOf(
+                        Effect.StatIncreasePercent(Stat.ATK, 0.35),
+                        Effect.BuffStat(Stat.LIFESTEAL, .15)
+                    )
+                ),
+                Ability(
+                    name = "Execução Solar",
+                    description = "Ao ficar com vida baixa, o inimigo é automaticamente executado por **Execucção Solar**",
+                    trigger = AbilityTrigger.OnAttack,
+                    type = AbilityType.PASSIVE,
+                    effects = listOf(
+                        Effect.ExecuteBellowHealth(
+                            threshold = 0.15,
+                        )
+                    )
+                )
+            )
         )
     )
 

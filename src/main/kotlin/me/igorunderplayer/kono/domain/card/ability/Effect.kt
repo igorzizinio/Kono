@@ -88,6 +88,10 @@ sealed class Effect {
 
     data object Taunt : Effect()
 
-
     data class Random(val profile: String) : Effect()
+
+    data class ExecuteBellowHealth(
+        val threshold: Double,
+        val target: AbilityTarget = AbilityTarget.ENEMY
+    ) : Effect()
 }

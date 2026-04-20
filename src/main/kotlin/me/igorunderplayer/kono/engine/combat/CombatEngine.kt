@@ -276,6 +276,23 @@ class CombatEngine(
                 state.combatLog += "🎯 ${owner.card.name} provocou os inimigos e virou alvo prioritário."
             }
 
+            is Effect.ExecuteBellowHealth -> {
+                val target = resolveTargets(owner, effect.target, event).firstOrNull() ?: return
+
+                val maxHp = target.stats[Stat.HP] ?: 0.0
+                val currentHp = target.hp
+
+                if (currentHp <= maxHp * effect.threshold) {
+                    target.hp = 0.0
+
+                    enqueue(
+                        CombatEvent.Death(
+                            target
+                        )
+                    )
+                }
+            }
+
             is Effect.Random -> {
                 processRandom(effect.profile, owner)
             }
