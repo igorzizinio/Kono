@@ -675,7 +675,7 @@ object CardCatalog {
             rarity = Rarity.EPIC,
             tags = setOf("gambler", "economy", "scaling", "support"),
             baseStats = mapOf(
-                Stat.HP to 5.0,
+                Stat.HP to 540.0,
                 Stat.ATK to 48.0,
                 Stat.DEF to 22.0,
                 Stat.CRIT_CHANCE to 0.12,
