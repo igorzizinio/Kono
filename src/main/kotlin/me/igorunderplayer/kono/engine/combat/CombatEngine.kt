@@ -5,7 +5,9 @@ import me.igorunderplayer.kono.domain.card.StatSource
 import me.igorunderplayer.kono.domain.card.ability.AbilityTarget
 import me.igorunderplayer.kono.domain.card.ability.AbilityTrigger
 import me.igorunderplayer.kono.domain.card.ability.AbilityType
+import me.igorunderplayer.kono.domain.card.ability.DamageType
 import me.igorunderplayer.kono.domain.card.ability.Effect
+import me.igorunderplayer.kono.domain.card.ability.ScalingMode
 import me.igorunderplayer.kono.domain.gameplay.CombatEvent
 import me.igorunderplayer.kono.domain.gameplay.CombatState
 import me.igorunderplayer.kono.domain.gameplay.Unit
@@ -129,9 +131,9 @@ class CombatEngine(
                 val targets = resolveTargets(owner, effect.target, event)
                 for (target in targets) {
                     val damage = when (effect.damageType) {
-                        Effect.DamageType.PHYSICAL,
-                        Effect.DamageType.MAGIC,
-                        Effect.DamageType.TRUE -> effect.value
+                        DamageType.PHYSICAL,
+                        DamageType.MAGIC,
+                        DamageType.TRUE -> effect.value
                     }
 
                     enqueue(
@@ -140,8 +142,8 @@ class CombatEngine(
                             target = target,
                             damage = damage,
                             damageType = effect.damageType,
-                            canCrit = effect.damageType == Effect.DamageType.PHYSICAL || effect.damageType == Effect.DamageType.MAGIC,
-                            canBeDodged = effect.damageType == Effect.DamageType.PHYSICAL || effect.damageType == Effect.DamageType.MAGIC
+                            canCrit = effect.damageType == DamageType.PHYSICAL || effect.damageType == DamageType.MAGIC,
+                            canBeDodged = effect.damageType == DamageType.PHYSICAL || effect.damageType == DamageType.MAGIC
                         )
                     )
                 }
@@ -165,8 +167,8 @@ class CombatEngine(
                             target = target,
                             damage = damage,
                             damageType = effect.damageType,
-                            canCrit = effect.damageType == Effect.DamageType.PHYSICAL || effect.damageType == Effect.DamageType.MAGIC,
-                            canBeDodged = effect.damageType == Effect.DamageType.PHYSICAL || effect.damageType == Effect.DamageType.MAGIC
+                            canCrit = effect.damageType == DamageType.PHYSICAL || effect.damageType == DamageType.MAGIC,
+                            canBeDodged = effect.damageType == DamageType.PHYSICAL || effect.damageType == DamageType.MAGIC
                         )
                     )
                 }
@@ -250,8 +252,8 @@ class CombatEngine(
 
                 val stacks = resolveCoinStacks(team.coins(), effect.coinsPerStack, effect.maxStacks)
                 val desiredValue = when (effect.mode) {
-                    Effect.ScalingMode.STACK -> stacks * effect.valuePerStack
-                    Effect.ScalingMode.HIGHEST_ONLY -> if (stacks > 0) effect.valuePerStack else 0.0
+                    ScalingMode.STACK -> stacks * effect.valuePerStack
+                    ScalingMode.HIGHEST_ONLY -> if (stacks > 0) effect.valuePerStack else 0.0
                 }
 
                 for (target in targets) {
@@ -319,7 +321,7 @@ class CombatEngine(
                         source = event.attacker,
                         target = event.target,
                         damage = damage,
-                        damageType = Effect.DamageType.PHYSICAL
+                        damageType = DamageType.PHYSICAL
                     )
                 )
             }
@@ -378,7 +380,7 @@ class CombatEngine(
         source: Unit,
         target: Unit,
         damage: Double,
-        damageType: Effect.DamageType = Effect.DamageType.PHYSICAL,
+        damageType: DamageType = DamageType.PHYSICAL,
         sourceAbilityType: AbilityType? = null
     ) {
         val finalDamage = damage.coerceAtLeast(0.0)
@@ -387,9 +389,9 @@ class CombatEngine(
         target.hp -= finalDamage
 
         val damageLabel = when (damageType) {
-            Effect.DamageType.PHYSICAL -> "dano físico"
-            Effect.DamageType.MAGIC -> "dano mágico"
-            Effect.DamageType.TRUE -> "dano verdadeiro"
+            DamageType.PHYSICAL -> "dano físico"
+            DamageType.MAGIC -> "dano mágico"
+            DamageType.TRUE -> "dano verdadeiro"
         }
         state.combatLog += "💥 ${unitLabel(source, state)} causou ${"%.1f".format(finalDamage)} de $damageLabel em ${unitLabel(target, state)} (${"%.1f".format(target.hp.coerceAtLeast(0.0))} HP restante)"
 
@@ -753,7 +755,21 @@ class CombatEngine(
 
     private fun processUndefinedRandom(owner: Unit) {
         val enemy = findTarget(owner)
-        when (state.rng.nextInt(4)) {
+
+        if (state.rng.nextDouble() < 0.01) {
+            val enemy = findTarget(owner)
+
+            if (enemy != null) {
+                enemy.hp = 0.0
+                enqueue(CombatEvent.Death(enemy))
+
+                state.combatLog += "🌌 ${owner.card.name} invocou o fim absoluto e apagou ${enemy.card.name} da existência."
+            }
+
+            return
+        }
+
+        when (state.rng.nextInt(8)) {
             0 -> {
                 owner.hp -= 70.0
                 state.combatLog += "🌀 ${owner.card.name} sofreu 70 de dano caotico."
@@ -768,11 +784,66 @@ class CombatEngine(
                     state.combatLog += "🌀 ${owner.card.name} disparou 90 de dano caotico."
                 }
             }
-            else -> {
+            3 -> {
                 if (enemy != null) {
                     heal(enemy, 60.0)
                     state.combatLog += "🌀 ${owner.card.name} curou o inimigo em 60 HP."
                 }
+            }
+            4 -> {
+                if (enemy != null) {
+                    val temp = owner.hp
+                    owner.hp = enemy.hp
+                    enemy.hp = temp
+
+                    state.combatLog += "🌀 ${owner.card.name} trocou sua vida com o inimigo."
+                }
+            }
+            5 -> {
+                val atk = owner.stats[Stat.ATK] ?: 0.0
+                val bonus = atk * 0.5
+
+                applyTemporaryStatModifier(
+                    target = owner,
+                    stat = Stat.ATK,
+                    delta = bonus,
+                    durationRounds = 1,
+                    source = "UNDEFINED_CHAOS"
+                )
+
+                state.combatLog += "🌀 ${owner.card.name} recebeu poder caótico (+50% ATK por 1 turno)."
+            }
+            6 -> {
+                val def = owner.stats[Stat.DEF] ?: 0.0
+                val reduction = def * 0.5
+
+                applyTemporaryStatModifier(
+                    target = owner,
+                    stat = Stat.DEF,
+                    delta = -reduction,
+                    durationRounds = 1,
+                    source = "UNDEFINED_CHAOS"
+                )
+
+                state.combatLog += "🌀 ${owner.card.name} teve sua defesa corrompida (-50% DEF)."
+            }
+            7 -> {
+                val allUnits = state.teams.flatMap { it.units }.filter { it.hp > 0 }
+
+                allUnits.forEach {
+                    enqueue(
+                        CombatEvent.BeforeDamage(
+                            source = owner,
+                            target = it,
+                            damage = 60.0
+                        )
+                    )
+                }
+
+                state.combatLog += "🌀 O caos se espalhou e atingiu todos no campo."
+            }
+            else -> {
+                state.combatLog += "Nada de caótico ocorreu nessa rodada.."
             }
         }
     }
@@ -785,8 +856,8 @@ class CombatEngine(
         when {
             enemy != null && state.rng.nextDouble() < 0.5 -> {
                 val damage = 18.0 + (coins * 0.8)
-                enqueue(CombatEvent.BeforeDamage(source = owner, target = enemy, damage = damage))
-                state.combatLog += "🎰 ${owner.card.name} converteu moedas em ${damage.toInt()} dano."
+                enqueue(CombatEvent.BeforeDamage(source = owner, target = enemy, damage = damage, damageType = DamageType.MAGIC))
+                state.combatLog += "🎰 ${owner.card.name} converteu moedas em ${damage.toInt()} dano mágico."
             }
             state.rng.nextDouble() < 0.8 -> {
                 val speedBuff = 4.0 + (coins * 0.1)
@@ -877,11 +948,11 @@ class CombatEngine(
     private fun resolveMitigatedDamage(
         rawDamage: Double,
         target: Unit,
-        damageType: Effect.DamageType
+        damageType: DamageType
     ): Double {
         val damage = rawDamage.coerceAtLeast(0.0)
         if (damage <= 0.0) return 0.0
-        if (damageType != Effect.DamageType.PHYSICAL) return damage
+        if (damageType != DamageType.PHYSICAL) return damage
 
         val defense = (target.stats[Stat.DEF] ?: 0.0).coerceAtLeast(-90.0)
         val mitigationMultiplier = 100.0 / (100.0 + defense)

@@ -1,7 +1,7 @@
 package me.igorunderplayer.kono.domain.gameplay
 
-import me.igorunderplayer.kono.domain.card.ability.Effect.DamageType
 import me.igorunderplayer.kono.domain.card.ability.AbilityType
+import me.igorunderplayer.kono.domain.card.ability.DamageType
 
 sealed class CombatEvent {
 

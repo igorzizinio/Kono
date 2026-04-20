@@ -152,8 +152,8 @@ class CardCommand(
             }
             is Effect.BuffStatByTeamCoins -> {
                 val modeText = when (effect.mode) {
-                    Effect.ScalingMode.STACK -> "acumulativo"
-                    Effect.ScalingMode.HIGHEST_ONLY -> "apenas 1 stack"
+                    ScalingMode.STACK -> "acumulativo"
+                    ScalingMode.HIGHEST_ONLY -> "apenas 1 stack"
                 }
                 val capText = effect.maxStacks?.let { " (max $it stacks)" } ?: ""
 
@@ -171,11 +171,11 @@ class CardCommand(
         }
     }
 
-    private fun damageTypeLabel(damageType: Effect.DamageType): String {
+    private fun damageTypeLabel(damageType: DamageType): String {
         return when (damageType) {
-            Effect.DamageType.PHYSICAL -> "físico"
-            Effect.DamageType.MAGIC -> "mágico"
-            Effect.DamageType.TRUE -> "verdadeiro"
+            DamageType.PHYSICAL -> "físico"
+            DamageType.MAGIC -> "mágico"
+            DamageType.TRUE -> "verdadeiro"
         }
     }
 }

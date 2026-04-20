@@ -6,16 +6,7 @@ import me.igorunderplayer.kono.domain.card.StatSource
 
 sealed class Effect {
 
-    enum class ScalingMode {
-        STACK,
-        HIGHEST_ONLY
-    }
 
-    enum class DamageType {
-        PHYSICAL,
-        MAGIC,
-        TRUE
-    }
 
     data class Damage(
         val value: Double,

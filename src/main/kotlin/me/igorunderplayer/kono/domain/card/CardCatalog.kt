@@ -176,10 +176,10 @@ object CardCatalog {
                 Stat.DEF to 14.0,
                 Stat.CRIT_CHANCE to 0.10,
                 Stat.CRIT_DAMAGE to 1.3,
-                Stat.SPEED to 115.0
+                Stat.SPEED to 110.0
             ),
             statsPerLevel = defaultStatsPerLevel,
-            tags = setOf("starter"),
+            tags = setOf("starter", ),
             abilities = listOf(
                 Ability(
                     name = "Injusto",
@@ -308,7 +308,7 @@ object CardCatalog {
                             scaling = 0.06,
                             statSource = StatSource.TARGET,
                             target = AbilityTarget.ENEMY,
-                            damageType = Effect.DamageType.TRUE
+                            damageType = DamageType.TRUE
                         )
                     )
                 )
@@ -740,17 +740,14 @@ object CardCatalog {
             faction = "god",
             rarity = Rarity.MYTHIC,
             baseStats = mapOf(
-                Stat.HP to 240.0,
                 Stat.ATK to 64.0,
-                Stat.DEF to 22.0,
                 Stat.CRIT_CHANCE to 0.15,
                 Stat.CRIT_DAMAGE to 0.5,
-                Stat.SPEED to -20.0
+                Stat.SPEED to -20.0,
+                Stat.DEF to -20.0,
             ),
             statsPerLevel = mapOf(
-                Stat.HP to 40.0,
                 Stat.ATK to 32.0,
-                Stat.DEF to 22.0,
                 Stat.CRIT_CHANCE to 0.05,
                 Stat.CRIT_DAMAGE to 0.15
             ),
