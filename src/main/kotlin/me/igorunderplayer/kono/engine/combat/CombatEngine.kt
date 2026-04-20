@@ -107,7 +107,7 @@ class CombatEngine(
                     state.combatLog += "✨ ${unitLabel(unit, state)} ativou ${ability.name}."
 
                     ability.effects.forEach { effect ->
-                        applyEffect(effect, unit, event)
+                        applyEffect(effect, unit, event, ability.name)
                     }
                 }
             }
@@ -117,7 +117,8 @@ class CombatEngine(
     private fun applyEffect(
         effect: Effect,
         owner: Unit,
-        event: CombatEvent?
+        event: CombatEvent?,
+        abilityName: String? = null
     ) {
         when (effect) {
 
@@ -177,6 +178,48 @@ class CombatEngine(
                 state.combatLog += "💰 ${owner.card.name} gerou $granted moeda(s) para o time ${team.id}. Total: ${team.coins()}"
             }
 
+            is Effect.AddCoinsScaling -> {
+                val team = findTeam(owner) ?: return
+                val granted = resolveScaledCoins(owner, team, effect)
+                if (granted <= 0) return
+
+                team.addCoins(granted)
+                state.combatLog += "💰 ${owner.card.name} gerou $granted moeda(s) escaladas para o time ${team.id}. Total: ${team.coins()}"
+            }
+
+            is Effect.BuffStatByTeamCoins -> {
+                val team = findTeam(owner) ?: return
+                val targets = resolveTargets(owner, effect.target, event)
+                if (targets.isEmpty()) return
+
+                val stacks = resolveCoinStacks(team.coins(), effect.coinsPerStack, effect.maxStacks)
+                val desiredValue = when (effect.mode) {
+                    Effect.ScalingMode.STACK -> stacks * effect.valuePerStack
+                    Effect.ScalingMode.HIGHEST_ONLY -> if (stacks > 0) effect.valuePerStack else 0.0
+                }
+
+                for (target in targets) {
+                    val key = "scale:${owner.id}:${abilityName ?: "unknown"}:${target.id}:${effect.stat.name}"
+                    val currentApplied = state.dynamicScaleAppliedValueByKey[key] ?: 0.0
+                    val delta = desiredValue - currentApplied
+                    if (delta == 0.0) continue
+
+                    target.stats[effect.stat] = (target.stats[effect.stat] ?: 0.0) + delta
+                    state.dynamicScaleAppliedValueByKey[key] = desiredValue
+                }
+            }
+
+            is Effect.ProtectAlliesDamageShare -> {
+                val share = effect.sharePercent.coerceIn(0.0, 0.95)
+                state.protectorShareByUnitId[owner.id] = share
+                state.combatLog += "🛡️ ${owner.card.name} agora protege aliados e absorve ${(share * 100).toInt()}% do dano recebido por eles."
+            }
+
+            Effect.Taunt -> {
+                state.tauntByUnitId += owner.id
+                state.combatLog += "🎯 ${owner.card.name} provocou os inimigos e virou alvo prioritário."
+            }
+
             is Effect.Random -> {
                 processRandom(effect.profile, owner)
             }
@@ -190,6 +233,8 @@ class CombatEngine(
             is CombatEvent.BattleStart -> {}
 
             is CombatEvent.Attack -> {
+                state.attackCountByUnitId[event.attacker.id] = (state.attackCountByUnitId[event.attacker.id] ?: 0) + 1
+
                 val damage = calculateDamage(event.attacker)
 
                 enqueue(
@@ -202,25 +247,54 @@ class CombatEngine(
             }
 
             is CombatEvent.BeforeDamage -> {
+                val incomingDamage = event.damage.coerceAtLeast(0.0)
+                if (incomingDamage <= 0.0) return
 
-                val finalDamage = event.damage // aqui depois entram modifiers
+                val guardian = resolveGuardianFor(event.target)
+                val share = guardian?.let { state.protectorShareByUnitId[it.id] ?: 0.0 } ?: 0.0
+                val redirectedDamage = (incomingDamage * share).coerceAtMost(incomingDamage)
+                val targetDamage = (incomingDamage - redirectedDamage).coerceAtLeast(0.0)
 
-                event.target.hp -= finalDamage
+                applyDamageInstance(source = event.source, target = event.target, damage = targetDamage)
 
-                enqueue(
-                    CombatEvent.AfterDamage(
-                        source = event.source,
-                        target = event.target,
-                        damage = finalDamage
-                    )
-                )
-
-                if (event.target.hp <= 0.0) {
-                    enqueue(CombatEvent.Death(event.target))
+                if (guardian != null && redirectedDamage > 0.0) {
+                    state.combatLog += "🛡️ ${guardian.card.name} interceptou ${redirectedDamage.toInt()} de dano para proteger ${event.target.card.name}."
+                    applyDamageInstance(source = event.source, target = guardian, damage = redirectedDamage)
                 }
             }
 
+            is CombatEvent.Death -> {
+                state.protectorShareByUnitId.remove(event.unit.id)
+                state.tauntByUnitId.remove(event.unit.id)
+            }
+
             else -> {}
+        }
+    }
+
+    private fun applyDamageInstance(source: Unit, target: Unit, damage: Double) {
+        val finalDamage = damage.coerceAtLeast(0.0)
+        if (finalDamage <= 0.0 || target.hp <= 0.0) return
+
+        target.hp -= finalDamage
+
+        enqueue(
+            CombatEvent.AfterDamage(
+                source = source,
+                target = target,
+                damage = finalDamage
+            )
+        )
+
+        val sourceTeam = findTeam(source)
+        val targetTeam = findTeam(target)
+        if (sourceTeam != null && targetTeam != null && sourceTeam != targetTeam) {
+            state.lastDamageSourceByTeamId[targetTeam.id] = source.id
+            state.lastDamageTurnByUnitId[source.id] = state.turn
+        }
+
+        if (target.hp <= 0.0) {
+            enqueue(CombatEvent.Death(target))
         }
     }
 
@@ -333,18 +407,51 @@ class CombatEngine(
         return selectTargetBySlotPriority(attacker = unit, enemyTeam = enemy)
     }
 
+    private fun resolveGuardianFor(target: Unit): Unit? {
+        val team = findTeam(target) ?: return null
+        val protectors = team.units
+            .filter { it.hp > 0 && it.id != target.id }
+            .mapNotNull { protector ->
+                val share = state.protectorShareByUnitId[protector.id] ?: return@mapNotNull null
+                if (share <= 0.0) return@mapNotNull null
+                protector to share
+            }
+
+        if (protectors.isEmpty()) return null
+
+        return protectors
+            .maxWithOrNull(compareBy<Pair<Unit, Double>> { it.second }.thenBy { it.first.hp })
+            ?.first
+    }
+
     private fun selectTargetBySlotPriority(attacker: Unit, enemyTeam: TeamState): Unit? {
         val aliveEnemies = enemyTeam.aliveUnits()
         if (aliveEnemies.isEmpty()) return null
 
-        // Base 3x3 behavior: try mirrored slot first, then nearest slot, then fallback to first alive.
-        enemyTeam.aliveUnitBySlot(attacker.slot)?.let { return it }
+        val tauntingEnemies = aliveEnemies.filter { it.id in state.tauntByUnitId }
+        val candidates = if (tauntingEnemies.isNotEmpty()) tauntingEnemies else aliveEnemies
 
-        val nearestBySlot = aliveEnemies
+        val ownerTeam = findTeam(attacker)
+        val revengeTargetId = ownerTeam?.let { state.lastDamageSourceByTeamId[it.id] }
+        if (revengeTargetId != null) {
+            candidates.firstOrNull { it.id == revengeTargetId }?.let { return it }
+        }
+
+        val threatenedTarget = candidates.maxWithOrNull(
+            compareBy<Unit> { state.attackCountByUnitId[it.id] ?: 0 }
+                .thenByDescending { state.lastDamageTurnByUnitId[it.id] ?: 0 }
+                .thenBy { kotlin.math.abs(it.slot - attacker.slot) }
+        )
+        if (threatenedTarget != null) return threatenedTarget
+
+        // Base 3x3 behavior: try mirrored slot first, then nearest slot, then fallback to first alive.
+        enemyTeam.aliveUnitBySlot(attacker.slot)?.takeIf { it in candidates }?.let { return it }
+
+        val nearestBySlot = candidates
             .minByOrNull { kotlin.math.abs(it.slot - attacker.slot) }
         if (nearestBySlot != null) return nearestBySlot
 
-        return aliveEnemies.firstOrNull()
+        return candidates.firstOrNull()
     }
 
     private fun resolveTargets(owner: Unit, target: AbilityTarget, event: CombatEvent?): List<Unit> {
@@ -446,6 +553,35 @@ class CombatEngine(
         val gangMembersAlive = team.units.count { it.hp > 0 && isMarkusGangMember(it) }
         val bonus = (gangMembersAlive - 1).coerceAtLeast(0)
         return base + bonus
+    }
+
+    private fun resolveScaledCoins(owner: Unit, team: TeamState, effect: Effect.AddCoinsScaling): Int {
+        val base = effect.base.coerceAtLeast(0)
+        val scaledStacks = resolveCoinStacks(team.coins(), effect.coinsPerStack)
+        val scaleBonus = (scaledStacks * effect.bonusPerStack).coerceAtLeast(0)
+
+        val factionBonus = if (
+            effect.allyFactionForBaseBonus.isNullOrBlank() ||
+            effect.requiredAlliesForBaseBonus <= 0 ||
+            effect.baseBonus <= 0
+        ) {
+            0
+        } else {
+            val allies = team.units.count {
+                it != owner &&
+                    it.hp > 0 &&
+                    it.card.faction?.equals(effect.allyFactionForBaseBonus, ignoreCase = true) == true
+            }
+            if (allies >= effect.requiredAlliesForBaseBonus) effect.baseBonus else 0
+        }
+
+        return base + scaleBonus + factionBonus
+    }
+
+    private fun resolveCoinStacks(coins: Int, coinsPerStack: Int, maxStacks: Int? = null): Int {
+        val step = coinsPerStack.coerceAtLeast(1)
+        val stacks = (coins.coerceAtLeast(0) / step)
+        return maxStacks?.coerceAtLeast(0)?.let { stacks.coerceAtMost(it) } ?: stacks
     }
 
     private fun isMarkusGangMember(unit: Unit): Boolean {

@@ -4,6 +4,8 @@
 
 DROP TABLE IF EXISTS tb_equipped_cards CASCADE;
 DROP TABLE IF EXISTS tb_card_instances CASCADE;
+DROP TABLE IF EXISTS tb_battle_victories CASCADE;
+DROP TABLE IF EXISTS tb_battle_team_slots CASCADE;
 DROP TABLE IF EXISTS tb_random_messages CASCADE;
 DROP TABLE IF EXISTS tb_users CASCADE;
 
@@ -106,4 +108,53 @@ CREATE INDEX idx_card_instances_definition
 
 CREATE INDEX idx_equipped_character
     ON tb_equipped_cards(character_instance_id);
+
+-- =========================
+-- BATTLE TEAM SLOTS
+-- =========================
+
+CREATE TABLE tb_battle_team_slots (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL,
+    slot INT NOT NULL,
+    character_instance_id INT NOT NULL,
+
+    CONSTRAINT fk_battle_team_user
+        FOREIGN KEY (user_id)
+        REFERENCES tb_users(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_battle_team_character
+        FOREIGN KEY (character_instance_id)
+        REFERENCES tb_card_instances(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT unique_team_slot UNIQUE (user_id, slot),
+    CONSTRAINT unique_team_character UNIQUE (character_instance_id)
+);
+
+CREATE INDEX idx_battle_team_user
+    ON tb_battle_team_slots(user_id);
+
+-- =========================
+-- BATTLE VICTORIES
+-- =========================
+
+CREATE TABLE tb_battle_victories (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL,
+    enemy_id TEXT NOT NULL,
+    essence_reward INT NOT NULL DEFAULT 0,
+    first_won_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_battle_victory_user
+        FOREIGN KEY (user_id)
+        REFERENCES tb_users(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT unique_user_enemy_victory UNIQUE (user_id, enemy_id)
+);
+
+CREATE INDEX idx_battle_victory_user
+    ON tb_battle_victories(user_id);
 

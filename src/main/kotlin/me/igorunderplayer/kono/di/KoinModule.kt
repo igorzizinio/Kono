@@ -17,6 +17,8 @@ import me.igorunderplayer.kono.commands.text.testing.*
 import me.igorunderplayer.kono.data.DatabaseManager
 import me.igorunderplayer.kono.data.repositories.CardInstanceRepository
 import me.igorunderplayer.kono.data.repositories.CardRepository
+import me.igorunderplayer.kono.data.repositories.BattleTeamRepository
+import me.igorunderplayer.kono.data.repositories.BattleVictoryRepository
 import me.igorunderplayer.kono.data.repositories.RandomMessageRepository
 import me.igorunderplayer.kono.data.repositories.UserRepository
 import me.igorunderplayer.kono.events.ChatInputCommandInteractionCreateHandler
@@ -28,6 +30,7 @@ import me.igorunderplayer.kono.services.DailyService
 import me.igorunderplayer.kono.services.EmojiService
 import me.igorunderplayer.kono.services.GachaService
 import me.igorunderplayer.kono.services.RandomMessageService
+import me.igorunderplayer.kono.services.TeamBattleService
 import me.igorunderplayer.kono.services.RiotService
 import me.igorunderplayer.kono.services.UserService
 import me.igorunderplayer.kono.services.WorkService
@@ -78,6 +81,8 @@ val appModule = module {
     singleOf(::RandomMessageRepository)
     singleOf(::CardRepository)
     singleOf(::CardInstanceRepository)
+    singleOf(::BattleTeamRepository)
+    singleOf(::BattleVictoryRepository)
     singleOf(::EquippedCardsRepository)
 
     // ========================
@@ -91,6 +96,7 @@ val appModule = module {
     singleOf(::WorkService)
     singleOf(::CardService)
     singleOf(::GachaService)
+    singleOf(::TeamBattleService)
 
 
     // ========================
@@ -142,6 +148,8 @@ val appModule = module {
     factoryOf(::UnequipCommand) { bind<BaseCommand>() }
     factoryOf(::TopCommand) { bind<BaseCommand>() }
     factoryOf(::FightCommand) { bind<BaseCommand>() }
+    factoryOf(::TeamCommand) { bind<BaseCommand>() }
+    factoryOf(::TeamFightCommand) { bind<BaseCommand>() }
     factoryOf(::CharacterCommand) { bind<BaseCommand>() }
     factoryOf(::StartFightCommand) { bind<BaseCommand>() }
     factoryOf(::CardCommand) { bind<BaseCommand>() }

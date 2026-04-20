@@ -26,7 +26,13 @@ class CombatState(
 
     // 🎯 ABILITIES STATE
     val hitCounterByAbilityKey: MutableMap<String, Int> = mutableMapOf()
+    val attackCountByUnitId: MutableMap<String, Int> = mutableMapOf()
+    val lastDamageSourceByTeamId: MutableMap<String, String> = mutableMapOf()
+    val lastDamageTurnByUnitId: MutableMap<String, Int> = mutableMapOf()
     val conditionalEffectStatesByKey: MutableMap<String, Boolean> = mutableMapOf()
+    val dynamicScaleAppliedValueByKey: MutableMap<String, Double> = mutableMapOf()
+    val protectorShareByUnitId: MutableMap<String, Double> = mutableMapOf()
+    val tauntByUnitId: MutableSet<String> = mutableSetOf()
     val onceTriggeredAbilityKeys: MutableSet<String> = mutableSetOf()
 
     // 💰 ECONOMY (team-based, 3x3 ready)

@@ -216,7 +216,7 @@ object CardCatalog {
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnTurnStart,
                     effects = listOf(
-                        Effect.AddCoins(value = 2),
+                        Effect.AddCoins(value = 2, scaleWithGangSynergy = false),
                         Effect.Random(profile = "MARKUS_GAMBLER")
                     )
                 )
@@ -259,7 +259,7 @@ object CardCatalog {
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnTurnStart,
                     effects = listOf(
-                        Effect.AddCoins(value = 1),
+                        Effect.AddCoins(value = 1, scaleWithGangSynergy = false),
                         Effect.Random(profile = "MARKUS_GAMBLER")
                     )
                 )
@@ -302,36 +302,45 @@ object CardCatalog {
         CardDefinition(
             id = "JORGE",
             name = "Jorge",
-            description = "Escudeiro de Markus. Sustento e controle de ritmo.",
+            description = "Escudeiro de Markus. Um guardião que intercepta dano e segura a linha de frente.",
             type = CardType.CHARACTER,
             rarity = Rarity.EPIC,
             faction = "gambler",
             baseStats = mapOf(
-                Stat.HP to 680.0,
-                Stat.ATK to 28.0,
-                Stat.DEF to 32.0,
+                Stat.HP to 840.0,
+                Stat.ATK to 24.0,
+                Stat.DEF to 48.0,
                 Stat.CRIT_CHANCE to 0.10,
-                Stat.CRIT_DAMAGE to 1.5,
-                Stat.SPEED to 70.0
+                Stat.CRIT_DAMAGE to 1.35,
+                Stat.SPEED to 62.0
             ),
             statsPerLevel = defaultStatsPerLevel,
-            tags = setOf("rng", "gambler", "tank", "defense", "risk"),
+            tags = setOf("gambler", "tank", "defense", "protector", "frontline"),
             abilities = listOf(
                 Ability(
-                    name = "Apoio de Escudo",
+                    name = "Guarda Juramentada",
                     type = AbilityType.PASSIVE,
-                    trigger = AbilityTrigger.OnDamageTaken,
+                    trigger = AbilityTrigger.OnBattleStart,
                     effects = listOf(
-                        Effect.Heal(value = 5.0, target = AbilityTarget.ALL_ALLIES)
+                        Effect.Taunt,
+                        Effect.ProtectAlliesDamageShare(sharePercent = 0.30)
                     )
                 ),
                 Ability(
-                    name = "Roleta de Protecao",
+                    name = "Fortaleza Viva",
+                    type = AbilityType.PASSIVE,
+                    trigger = AbilityTrigger.OnDamageTaken,
+                    effects = listOf(
+                        Effect.Heal(value = 12.0, target = AbilityTarget.SELF)
+                    )
+                ),
+                Ability(
+                    name = "Muralha do Esquadrão",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnTurnStart,
                     effects = listOf(
-                        Effect.AddCoins(value = 1),
-                        Effect.Random(profile = "MARKUS_GAMBLER")
+                        Effect.BuffStat(stat = Stat.DEF, value = 4.0, target = AbilityTarget.SELF),
+                        Effect.Heal(value = 6.0, target = AbilityTarget.ALL_ALLIES)
                     )
                 )
             )
@@ -364,7 +373,7 @@ object CardCatalog {
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnTurnStart,
                     effects = listOf(
-                        Effect.AddCoins(value = 1),
+                        Effect.AddCoins(value = 1, scaleWithGangSynergy = false),
                         Effect.Random(profile = "MARKUS_GAMBLER")
                     )
                 )
@@ -379,7 +388,7 @@ object CardCatalog {
             faction = "system",
             baseStats = mapOf(
                 Stat.HP to 2450.0,
-                Stat.ATK to 270.0,
+                Stat.ATK to 320.0,
                 Stat.DEF to 180.0,
                 Stat.CRIT_CHANCE to 0.5,
                 Stat.CRIT_DAMAGE to 3.0,
@@ -429,9 +438,19 @@ object CardCatalog {
                     trigger = AbilityTrigger.OnBellowHealth(0.15),
                     once = true,
                     effects = listOf(
-                        Effect.Damage(800.0, AbilityTarget.ALL_ENEMIES),
+                        Effect.Damage(1000.0, AbilityTarget.ALL_ENEMIES),
                         Effect.BuffStat(Stat.ATK, -30.0, target = AbilityTarget.ALL_ENEMIES),
                         Effect.BuffStat(Stat.SPEED, -20.0, target = AbilityTarget.ALL_ENEMIES)
+                    )
+                ),
+                Ability(
+                    name = "Quebra de código",
+                    type = AbilityType.PASSIVE,
+                    trigger = AbilityTrigger.OnDeath,
+                    once = true,
+                    effects = listOf(
+                        Effect.Heal(value = 5000.0, target = AbilityTarget.SELF),
+                        Effect.Damage(value = 1500.0, target = AbilityTarget.ALL_ENEMIES),
                     )
                 )
             )
@@ -555,6 +574,70 @@ object CardCatalog {
                     )
                 )
             )
+        ),
+        CardDefinition(
+            id = "AURUM",
+            name = "Aurum",
+            description = "Converte economia do time em poder crescente ao longo do combate.",
+            type = CardType.CHARACTER,
+            faction = "markus_gang",
+            rarity = Rarity.EPIC,
+            tags = setOf("gambler", "economy", "scaling", "support"),
+            baseStats = mapOf(
+                Stat.HP to 5.0,
+                Stat.ATK to 48.0,
+                Stat.DEF to 22.0,
+                Stat.CRIT_CHANCE to 0.12,
+                Stat.CRIT_DAMAGE to 1.4,
+                Stat.SPEED to 90.0
+            ),
+            statsPerLevel = defaultStatsPerLevel,
+            abilities = listOf(
+                Ability(
+                    name = "Geração de Riqueza",
+                    // description = "Gera 1 moeda por turno. A cada 10 moedas acumuladas, aumenta sua geração em +1. Se houver 2 ou mais aliados da Markus Gang: Geração base passa a ser 2 moedas por turno
+                    type = AbilityType.PASSIVE,
+                    trigger = AbilityTrigger.OnTurnStart,
+                    effects = listOf(
+                        Effect.AddCoinsScaling(
+                            base = 1,
+                            coinsPerStack = 10,
+                            bonusPerStack = 1,
+                            allyFactionForBaseBonus = "gambler",
+                            requiredAlliesForBaseBonus = 1,
+                            baseBonus = 1
+                        )
+                    )
+                ),
+                Ability(
+                    name = "Investimento Crescente",
+                    // description = "Prove buffs de ATK, SPEED, DEF e CRIT_DMG baseado na quantidade de moedas acumuladas"
+                    type = AbilityType.PASSIVE,
+                    trigger = AbilityTrigger.OnTurnStart,
+                    effects = listOf(
+                        Effect.BuffStatByTeamCoins(
+                            stat = Stat.ATK,
+                            valuePerStack = 3.0,
+                            coinsPerStack = 10
+                        ),
+                        Effect.BuffStatByTeamCoins(
+                            stat = Stat.DEF,
+                            valuePerStack = 2.0,
+                            coinsPerStack = 10
+                        ),
+                        Effect.BuffStatByTeamCoins(
+                            stat = Stat.SPEED,
+                            valuePerStack = 1.5,
+                            coinsPerStack = 10
+                        ),
+                        Effect.BuffStatByTeamCoins(
+                            stat = Stat.CRIT_DAMAGE,
+                            valuePerStack = 0.05,
+                            coinsPerStack = 10
+                        )
+                    )
+                )
+            ),
         )
     )
 
