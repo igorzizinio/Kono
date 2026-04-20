@@ -28,14 +28,14 @@ object EnemyTeamCatalog {
             )
         ),
         EnemyTeamDefinition(
-            id = "MARKUS_GANG",
-            name = "Esquadrão das Apostas",
-            description = "Time agressivo de Markus, com risco e burst.",
-            essenceReward = 180,
+            id = "MARKUS_HENCHMEN",
+            name = "Capangas de Markus",
+            description = "Os capangas de Markus, o grande Apostador",
+            essenceReward = 160,
             members = listOf(
-                EnemyTeamMember("MARKUS", 5),
-                EnemyTeamMember("JORGE", 8),
-                EnemyTeamMember("VEYN", 8)
+                EnemyTeamMember("VEYN", 4),
+                EnemyTeamMember("JORGE", 3),
+                EnemyTeamMember("AURUM", 3)
             )
         ),
         EnemyTeamDefinition(
@@ -47,6 +47,17 @@ object EnemyTeamCatalog {
                 EnemyTeamMember("JUNIOR_KNIGHT", 1),
                 EnemyTeamMember("THIEF", 2),
                 EnemyTeamMember("THIEF", 1)
+            )
+        ),
+        EnemyTeamDefinition(
+            id = "MARKUS_GANG",
+            name = "Esquadrão das Apostas",
+            description = "Time agressivo de Markus, com risco e burst.",
+            essenceReward = 260,
+            members = listOf(
+                EnemyTeamMember("MARKUS", 5),
+                EnemyTeamMember("JORGE", 8),
+                EnemyTeamMember("VEYN", 8)
             )
         ),
         EnemyTeamDefinition(
