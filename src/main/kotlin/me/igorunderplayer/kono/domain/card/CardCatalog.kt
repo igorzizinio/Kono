@@ -617,11 +617,11 @@ object CardCatalog {
             description = "Uma espada grande e pesada, extremamente pesada, mas efetiva",
             type = CardType.EQUIPMENT,
             baseStats = mapOf(
-                Stat.ATK to 32.0,
+                Stat.ATK to 38.0,
                 Stat.SPEED to -12.0
             ),
             statsPerLevel = mapOf(
-                Stat.ATK to 4.0
+                Stat.ATK to 6.0
             ),
             tags = setOf("iron", "great", "heavy"),
             abilities = listOf(
@@ -631,7 +631,7 @@ object CardCatalog {
                     trigger = AbilityTrigger.OnBattleStart,
                     type = AbilityType.PASSIVE,
                     effects = listOf(
-                        Effect.StatIncreasePercent(Stat.ATK, 0.2)
+                        Effect.StatIncreasePercent(Stat.ATK, 0.25)
                     )
                 ),
                 Ability(
