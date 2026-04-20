@@ -95,7 +95,7 @@ class CombatEngine(
         for (team in state.teams) {
             for (unit in team.units) {
 
-                if (unit.hp <= 0) continue
+                if (unit.hp <= 0 && event !is CombatEvent.Death) continue
 
                 syncConditionalEffects(unit)
 
@@ -348,6 +348,8 @@ class CombatEngine(
             }
 
             is CombatEvent.Death -> {
+                if (event.unit.hp > 0) return
+
                 state.protectorShareByUnitId.remove(event.unit.id)
                 state.tauntByUnitId.remove(event.unit.id)
                 state.combatLog += "☠️ ${unitLabel(event.unit, state)} foi derrotado!"
