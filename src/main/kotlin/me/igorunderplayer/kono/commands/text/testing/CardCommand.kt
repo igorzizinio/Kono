@@ -141,6 +141,28 @@ class CardCommand(
                 "• 📈 +${effect.percent * 100}% ${effect.stat.prettyName()}"
             is Effect.AddCoins ->
                 "• 💰 Gera ${effect.value} moedas"
+            is Effect.AddCoinsScaling -> {
+                val factionBonusText = if (effect.allyFactionForBaseBonus.isNullOrBlank() || effect.baseBonus <= 0) {
+                    ""
+                } else {
+                    " • +${effect.baseBonus} base com ${effect.requiredAlliesForBaseBonus}+ aliado(s) da faccao ${effect.allyFactionForBaseBonus}"
+                }
+
+                "• 💰 Gera ${effect.base} moeda(s) base +${effect.bonusPerStack} a cada ${effect.coinsPerStack} moedas do time$factionBonusText"
+            }
+            is Effect.BuffStatByTeamCoins -> {
+                val modeText = when (effect.mode) {
+                    Effect.ScalingMode.STACK -> "acumulativo"
+                    Effect.ScalingMode.HIGHEST_ONLY -> "apenas 1 stack"
+                }
+                val capText = effect.maxStacks?.let { " (max $it stacks)" } ?: ""
+
+                "• 🎰 +${effect.valuePerStack} ${effect.stat.prettyName()} a cada ${effect.coinsPerStack} moedas do time [$modeText]$capText"
+            }
+            is Effect.ProtectAlliesDamageShare ->
+                "• 🛡️ Intercepta ${(effect.sharePercent * 100).toInt()}% do dano recebido pelos aliados"
+            Effect.Taunt ->
+                "• 🎯 Provoca inimigos e vira alvo prioritario"
             is Effect.Random ->
                 "• 🎲 Efeito aleatório (${effect.profile})"
             is Effect.StatIncreaseWhileBelowHealth ->
