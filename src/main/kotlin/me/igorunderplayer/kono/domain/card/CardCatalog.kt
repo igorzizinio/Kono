@@ -692,7 +692,7 @@ object CardCatalog {
                             base = 1,
                             coinsPerStack = 10,
                             bonusPerStack = 1,
-                            allyFactionForBaseBonus = "gambler",
+                            allyFactionForBaseBonus = "markus_gang",
                             requiredAlliesForBaseBonus = 1,
                             baseBonus = 1
                         )
