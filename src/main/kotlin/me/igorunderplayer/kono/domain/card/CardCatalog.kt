@@ -935,7 +935,7 @@ object CardCatalog {
                             self.stats[Stat.ATK] = (self.stats[Stat.ATK] ?: 0.0) + atkGain
                             self.stats[Stat.HP] = (self.stats[Stat.HP] ?: 0.0) + hpGain
 
-                            state.combatLog += "🙏 ${self.card.name} aumentou seu poder com fé (+\${atkGain.toInt()} ATK, +\${hpGain.toInt()} HP)."
+                            state.combatLog += "🙏 ${self.card.name} aumentou seu poder com fé (+${atkGain.toInt()} ATK, +${hpGain.toInt()} HP)."
                         }
                     )
                 )
