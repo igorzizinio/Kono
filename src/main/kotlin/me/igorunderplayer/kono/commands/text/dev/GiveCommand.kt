@@ -4,6 +4,7 @@ import dev.kord.core.behavior.reply
 import dev.kord.core.event.message.MessageCreateEvent
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandCategory
+import me.igorunderplayer.kono.data.entities.User
 import me.igorunderplayer.kono.data.repositories.CardInstanceRepository
 import me.igorunderplayer.kono.data.repositories.CardRepository
 import me.igorunderplayer.kono.data.repositories.UserRepository
@@ -24,7 +25,7 @@ class GiveCommand(
     override suspend fun run(event: MessageCreateEvent, args: Array<String>) {
         if (args.size < 3) {
             event.message.reply {
-                content = "use: give <@user|id> <konos|essence|item> <amount|item_id> [amount]"
+                content = "use: give <@user|id> <konos|essence|card|stone > <amount|item_id> [amount]"
             }
             return
         }
@@ -47,6 +48,7 @@ class GiveCommand(
             "kono", "konos" -> giveKonos(event, targetUser.id, targetDiscordId, targetUser.konos, args[2])
             "essence", "essences" -> giveEssence(event, targetUser.id, targetDiscordId, targetUser.essence, args[2])
             "card", "cards" -> giveCard(event, targetUser.id, targetDiscordId, args)
+            "stone", "stones", "smithing_stones" -> giveSmithingStones(event, targetUser, args[2])
             else -> {
                 event.message.reply {
                     content = "invalid type. use konos, essence or card."
@@ -63,8 +65,8 @@ class GiveCommand(
         amountRaw: String
     ) {
         val amount = amountRaw.toLongOrNull()
-        if (amount == null || amount <= 0) {
-            event.message.reply { content = "amount must be a positive number." }
+        if (amount == null) {
+            event.message.reply { content = "amount must be a number." }
             return
         }
 
@@ -89,7 +91,7 @@ class GiveCommand(
         amountRaw: String
     ) {
         val amount = amountRaw.toIntOrNull()
-        if (amount == null || amount <= 0) {
+        if (amount == null) {
             event.message.reply { content = "amount must be a positive number." }
             return
         }
@@ -116,11 +118,6 @@ class GiveCommand(
         val definitionId = args[2]
         val quantity = args.getOrNull(3)?.toIntOrNull() ?: 1
 
-        if (quantity <= 0) {
-            event.message.reply { content = "amount must be a positive number." }
-            return
-        }
-
         val definition = cardRepository.getDefinition(definitionId)
             ?: cardRepository.getDefinition(definitionId.uppercase())
 
@@ -144,6 +141,19 @@ class GiveCommand(
         event.message.reply {
             content = "gave $quantity x ${definition.name} (${definition.id}) to <@$targetDiscordId>."
         }
+    }
+
+    private suspend fun giveSmithingStones(
+        event: MessageCreateEvent,
+        targetUser: User,
+        amountRaw: String
+    ) {
+        val amount = amountRaw.toIntOrNull() ?: 1
+
+        userRepository.updateSmithingStones(targetUser.id, targetUser.smithingStones + amount)
+
+        event.message.reply { content = "gave $amount smithing stones to <@${targetUser.discordId}>. new balance: ${targetUser.smithingStones + amount}" }
+
     }
 
 }
