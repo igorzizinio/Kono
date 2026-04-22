@@ -88,6 +88,7 @@ val appModule = module {
     singleOf(::UnequipItemHandler)
     singleOf(::UpgradeCharacterHandler)
     singleOf(::UpgradeEquipmentHandler)
+    singleOf(::DismantleEquipmentHandler)
 
     // ========================
     // TEXT COMMANDS

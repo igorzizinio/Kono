@@ -158,3 +158,9 @@ CREATE TABLE tb_battle_victories (
 CREATE INDEX idx_battle_victory_user
     ON tb_battle_victories(user_id);
 
+
+ALTER TABLE tb_users
+    ADD COLUMN smithing_stones INT DEFAULT 0;
+
+ALTER TABLE tb_users
+    ALTER COLUMN konos TYPE BIGINT;

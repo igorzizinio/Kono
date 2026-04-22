@@ -32,7 +32,7 @@ class UpgradeCharacterHandler(
     data class UpgradeCost(
         val currentLevel: Int,
         val nextLevel: Int,
-        val konosCost: Int,
+        val konosCost: Long,
         val copiesRequired: Int,
         val maxLevel: Int
     )
@@ -42,7 +42,7 @@ class UpgradeCharacterHandler(
             val instanceId: Int,
             val characterName: String,
             val cost: UpgradeCost,
-            val currentKonos: Int,
+            val currentKonos: Long,
             val availableCopies: Int
         ) : PreviewResult()
 
@@ -51,7 +51,7 @@ class UpgradeCharacterHandler(
         data class CharacterNotFound(val instanceId: Int) : PreviewResult()
         data class InvalidCardType(val definitionId: String) : PreviewResult()
         data class MaxLevelReached(val currentLevel: Int, val levelCap: Int) : PreviewResult()
-        data class NotEnoughKonos(val required: Int, val current: Int) : PreviewResult()
+        data class NotEnoughKonos(val required: Long, val current: Long) : PreviewResult()
         data class NotEnoughCopies(val required: Int, val current: Int) : PreviewResult()
     }
 
@@ -61,9 +61,9 @@ class UpgradeCharacterHandler(
             val characterName: String,
             val previousLevel: Int,
             val newLevel: Int,
-            val konosSpent: Int,
+            val konosSpent: Long,
             val copiesSpent: Int,
-            val remainingKonos: Int
+            val remainingKonos: Long
         ) : Result()
 
         object UserNotFound : Result()
@@ -71,7 +71,7 @@ class UpgradeCharacterHandler(
         data class CharacterNotFound(val instanceId: Int) : Result()
         data class InvalidCardType(val definitionId: String) : Result()
         data class MaxLevelReached(val currentLevel: Int, val levelCap: Int) : Result()
-        data class NotEnoughKonos(val required: Int, val current: Int) : Result()
+        data class NotEnoughKonos(val required: Long, val current: Long) : Result()
         data class NotEnoughCopies(val required: Int, val current: Int) : Result()
         object PersistFailed : Result()
     }
@@ -197,9 +197,9 @@ class UpgradeCharacterHandler(
         )
     }
 
-    private fun resolveKonosCost(currentLevel: Int): Int {
+    private fun resolveKonosCost(currentLevel: Int): Long {
         val exponent = (currentLevel - 1).coerceAtLeast(0)
-        return (BASE_KONOS_COST * KONOS_EXP_GROWTH.pow(exponent)).roundToInt().coerceAtLeast(BASE_KONOS_COST)
+        return (BASE_KONOS_COST * KONOS_EXP_GROWTH.pow(exponent)).roundToInt().toLong().coerceAtLeast(BASE_KONOS_COST.toLong())
     }
 
     private fun resolveCopiesRequired(currentLevel: Int): Int {

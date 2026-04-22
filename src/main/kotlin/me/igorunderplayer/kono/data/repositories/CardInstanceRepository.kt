@@ -145,6 +145,18 @@ class CardInstanceRepository(
             instance to definition
         }
 
+    suspend fun getOwnedEquipmentsWithDefinition(userId: Int): List<Pair<CardInstance, CardDefinition>> =
+        withContext(Dispatchers.IO) {
+            database.sequenceOf(CardInstances)
+                .filter { it.userId eq userId }
+                .toList()
+                .mapNotNull { instance ->
+                    val definition = CardCatalog.getById(instance.definitionId) ?: return@mapNotNull null
+                    if (definition.type != CardType.EQUIPMENT) return@mapNotNull null
+                    instance to definition
+                }
+        }
+
     suspend fun countOwnedDefinitionInstances(userId: Int, definitionId: String): Int = withContext(Dispatchers.IO) {
         database.from(CardInstances)
             .select(CardInstances.id)
@@ -245,6 +257,15 @@ class CardInstanceRepository(
             set(it.level, newLevel)
             set(it.upgraded, newLevel > 1)
             where { it.id eq instanceId }
+        } > 0
+    }
+
+    suspend fun deleteOwnedEquipmentInstance(userId: Int, instanceId: Int): Boolean = withContext(Dispatchers.IO) {
+        val equipment = getOwnedEquipmentWithDefinition(userId, instanceId)
+            ?: return@withContext false
+
+        database.delete(CardInstances) {
+            (it.id eq equipment.first.id) and (it.userId eq userId)
         } > 0
     }
 

@@ -88,7 +88,7 @@ class UserRepository(private val databaseManager: DatabaseManager) {
 
     suspend fun updateWork(
         userId: Int,
-        konos: Int,
+        konos: Long,
         workedAt: Instant
     ) = withContext(Dispatchers.IO) {
         val updated = database.update(Users) {
@@ -109,9 +109,18 @@ class UserRepository(private val databaseManager: DatabaseManager) {
         updated > 0
     }
 
-    suspend fun updateKonos(userId: Int, konos: Int) = withContext(Dispatchers.IO) {
+    suspend fun updateKonos(userId: Int, konos: Long) = withContext(Dispatchers.IO) {
         val updated = database.update(Users) {
             set(it.konos, konos)
+            where { it.id eq userId }
+        }
+
+        updated > 0
+    }
+
+    suspend fun updateSmithingStones(userId: Int, stones: Int) = withContext(Dispatchers.IO) {
+        val updated = database.update(Users) {
+            set(it.smithingStones, stones)
             where { it.id eq userId }
         }
 

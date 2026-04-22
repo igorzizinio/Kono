@@ -59,10 +59,10 @@ class GiveCommand(
         event: MessageCreateEvent,
         targetUserId: Int,
         targetDiscordId: Long,
-        currentKonos: Int,
+        currentKonos: Long,
         amountRaw: String
     ) {
-        val amount = amountRaw.toIntOrNull()
+        val amount = amountRaw.toLongOrNull()
         if (amount == null || amount <= 0) {
             event.message.reply { content = "amount must be a positive number." }
             return

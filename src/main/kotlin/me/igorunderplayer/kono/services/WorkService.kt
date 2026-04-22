@@ -20,7 +20,7 @@ sealed class WorkResult {
 
     data class Success(
         val amount: Int,
-        val balance: Int,
+        val balance: Long,
         val nextAvailable: Instant
     ) : WorkResult()
 }
@@ -49,7 +49,7 @@ class WorkService(
         // 💰 recompensa aleatória
         val amount = Random.nextInt(WORK_MIN, WORK_MAX + 1)
 
-        val newBalance = user.konos + amount
+        val newBalance = user.konos + amount.toLong()
 
         val success = userRepository.updateWork(
             userId = user.id,

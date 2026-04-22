@@ -16,8 +16,8 @@ class UpgradeEquipmentHandler(
         const val BASE_KONOS_COST = 150
         const val KONOS_EXP_GROWTH = 1.33
 
-        const val BASE_COPIES_REQUIRED = 2
-        const val COPIES_EXP_GROWTH = 1.18
+        const val BASE_SMITHING_STONES_REQUIRED = 2
+        const val SMITHING_STONES_EXP_GROWTH = 1.18
 
         const val COMMON_LEVEL_CAP = 6
         const val RARE_LEVEL_CAP = 10
@@ -29,8 +29,8 @@ class UpgradeEquipmentHandler(
     data class UpgradeCost(
         val currentLevel: Int,
         val nextLevel: Int,
-        val konosCost: Int,
-        val copiesRequired: Int,
+        val konosCost: Long,
+        val smithingStonesRequired: Int,
         val maxLevel: Int
     )
 
@@ -39,16 +39,16 @@ class UpgradeEquipmentHandler(
             val instanceId: Int,
             val equipmentName: String,
             val cost: UpgradeCost,
-            val currentKonos: Int,
-            val availableCopies: Int
+            val currentKonos: Long,
+            val currentSmithingStones: Int
         ) : PreviewResult()
 
         object UserNotFound : PreviewResult()
         data class EquipmentNotFound(val instanceId: Int) : PreviewResult()
         data class InvalidCardType(val definitionId: String) : PreviewResult()
         data class MaxLevelReached(val currentLevel: Int, val levelCap: Int) : PreviewResult()
-        data class NotEnoughKonos(val required: Int, val current: Int) : PreviewResult()
-        data class NotEnoughCopies(val required: Int, val current: Int) : PreviewResult()
+        data class NotEnoughKonos(val required: Long, val current: Long) : PreviewResult()
+        data class NotEnoughSmithingStones(val required: Int, val current: Int) : PreviewResult()
     }
 
     sealed class Result {
@@ -57,17 +57,18 @@ class UpgradeEquipmentHandler(
             val equipmentName: String,
             val previousLevel: Int,
             val newLevel: Int,
-            val konosSpent: Int,
-            val copiesSpent: Int,
-            val remainingKonos: Int
+            val konosSpent: Long,
+            val smithingStonesSpent: Int,
+            val remainingKonos: Long,
+            val remainingSmithingStones: Int
         ) : Result()
 
         object UserNotFound : Result()
         data class EquipmentNotFound(val instanceId: Int) : Result()
         data class InvalidCardType(val definitionId: String) : Result()
         data class MaxLevelReached(val currentLevel: Int, val levelCap: Int) : Result()
-        data class NotEnoughKonos(val required: Int, val current: Int) : Result()
-        data class NotEnoughCopies(val required: Int, val current: Int) : Result()
+        data class NotEnoughKonos(val required: Long, val current: Long) : Result()
+        data class NotEnoughSmithingStones(val required: Int, val current: Int) : Result()
         object PersistFailed : Result()
     }
 
@@ -90,20 +91,16 @@ class UpgradeEquipmentHandler(
             return PreviewResult.MaxLevelReached(currentLevel, levelCap)
         }
 
-        val cost = resolveUpgradeCost(currentLevel, levelCap)
+        val cost = resolveUpgradeCost(currentLevel, levelCap, definition.rarity)
 
         if (user.konos < cost.konosCost) {
             return PreviewResult.NotEnoughKonos(required = cost.konosCost, current = user.konos)
         }
 
-        val availableCopies = cardInstanceRepository.countUnequippedDefinitionCopiesForUpgrade(
-            userId = user.id,
-            definitionId = instance.definitionId,
-            exceptInstanceId = instance.id
-        )
+        val currentSmithingStones = user.smithingStones
 
-        if (availableCopies < cost.copiesRequired) {
-            return PreviewResult.NotEnoughCopies(required = cost.copiesRequired, current = availableCopies)
+        if (currentSmithingStones < cost.smithingStonesRequired) {
+            return PreviewResult.NotEnoughSmithingStones(required = cost.smithingStonesRequired, current = currentSmithingStones)
         }
 
         return PreviewResult.Ready(
@@ -111,7 +108,7 @@ class UpgradeEquipmentHandler(
             equipmentName = definition.name,
             cost = cost,
             currentKonos = user.konos,
-            availableCopies = availableCopies
+            currentSmithingStones = currentSmithingStones
         )
     }
 
@@ -134,35 +131,25 @@ class UpgradeEquipmentHandler(
             return Result.MaxLevelReached(currentLevel, levelCap)
         }
 
-        val cost = resolveUpgradeCost(currentLevel, levelCap)
+        val cost = resolveUpgradeCost(currentLevel, levelCap, definition.rarity)
         if (user.konos < cost.konosCost) {
             return Result.NotEnoughKonos(required = cost.konosCost, current = user.konos)
         }
 
-        val availableCopies = cardInstanceRepository.countUnequippedDefinitionCopiesForUpgrade(
-            userId = user.id,
-            definitionId = instance.definitionId,
-            exceptInstanceId = instance.id
-        )
-
-        if (availableCopies < cost.copiesRequired) {
-            return Result.NotEnoughCopies(required = cost.copiesRequired, current = availableCopies)
-        }
-
-        val consumedCopies = cardInstanceRepository.consumeUnequippedDefinitionCopies(
-            userId = user.id,
-            definitionId = instance.definitionId,
-            exceptInstanceId = instance.id,
-            amount = cost.copiesRequired
-        )
-
-        if (consumedCopies != cost.copiesRequired) {
-            return Result.PersistFailed
+        val currentSmithingStones = user.smithingStones
+        if (currentSmithingStones < cost.smithingStonesRequired) {
+            return Result.NotEnoughSmithingStones(required = cost.smithingStonesRequired, current = currentSmithingStones)
         }
 
         val newKonos = user.konos - cost.konosCost
         val konosUpdated = userRepository.updateKonos(user.id, newKonos)
         if (!konosUpdated) {
+            return Result.PersistFailed
+        }
+
+        val newSmithingStones = currentSmithingStones - cost.smithingStonesRequired
+        val smithingUpdated = userRepository.updateSmithingStones(user.id, newSmithingStones)
+        if (!smithingUpdated) {
             return Result.PersistFailed
         }
 
@@ -178,27 +165,36 @@ class UpgradeEquipmentHandler(
             previousLevel = currentLevel,
             newLevel = nextLevel,
             konosSpent = cost.konosCost,
-            copiesSpent = cost.copiesRequired,
-            remainingKonos = newKonos
+            smithingStonesSpent = cost.smithingStonesRequired,
+            remainingKonos = newKonos,
+            remainingSmithingStones = newSmithingStones
         )
     }
 
-    private fun resolveKonosCost(currentLevel: Int): Int {
+    private fun resolveKonosCost(currentLevel: Int, rarity: Rarity): Long {
         val exponent = (currentLevel - 1).coerceAtLeast(0)
-        return (BASE_KONOS_COST * KONOS_EXP_GROWTH.pow(exponent)).roundToInt().coerceAtLeast(BASE_KONOS_COST)
+
+        val base = BASE_KONOS_COST * KONOS_EXP_GROWTH.pow(exponent)
+        val scaled = base * rarityMultiplier(rarity)
+
+        return scaled.roundToInt().toLong().coerceAtLeast(BASE_KONOS_COST.toLong())
     }
 
-    private fun resolveCopiesRequired(currentLevel: Int): Int {
+    private fun resolveSmithingStonesRequired(currentLevel: Int, rarity: Rarity): Int {
         val exponent = (currentLevel - 1).coerceAtLeast(0)
-        return (BASE_COPIES_REQUIRED * COPIES_EXP_GROWTH.pow(exponent)).roundToInt().coerceAtLeast(1)
+
+        val base = BASE_SMITHING_STONES_REQUIRED * SMITHING_STONES_EXP_GROWTH.pow(exponent)
+        val scaled = base * rarityMultiplier(rarity)
+
+        return scaled.roundToInt().coerceAtLeast(1)
     }
 
-    private fun resolveUpgradeCost(currentLevel: Int, levelCap: Int): UpgradeCost {
+    private fun resolveUpgradeCost(currentLevel: Int, levelCap: Int, rarity: Rarity): UpgradeCost {
         return UpgradeCost(
             currentLevel = currentLevel,
             nextLevel = currentLevel + 1,
-            konosCost = resolveKonosCost(currentLevel),
-            copiesRequired = resolveCopiesRequired(currentLevel),
+            konosCost = resolveKonosCost(currentLevel, rarity),
+            smithingStonesRequired = resolveSmithingStonesRequired(currentLevel, rarity),
             maxLevel = levelCap
         )
     }
@@ -211,6 +207,17 @@ class UpgradeEquipmentHandler(
             Rarity.LEGENDARY -> LEGENDARY_LEVEL_CAP
             Rarity.MYTHIC -> MYTHIC_LEVEL_CAP
             Rarity.KONO -> MYTHIC_LEVEL_CAP
+        }
+    }
+
+    private fun rarityMultiplier(rarity: Rarity): Double {
+        return when (rarity) {
+            Rarity.COMMON -> 1.0
+            Rarity.RARE -> 1.25
+            Rarity.EPIC -> 1.6
+            Rarity.LEGENDARY -> 2.2
+            Rarity.MYTHIC -> 3.0
+            Rarity.KONO -> 4.0
         }
     }
 }
