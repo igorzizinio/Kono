@@ -787,7 +787,7 @@ object CardCatalog {
                 Ability(
                     name = "Execução Solar",
                     description = "Ao ficar com vida baixa, o inimigo é automaticamente executado por **Execucção Solar**",
-                    trigger = AbilityTrigger.OnAttack,
+                    trigger = AbilityTrigger.OnDamageDealt,
                     type = AbilityType.PASSIVE,
                     effects = listOf(
                         Effect.ExecuteBellowHealth(
