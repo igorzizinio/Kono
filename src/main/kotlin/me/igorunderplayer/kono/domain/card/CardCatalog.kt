@@ -807,7 +807,7 @@ object CardCatalog {
                     type = AbilityType.PASSIVE,
                     effects = listOf(
                         Effect.ExecuteBellowHealth(
-                            threshold = 0.15,
+                            threshold = 0.20,
                         )
                     )
                 )
