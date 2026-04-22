@@ -134,8 +134,24 @@ object CardCatalog {
             description = "erro: undefined não é um item",
             type = CardType.EQUIPMENT,
             rarity = Rarity.MYTHIC,
-            baseStats = emptyMap(),
-            statsPerLevel = defaultStatsPerLevel,
+            baseStats = mapOf(
+                Stat.HP to 50.0,
+                Stat.DEF to 50.0,
+                Stat.SPEED to 5.0,
+                Stat.ATK to 50.0,
+                Stat.LIFESTEAL to .5,
+                Stat.CRIT_CHANCE to 0.05,
+                Stat.CRIT_DAMAGE to 1.5,
+            ),
+            statsPerLevel = mapOf(
+                Stat.HP to 25.0,
+                Stat.DEF to 25.0,
+                Stat.SPEED to 5.0,
+                Stat.ATK to 25.0,
+                Stat.LIFESTEAL to .025,
+                Stat.CRIT_CHANCE to 0.025,
+                Stat.CRIT_DAMAGE to .5,
+            ),
             tags = setOf("bug", "chaos"),
             abilities = listOf(
                 Ability(
