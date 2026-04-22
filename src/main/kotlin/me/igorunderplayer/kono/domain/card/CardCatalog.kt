@@ -580,10 +580,11 @@ object CardCatalog {
                 Stat.CRIT_DAMAGE to 2.0,
             ),
             statsPerLevel = mapOf(
-                Stat.ATK to 16.0,
+                Stat.ATK to 32.0,
                 Stat.SPEED to 4.0,
-                Stat.CRIT_CHANCE to 0.02,
-                Stat.DEF to 14.0,
+                Stat.CRIT_CHANCE to 0.05,
+                Stat.DEF to 24.0,
+                Stat.CRIT_DAMAGE to 0.5,
             ),
             tags = setOf("knight"),
             abilities = listOf(
@@ -593,10 +594,9 @@ object CardCatalog {
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnBellowHealth(0.4),
                     effects = listOf(
-                        Effect.StatIncreaseWhileBelowHealth(
+                        Effect.StatIncreasePercent(
                             stat = Stat.DEF,
-                            value = 88.0,
-                            threshold = 0.4
+                            percent = 1.0
                         )
                     )
                 ),

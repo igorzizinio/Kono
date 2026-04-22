@@ -285,16 +285,11 @@ class CombatEngine(
                 val currentHp = target.hp
 
                 if (currentHp <= maxHp * effect.threshold) {
-
+                    target.hp = 0.0
                     state.combatLog += "⚡ ${unitLabel(owner, state)} executou ${unitLabel(target, state)}!"
                     enqueue(
-                        CombatEvent.BeforeDamage(
-                            source = owner,
-                            target = target,
-                            damage = currentHp,
-                            damageType = DamageType.TRUE,
-                            canCrit = false,
-                            canBeDodged = false
+                        CombatEvent.Death(
+                            target
                         )
                     )
                 }
