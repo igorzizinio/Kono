@@ -285,11 +285,14 @@ class CombatEngine(
                 val currentHp = target.hp
 
                 if (currentHp <= maxHp * effect.threshold) {
-                    target.hp = 0.0
-
                     enqueue(
-                        CombatEvent.Death(
-                            target
+                        CombatEvent.BeforeDamage(
+                            source = owner,
+                            target = target,
+                            damage = currentHp,
+                            damageType = DamageType.TRUE,
+                            canCrit = false,
+                            canBeDodged = false
                         )
                     )
                 }
