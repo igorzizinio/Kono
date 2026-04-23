@@ -577,7 +577,7 @@ object CardCatalog {
                 Stat.ATK to 112.0,
                 Stat.SPEED to 90.0,
                 Stat.CRIT_CHANCE to 0.3,
-                Stat.CRIT_DAMAGE to 2.0,
+                Stat.CRIT_DAMAGE to 2.5,
             ),
             statsPerLevel = mapOf(
                 Stat.ATK to 32.0,
@@ -596,7 +596,11 @@ object CardCatalog {
                     effects = listOf(
                         Effect.StatIncreasePercent(
                             stat = Stat.DEF,
-                            percent = 1.0
+                            percent = 1.5
+                        ),
+                        Effect.StatIncreasePercent(
+                            stat = Stat.ATK,
+                            percent = 0.4
                         )
                     )
                 ),
@@ -613,11 +617,20 @@ object CardCatalog {
                 ),
                 Ability(
                     name = "Senso de justiça",
-                    description = "Causa 20% de dano extra em inimigos malignos.",
+                    description = "Causa 30% de dano extra em inimigos malignos.",
                     type = AbilityType.PASSIVE,
                     trigger = AbilityTrigger.OnAttackAgainstTag("malignant"),
                     effects = listOf(
-                        Effect.DamageIncreasePercent(value = 0.2)
+                        Effect.DamageIncreasePercent(value = 0.3)
+                    )
+                ),
+                Ability(
+                    name = "Explosão de Fogo Sagrado",
+                    description = "A cada 4 ataques, o fogo sagrado de dentro de Cavaleirinho explode, causando dano real a todos inimigos",
+                    type = AbilityType.PASSIVE,
+                    trigger = AbilityTrigger.OnAttackEvery(4),
+                    effects = listOf(
+                        Effect.DamageBasedOnStat(stat = Stat.HP, scaling = 0.2, statSource = StatSource.TARGET, damageType = DamageType.TRUE)
                     )
                 )
             )
@@ -758,7 +771,7 @@ object CardCatalog {
             faction = "god",
             rarity = Rarity.MYTHIC,
             baseStats = mapOf(
-                Stat.ATK to 64.0,
+                Stat.ATK to 72.0,
                 Stat.CRIT_CHANCE to 0.15,
                 Stat.CRIT_DAMAGE to 0.5,
                 Stat.SPEED to -20.0,
@@ -767,7 +780,8 @@ object CardCatalog {
             statsPerLevel = mapOf(
                 Stat.ATK to 32.0,
                 Stat.CRIT_CHANCE to 0.05,
-                Stat.CRIT_DAMAGE to 0.15
+                Stat.CRIT_DAMAGE to 0.15,
+                Stat.SPEED to 0.5
             ),
             abilities = listOf(
                 Ability(
@@ -780,7 +794,21 @@ object CardCatalog {
                         Effect.StatIncreasePercent(Stat.ATK, 0.015)
                     )
                 ),
+                Ability(
+                    name = "Ataques de chama divina",
+                    description = "A chama divina é aplicada ao inimigo, causando danos dolorosos e atravesando sua defesa",
+                    type = AbilityType.PASSIVE,
+                    trigger = AbilityTrigger.OnAttack,
+                    effects = listOf(
+                        Effect.Custom("") { self, unit, state ->
+                            val damage = self.stats[Stat.ATK]?.times(0.2)
+                            if (damage == null || damage <= 0) return@Custom
 
+                            state.combatLog += "🔥 O poder da chama divina penetra em ${unit?.card?.name} e o causa ${"%.1f".format(damage)} de dano verdadeiro!"
+                            unit?.hp -= damage
+                        }
+                    )
+                ),
                 Ability(
                     name = "Provação Divina",
                     description = "Ao receber dano, sua fé é testada, aumentando ainda mais seu poder.",
@@ -796,8 +824,8 @@ object CardCatalog {
                     trigger = AbilityTrigger.OnBellowHealth(0.4),
                     type = AbilityType.PASSIVE,
                     effects = listOf(
-                        Effect.StatIncreasePercent(Stat.ATK, 0.35),
-                        Effect.BuffStat(Stat.LIFESTEAL, .15)
+                        Effect.StatIncreasePercent(Stat.ATK, 0.6),
+                        Effect.BuffStat(Stat.LIFESTEAL, .20)
                     )
                 ),
                 Ability(
