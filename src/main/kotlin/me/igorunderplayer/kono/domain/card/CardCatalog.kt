@@ -1156,6 +1156,32 @@ object CardCatalog {
                     )
                 )
             )
+        ),
+        CardDefinition(
+            id = "DUMMY",
+            name = "Boneco de treino",
+            type = CardType.CHARACTER,
+            description = "Apenas um boneco, alvo de pancadas",
+            baseStats = mapOf(
+                Stat.HP to Double.MAX_VALUE,
+                Stat.ATK to 0.0,
+                Stat.DEF to 0.0,
+                Stat.SPEED to 0.0
+            ),
+            tags = emptySet(),
+            rarity = Rarity.KONO,
+            statsPerLevel = mapOf(),
+            abilities = listOf(
+                Ability(
+                    name = "Acabar com combate",
+                    description = "Executa todos os inimigos depois de 25 turnos",
+                    type = AbilityType.PASSIVE,
+                    trigger = AbilityTrigger.OnTurnEvery(25),
+                    effects = listOf(
+                        Effect.ExecuteBellowHealth(1.0, target = AbilityTarget.ALL_ENEMIES)
+                    )
+                )
+            )
         )
     )
 

@@ -70,6 +70,17 @@ object EnemyTeamCatalog {
                 EnemyTeamMember("KONO", 15),
                 EnemyTeamMember("KONO", 15)
             )
+        ),
+        EnemyTeamDefinition(
+            id = "DUMMIES",
+            name = "Bonecos de treino",
+            description = "Apenas 3 bonecos de treino",
+            essenceReward = 0,
+            members = listOf(
+                EnemyTeamMember("DUMMY", 1),
+                EnemyTeamMember("DUMMY", 1),
+                EnemyTeamMember("DUMMY", 1)
+            )
         )
     )
 
