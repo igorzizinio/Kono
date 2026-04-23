@@ -61,6 +61,17 @@ object EnemyTeamCatalog {
             )
         ),
         EnemyTeamDefinition(
+            id = "FAITH_KNIGHT",
+            name = "Cavaleiros da Fé",
+            description = "Um grupo de membros do reino sagrado, um reino dourado que adora os Deuses",
+            essenceReward = 600,
+            members = listOf(
+                EnemyTeamMember("JUNIOR_KNIGHT", 5),
+                EnemyTeamMember("LUMINA", level = 8),
+                EnemyTeamMember("SOLAR_PALADIN", 10)
+            )
+        ),
+        EnemyTeamDefinition(
             id = "KONO_SISTERS",
             name = "Irmãs Kono",
             description = "As 3 irmãs unidas, divindade pura",
