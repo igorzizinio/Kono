@@ -4,6 +4,16 @@ import me.igorunderplayer.kono.Kono
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandManager
 import me.igorunderplayer.kono.commands.KonoSlashCommand
+import me.igorunderplayer.kono.commands.slash.game.BatalhaSlashCommand
+import me.igorunderplayer.kono.commands.slash.game.DailySlashCommand
+import me.igorunderplayer.kono.commands.slash.game.DesequiparSlashCommand
+import me.igorunderplayer.kono.commands.slash.game.EquiparSlashCommand
+import me.igorunderplayer.kono.commands.slash.game.EquipamentosSlashCommand
+import me.igorunderplayer.kono.commands.slash.game.InventarioSlashCommand
+import me.igorunderplayer.kono.commands.slash.game.PersonagemSlashCommand
+import me.igorunderplayer.kono.commands.slash.game.PullSlashCommand
+import me.igorunderplayer.kono.commands.slash.game.TimeSlashCommand
+import me.igorunderplayer.kono.commands.slash.game.WorkSlashCommand
 import me.igorunderplayer.kono.commands.slash.image.ImageSlashCommands
 import me.igorunderplayer.kono.commands.slash.lol.LoLSlashCommands
 import me.igorunderplayer.kono.commands.slash.testing.AvatarSlashCommand
@@ -147,6 +157,16 @@ val appModule = module {
     factoryOf(::DestinoSlashCommand) { bind<KonoSlashCommand>() }
     factoryOf(::LoLSlashCommands) { bind<KonoSlashCommand>() }
     factoryOf(::ImageSlashCommands) { bind<KonoSlashCommand>() }
+    factoryOf(::EquiparSlashCommand) { bind<KonoSlashCommand>() }
+    factoryOf(::DesequiparSlashCommand) { bind<KonoSlashCommand>() }
+    factoryOf(::EquipamentosSlashCommand) { bind<KonoSlashCommand>() }
+    factoryOf(::PullSlashCommand) { bind<KonoSlashCommand>() }
+    factoryOf(::DailySlashCommand) { bind<KonoSlashCommand>() }
+    factoryOf(::WorkSlashCommand) { bind<KonoSlashCommand>() }
+    factoryOf(::InventarioSlashCommand) { bind<KonoSlashCommand>() }
+    factoryOf(::BatalhaSlashCommand) { bind<KonoSlashCommand>() }
+    factoryOf(::PersonagemSlashCommand) { bind<KonoSlashCommand>() }
+    factoryOf(::TimeSlashCommand) { bind<KonoSlashCommand>() }
 
 
     // ========================

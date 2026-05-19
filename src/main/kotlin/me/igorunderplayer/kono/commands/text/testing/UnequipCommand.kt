@@ -4,6 +4,7 @@ import dev.kord.core.behavior.reply
 import dev.kord.core.event.message.MessageCreateEvent
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandCategory
+import me.igorunderplayer.kono.domain.card.EquipmentSlot
 import me.igorunderplayer.kono.domain.team.UnequipItemHandler
 
 @Suppress("unused")
@@ -17,27 +18,27 @@ class UnequipCommand(
 
     override suspend fun run(event: MessageCreateEvent, args: Array<String>) {
         val discordId = event.message.author?.id?.value?.toLong() ?: return
-        val slotInput = args.getOrNull(0)?.toIntOrNull()
+        val slotInput = args.getOrNull(0)
 
         if (slotInput == null) {
+            val slotNames = EquipmentSlot.entries.joinToString(", ") { "${it.index + 1} (${it.displayName})" }
             event.message.reply {
-                content = "Por favor, informe o slot do item. Ex: `!unequip 1`"
+                content = "Por favor, informe o slot do item. Ex: `!unequip arma` ou `!unequip 1`\nSlots disponíveis: $slotNames"
             }
             return
         }
 
-        val slot = slotInput - 1
-
-        when (val result = unequipItemHandler.execute(discordId, slot)) {
+        when (val result = unequipItemHandler.execute(discordId, slotInput)) {
             is UnequipItemHandler.Result.Success -> {
                 event.message.reply {
-                    content = "✅ Item #${result.itemInstanceId} removido do slot ${result.slot + 1}."
+                    content = "✅ Item #${result.itemInstanceId} removido do slot ${result.slot.icon} **${result.slot.displayName}**."
                 }
             }
 
             is UnequipItemHandler.Result.InvalidSlot -> {
+                val slotNames = EquipmentSlot.entries.joinToString(", ") { "${it.index + 1} (${it.displayName})" }
                 event.message.reply {
-                    content = "❌ Slot inválido. Use 1, 2 ou 3."
+                    content = "❌ Slot `${result.input}` inválido. Slots disponíveis: $slotNames"
                 }
             }
 
@@ -55,5 +56,3 @@ class UnequipCommand(
         }
     }
 }
-
-

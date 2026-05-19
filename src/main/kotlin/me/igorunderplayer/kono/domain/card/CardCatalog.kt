@@ -1,7 +1,9 @@
 package me.igorunderplayer.kono.domain.card
 
 import me.igorunderplayer.kono.domain.card.ability.*
+import me.igorunderplayer.kono.domain.gameplay.CombatEvent
 import me.igorunderplayer.kono.domain.gameplay.TemporaryStatModifier
+import me.igorunderplayer.kono.domain.card.EquipmentSlot
 
 // =============================================================================
 // TIER RULES
@@ -122,17 +124,17 @@ object CardCatalog {
         rarity = Rarity.EPIC,
         faction = "markus_gang",
         baseStats = mapOf(
-            Stat.HP to 760.0,
+            Stat.HP to 720.0,
             Stat.ATK to 28.0,
-            Stat.DEF to 50.0,
+            Stat.DEF to 44.0,
             Stat.SPEED to 65.0,
             Stat.CRIT_CHANCE to 0.10,
             Stat.CRIT_DAMAGE to 1.30
         ),
         statsPerLevel = mapOf(
-            Stat.HP to 10.0,
+            Stat.HP to 8.0,
             Stat.ATK to 1.0,
-            Stat.DEF to 3.0
+            Stat.DEF to 2.0
         ),
         tags = setOf("gambler", "tank", "defense", "protector", "frontline"),
         abilities = listOf(
@@ -148,19 +150,19 @@ object CardCatalog {
             ),
             Ability(
                 name = "Fortaleza Viva",
-                description = "Ao receber dano, Jorge se cura em 15 HP, sustentando sua presença na linha de frente.",
+                description = "Ao receber dano, Jorge se cura em 10 HP, sustentando sua presença na linha de frente.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnDamageTaken,
-                effects = listOf(Effect.Heal(value = 15.0, target = AbilityTarget.SELF))
+                effects = listOf(Effect.Heal(value = 10.0, target = AbilityTarget.SELF))
             ),
             Ability(
                 name = "Muralha do Esquadrão",
-                description = "A cada turno, Jorge ganha +3 DEF permanente e cura todos os aliados em 8 HP.",
+                description = "A cada turno, Jorge ganha +2 DEF permanente e cura todos os aliados em 6 HP.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnTurnStart,
                 effects = listOf(
-                    Effect.BuffStat(stat = Stat.DEF, value = 3.0, target = AbilityTarget.SELF),
-                    Effect.Heal(value = 8.0, target = AbilityTarget.ALL_ALLIES)
+                    Effect.BuffStat(stat = Stat.DEF, value = 2.0, target = AbilityTarget.SELF),
+                    Effect.Heal(value = 6.0, target = AbilityTarget.ALL_ALLIES)
                 )
             )
         )
@@ -175,7 +177,7 @@ object CardCatalog {
         faction = "markus_gang",
         baseStats = mapOf(
             Stat.HP to 440.0,
-            Stat.ATK to 48.0,
+            Stat.ATK to 44.0,
             Stat.DEF to 16.0,
             Stat.SPEED to 125.0,
             Stat.CRIT_CHANCE to 0.16,
@@ -191,10 +193,10 @@ object CardCatalog {
         abilities = listOf(
             Ability(
                 name = "Rajada Rítmica",
-                description = "A cada 2 ataques, Veyn libera uma rajada precisa que causa 22 de dano extra ao alvo.",
+                description = "A cada 2 ataques, Veyn libera uma rajada precisa que causa 18 de dano extra ao alvo.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnAttackEvery(2),
-                effects = listOf(Effect.Damage(value = 22.0, target = AbilityTarget.ENEMY))
+                effects = listOf(Effect.Damage(value = 18.0, target = AbilityTarget.ENEMY))
             ),
             Ability(
                 name = "Ritmo de Cassino",
@@ -270,27 +272,27 @@ object CardCatalog {
         rarity = Rarity.EPIC,
         faction = "faith",
         baseStats = mapOf(
-            Stat.HP to 700.0,
-            Stat.ATK to 75.0,
-            Stat.DEF to 42.0,
-            Stat.SPEED to 95.0,
+            Stat.HP to 660.0,
+            Stat.ATK to 58.0,
+            Stat.DEF to 36.0,
+            Stat.SPEED to 90.0,
             Stat.CRIT_CHANCE to 0.10,
             Stat.CRIT_DAMAGE to 1.30
         ),
         statsPerLevel = mapOf(
-            Stat.HP to 18.0,
-            Stat.ATK to 6.0,
-            Stat.DEF to 3.0
+            Stat.HP to 14.0,
+            Stat.ATK to 4.0,
+            Stat.DEF to 2.0
         ),
         abilities = listOf(
             Ability(
                 name = "Graça Contínua",
-                description = "A cada turno, Lumina cura todos os aliados vivos em 20% de seu ATK.",
+                description = "A cada turno, Lumina cura todos os aliados vivos em 16% de seu ATK.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnTurnStart,
                 effects = listOf(
-                    Effect.Custom("Heal allies 20% ATK") { self, _, state ->
-                        val healAmount = (self.stats[Stat.ATK] ?: 0.0) * 0.20
+                    Effect.Custom("Heal allies 16% ATK") { self, _, state ->
+                        val healAmount = (self.stats[Stat.ATK] ?: 0.0) * 0.16
                         if (healAmount <= 0) return@Custom
                         val team = state.teams.firstOrNull { it.units.contains(self) } ?: return@Custom
                         team.units.filter { it.hp > 0 }.forEach { ally ->
@@ -305,15 +307,15 @@ object CardCatalog {
             ),
             Ability(
                 name = "Bênção da Aurora",
-                description = "A cada 3 turnos, Lumina concede a todos os aliados +25% ATK e +25% DEF temporários por 2 rodadas.",
+                description = "A cada 3 turnos, Lumina concede a todos os aliados +20% ATK e +20% DEF temporários por 2 rodadas.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnTurnEvery(3),
                 effects = listOf(
-                    Effect.Custom("Temp buff ATK+DEF 25%") { self, _, state ->
+                    Effect.Custom("Temp buff ATK+DEF 20%") { self, _, state ->
                         val atk = self.stats[Stat.ATK] ?: 0.0
                         val def = self.stats[Stat.DEF] ?: 0.0
-                        val atkBuff = atk * 0.25
-                        val defBuff = def * 0.25
+                        val atkBuff = atk * 0.20
+                        val defBuff = def * 0.20
                         val team = state.teams.firstOrNull { it.units.contains(self) } ?: return@Custom
                         team.units.filter { it.hp > 0 }.forEach { ally ->
                             ally.stats[Stat.ATK] = (ally.stats[Stat.ATK] ?: 0.0) + atkBuff
@@ -327,14 +329,14 @@ object CardCatalog {
             ),
             Ability(
                 name = "Fé Crescente",
-                description = "A cada turno, Lumina fortalece sua própria fé e ganha +4 ATK e +16 HP permanentes.",
+                description = "A cada 4 turnos, Lumina fortalece sua própria fé e ganha +6 ATK e +25 HP permanentes.",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnTurnStart,
+                trigger = AbilityTrigger.OnTurnEvery(4),
                 effects = listOf(
                     Effect.Custom("Self-scale ATK+HP") { self, _, state ->
-                        self.stats[Stat.ATK] = (self.stats[Stat.ATK] ?: 0.0) + 4.0
-                        self.stats[Stat.HP] = (self.stats[Stat.HP] ?: 0.0) + 16.0
-                        state.combatLog += "🙏 ${self.card.name} fortaleceu sua fé (+4 ATK, +16 HP)."
+                        self.stats[Stat.ATK] = (self.stats[Stat.ATK] ?: 0.0) + 6.0
+                        self.stats[Stat.HP] = (self.stats[Stat.HP] ?: 0.0) + 25.0
+                        state.combatLog += "🙏 ${self.card.name} fortaleceu sua fé (+6 ATK, +25 HP)."
                     }
                 )
             )
@@ -645,6 +647,7 @@ object CardCatalog {
         description = "Uma espada simples para iniciantes. Sem truques.",
         type = CardType.EQUIPMENT,
         rarity = Rarity.COMMON,
+        slot = EquipmentSlot.WEAPON,
         baseStats = mapOf(Stat.ATK to 14.0),
         statsPerLevel = mapOf(Stat.ATK to 1.5),
         tags = setOf("starter"),
@@ -657,6 +660,7 @@ object CardCatalog {
         description = "Pequena e ágil. Oferece um toque de velocidade junto com dano modesto.",
         type = CardType.EQUIPMENT,
         rarity = Rarity.COMMON,
+        slot = EquipmentSlot.WEAPON,
         baseStats = mapOf(
             Stat.ATK to 8.0,
             Stat.SPEED to 5.0
@@ -675,7 +679,8 @@ object CardCatalog {
         description = "Armadura básica. Oferece proteção decente sem penalizar a velocidade.",
         type = CardType.EQUIPMENT,
         rarity = Rarity.COMMON,
-        baseStats = mapOf(Stat.DEF to 22.0),
+        slot = EquipmentSlot.ARMOR,
+        baseStats = mapOf(Stat.DEF to 26.0),
         statsPerLevel = mapOf(Stat.DEF to 2.0),
         tags = setOf("armor", "defense"),
         abilities = emptyList()
@@ -691,6 +696,7 @@ object CardCatalog {
         description = "Dano sólido com um leve custo de velocidade. Bom passo além da madeira.",
         type = CardType.EQUIPMENT,
         rarity = Rarity.RARE,
+        slot = EquipmentSlot.WEAPON,
         baseStats = mapOf(
             Stat.ATK to 28.0,
             Stat.SPEED to -4.0
@@ -706,6 +712,7 @@ object CardCatalog {
         description = "Troca ofensa por resistência. Para quem quer sobreviver mais.",
         type = CardType.EQUIPMENT,
         rarity = Rarity.RARE,
+        slot = EquipmentSlot.SECONDARY,
         baseStats = mapOf(
             Stat.DEF to 35.0,
             Stat.HP to 70.0,
@@ -725,6 +732,7 @@ object CardCatalog {
         description = "Proteção robusta com custo significativo de velocidade. Funciona melhor em unidades naturalmente lentas.",
         type = CardType.EQUIPMENT,
         rarity = Rarity.RARE,
+        slot = EquipmentSlot.ARMOR,
         baseStats = mapOf(
             Stat.DEF to 50.0,
             Stat.SPEED to -20.0
@@ -740,6 +748,7 @@ object CardCatalog {
         description = "Leve e rápida. Sacrifica um pouco de DEF para ganhar velocidade, crítico e um golpe extra em cada ataque.",
         type = CardType.EQUIPMENT,
         rarity = Rarity.RARE,
+        slot = EquipmentSlot.WEAPON,
         baseStats = mapOf(
             Stat.ATK to 15.0,
             Stat.SPEED to 7.0,
@@ -769,7 +778,8 @@ object CardCatalog {
         description = "Um anel tomado de um vampiro. Rouba uma fração de vida a cada ataque.",
         type = CardType.EQUIPMENT,
         rarity = Rarity.RARE,
-        baseStats = mapOf(Stat.LIFESTEAL to 0.08),
+        slot = EquipmentSlot.TRINKET,
+        baseStats = mapOf(Stat.LIFESTEAL to 0.12),
         statsPerLevel = mapOf(Stat.LIFESTEAL to 0.01),
         tags = setOf("lifesteal", "vampire"),
         abilities = emptyList()
@@ -785,6 +795,7 @@ object CardCatalog {
         description = "Refinada, confiável e cortante. Versão superior da katana com mais ATK e crítico.",
         type = CardType.EQUIPMENT,
         rarity = Rarity.EPIC,
+        slot = EquipmentSlot.WEAPON,
         baseStats = mapOf(
             Stat.ATK to 20.0,
             Stat.CRIT_CHANCE to 0.14,
@@ -813,6 +824,7 @@ object CardCatalog {
         description = "Um núcleo de energia sombria. Confere ATK e roubo de vida substancial.",
         type = CardType.EQUIPMENT,
         rarity = Rarity.EPIC,
+        slot = EquipmentSlot.TRINKET,
         faction = "vampire",
         baseStats = mapOf(
             Stat.ATK to 24.0,
@@ -832,6 +844,7 @@ object CardCatalog {
         description = "Enorme e devastadora. Quem for forte o suficiente para erguê-la será recompensado com poder bruto.",
         type = CardType.EQUIPMENT,
         rarity = Rarity.EPIC,
+        slot = EquipmentSlot.WEAPON,
         baseStats = mapOf(
             Stat.ATK to 44.0,
             Stat.SPEED to -20.0
@@ -848,11 +861,11 @@ object CardCatalog {
             ),
             Ability(
                 name = "Golpe Colossal",
-                description = "A cada 3 ataques, desfere um golpe colossal que causa 150% do ATK atual como dano.",
+                description = "A cada 3 ataques, desfere um golpe colossal que causa 120% do ATK atual como dano.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnAttackEvery(3),
                 effects = listOf(
-                    Effect.DamageBasedOnStat(stat = Stat.ATK, scaling = 1.5, statSource = StatSource.SELF)
+                    Effect.DamageBasedOnStat(stat = Stat.ATK, scaling = 1.2, statSource = StatSource.SELF)
                 )
             )
         )
@@ -864,9 +877,10 @@ object CardCatalog {
         description = "Um artefato caótico. Aumenta o potencial crítico e desencadeia efeitos aleatórios a cada turno.",
         type = CardType.EQUIPMENT,
         rarity = Rarity.EPIC,
+        slot = EquipmentSlot.SECONDARY,
         baseStats = mapOf(
-            Stat.CRIT_CHANCE to 0.07,
-            Stat.CRIT_DAMAGE to 0.18
+            Stat.CRIT_CHANCE to 0.09,
+            Stat.CRIT_DAMAGE to 0.22
         ),
         statsPerLevel = mapOf(
             Stat.CRIT_CHANCE to 0.01,
@@ -890,17 +904,18 @@ object CardCatalog {
         description = "Cetro sagrado que amplifica a fé do portador. Cura e protege aliados — especialmente os da fé.",
         type = CardType.EQUIPMENT,
         rarity = Rarity.EPIC,
+        slot = EquipmentSlot.WEAPON,
         faction = "faith",
         baseStats = mapOf(
-            Stat.ATK to 55.0,
+            Stat.ATK to 44.0,
             Stat.SPEED to -14.0
         ),
-        statsPerLevel = mapOf(Stat.ATK to 5.0),
+        statsPerLevel = mapOf(Stat.ATK to 4.0),
         tags = setOf("faith", "support", "scaling"),
         abilities = listOf(
             Ability(
                 name = "Conversão Divina",
-                description = "A cada turno, cura todos os aliados: membros da fé recebem 14% do ATK, os demais 8%.",
+                description = "A cada turno, cura todos os aliados: membros da fé recebem 11% do ATK, os demais 6%.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnTurnStart,
                 effects = listOf(
@@ -909,7 +924,7 @@ object CardCatalog {
                         val team = state.teams.firstOrNull { it.units.contains(self) } ?: return@Custom
                         team.units.filter { it.hp > 0 }.forEach { ally ->
                             val isFaith = ally.card.faction == "faith"
-                            val healAmount = atk * (if (isFaith) 0.14 else 0.08)
+                            val healAmount = atk * (if (isFaith) 0.11 else 0.06)
                             val maxHp = ally.stats[Stat.HP] ?: return@forEach
                             val before = ally.hp
                             ally.hp = (ally.hp + healAmount).coerceAtMost(maxHp)
@@ -921,7 +936,7 @@ object CardCatalog {
             ),
             Ability(
                 name = "Proteção Sagrada",
-                description = "A cada 2 turnos, concede escudos temporários: membros da fé recebem 20% do ATK, os demais 10%.",
+                description = "A cada 2 turnos, concede escudos temporários: membros da fé recebem 16% do ATK, os demais 8%.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnTurnEvery(2),
                 effects = listOf(
@@ -930,7 +945,7 @@ object CardCatalog {
                         val team = state.teams.firstOrNull { it.units.contains(self) } ?: return@Custom
                         team.units.filter { it.hp > 0 }.forEach { ally ->
                             val isFaith = ally.card.faction == "faith"
-                            val shieldValue = atk * (if (isFaith) 0.20 else 0.10)
+                            val shieldValue = atk * (if (isFaith) 0.16 else 0.08)
                             state.temporaryStatModifiers += TemporaryStatModifier(unitId = ally.id, stat = Stat.HP, delta = shieldValue, remainingRounds = 1, source = "DEVOTION_SHIELD")
                             state.combatLog += "🛡️ ${ally.card.name} recebeu ${shieldValue.toInt()} de escudo (${if (isFaith) "fé" else "normal"})."
                         }
@@ -950,6 +965,7 @@ object CardCatalog {
         description = "Uma relíquia bizarra de um peixe crítico. Não tem ATK — mas a cada 4 ataques, desfere um golpe garantido de 140% do ATK.",
         type = CardType.EQUIPMENT,
         rarity = Rarity.LEGENDARY,
+        slot = EquipmentSlot.SECONDARY,
         baseStats = mapOf(
             Stat.CRIT_CHANCE to 0.18,
             Stat.CRIT_DAMAGE to 1.60
@@ -984,6 +1000,7 @@ object CardCatalog {
         description = "A cada 3 ataques, dispara uma flecha de prata que causa dano verdadeiro com base no HP máximo do alvo. Excelente contra alvos com muita vida.",
         type = CardType.EQUIPMENT,
         rarity = Rarity.LEGENDARY,
+        slot = EquipmentSlot.WEAPON,
         baseStats = mapOf(
             Stat.SPEED to 18.0,
             Stat.ATK to 18.0
@@ -1015,6 +1032,7 @@ object CardCatalog {
         description = "Arma exclusiva de Markus. Cada ataque causa dano extra e gera moedas de cassino para apostas.",
         type = CardType.EQUIPMENT,
         rarity = Rarity.LEGENDARY,
+        slot = EquipmentSlot.SECONDARY,
         faction = "markus_gang",
         baseStats = mapOf(
             Stat.ATK to 24.0,
@@ -1056,6 +1074,7 @@ object CardCatalog {
         description = "erro: undefined não é um item",
         type = CardType.EQUIPMENT,
         rarity = Rarity.MYTHIC,
+        slot = EquipmentSlot.TRINKET,
         baseStats = mapOf(
             Stat.HP to 55.0,
             Stat.DEF to 55.0,
@@ -1092,6 +1111,7 @@ object CardCatalog {
         description = "Lâmina sagrada que cresce a cada golpe dado ou recebido. Sacrifica DEF e SPEED por escalada de ATK extrema e execução solar.",
         type = CardType.EQUIPMENT,
         rarity = Rarity.MYTHIC,
+        slot = EquipmentSlot.WEAPON,
         faction = "god",
         baseStats = mapOf(
             Stat.ATK to 80.0,
@@ -1421,69 +1441,6 @@ object CardCatalog {
     )
 
     // =========================================================================
-    // NEW — MYTHIC CHARACTERS
-    // =========================================================================
-
-    // Rebirth fighter. Comes back from death once. High ATK, decent bulk, extreme speed scaling.
-    // Max lv20: ATK ~546, SPEED ~197 (1.97 avg attacks/turn), DEF ~103. Rebirth at 450 HP.
-    private val phoenix = CardDefinition(
-        id = "PHOENIX",
-        name = "Fênix",
-        description = "Uma lendária ave flamejante. Quando derrubada, renasce das cinzas uma única vez — e volta com sede de vingança.",
-        type = CardType.CHARACTER,
-        rarity = Rarity.MYTHIC,
-        baseStats = mapOf(
-            Stat.HP to 780.0,
-            Stat.ATK to 128.0,
-            Stat.DEF to 46.0,
-            Stat.SPEED to 140.0,
-            Stat.CRIT_CHANCE to 0.28,
-            Stat.CRIT_DAMAGE to 2.0
-        ),
-        statsPerLevel = mapOf(
-            Stat.HP to 18.0,
-            Stat.ATK to 22.0,
-            Stat.DEF to 3.0,
-            Stat.SPEED to 3.0,
-            Stat.CRIT_CHANCE to 0.03,
-            Stat.CRIT_DAMAGE to 0.2
-        ),
-        tags = setOf("rebirth", "fire", "fast"),
-        abilities = listOf(
-            Ability(
-                name = "Voo Ardente",
-                description = "No início da batalha, as asas flamejantes aceleram a Fênix, ganhando +25 SPEED permanente.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnBattleStart,
-                effects = listOf(Effect.BuffStat(stat = Stat.SPEED, value = 25.0))
-            ),
-            Ability(
-                name = "Chamas da Fênix",
-                description = "Cada ataque descarrega chamas ardentes, causando 18% do ATK como dano mágico adicional.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnAttack,
-                effects = listOf(
-                    Effect.DamageBasedOnStat(
-                        stat = Stat.ATK,
-                        scaling = 0.18,
-                        statSource = StatSource.SELF,
-                        target = AbilityTarget.ENEMY,
-                        damageType = DamageType.MAGIC
-                    )
-                )
-            ),
-            Ability(
-                name = "Renascimento",
-                description = "Ao morrer, a Fênix renasce das cinzas uma única vez, restaurando 450 HP.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnDeath,
-                once = true,
-                effects = listOf(Effect.Heal(value = 450.0, target = AbilityTarget.SELF))
-            )
-        )
-    )
-
-    // =========================================================================
     // NEW — RARE EQUIPMENT
     // =========================================================================
 
@@ -1495,9 +1452,10 @@ object CardCatalog {
         description = "Botas leves como vento. Concede um bônus expressivo de velocidade ao custo de um pouco de resistência.",
         type = CardType.EQUIPMENT,
         rarity = Rarity.RARE,
+        slot = EquipmentSlot.BOOTS,
         baseStats = mapOf(
-            Stat.SPEED to 30.0,
-            Stat.HP to -20.0
+            Stat.SPEED to 35.0,
+            Stat.HP to -10.0
         ),
         statsPerLevel = mapOf(Stat.SPEED to 2.0),
         tags = setOf("speed", "light"),
@@ -1512,6 +1470,7 @@ object CardCatalog {
         description = "Um cajado arcano talhado de ossos. Pulsa energia sombria a cada três turnos, atingindo todos os inimigos.",
         type = CardType.EQUIPMENT,
         rarity = Rarity.RARE,
+        slot = EquipmentSlot.WEAPON,
         baseStats = mapOf(
             Stat.ATK to 20.0,
             Stat.DEF to -8.0
@@ -1543,10 +1502,11 @@ object CardCatalog {
         description = "Cada golpe recebido devolve energia mágica cortante a todos os inimigos. Quanto maior a DEF do portador, maior o contra-ataque.",
         type = CardType.EQUIPMENT,
         rarity = Rarity.EPIC,
+        slot = EquipmentSlot.ARMOR,
         baseStats = mapOf(
             Stat.HP to 60.0,
             Stat.DEF to 32.0,
-            Stat.ATK to -12.0,
+            Stat.ATK to -8.0,
             Stat.SPEED to -8.0
         ),
         statsPerLevel = mapOf(
@@ -1581,6 +1541,7 @@ object CardCatalog {
         description = "Um frasco de elixir que regenera e fortalece o corpo do portador. Cresce em HP permanentemente com o tempo.",
         type = CardType.EQUIPMENT,
         rarity = Rarity.EPIC,
+        slot = EquipmentSlot.TRINKET,
         baseStats = mapOf(
             Stat.HP to 80.0,
             Stat.LIFESTEAL to 0.12
@@ -1616,6 +1577,7 @@ object CardCatalog {
         description = "Uma arma de cerco que corrói a armadura inimiga ao longo do combate. Inimigos blindados são o alvo principal.",
         type = CardType.EQUIPMENT,
         rarity = Rarity.LEGENDARY,
+        slot = EquipmentSlot.WEAPON,
         baseStats = mapOf(
             Stat.ATK to 32.0,
             Stat.SPEED to 10.0
@@ -1651,6 +1613,7 @@ object CardCatalog {
         description = "Uma tocha que nunca se apaga. Queima inimigos a cada ataque — e ao ser destruída, explode em chamas que atingem todos.",
         type = CardType.EQUIPMENT,
         rarity = Rarity.LEGENDARY,
+        slot = EquipmentSlot.WEAPON,
         baseStats = mapOf(
             Stat.ATK to 28.0,
             Stat.SPEED to 18.0
@@ -1684,6 +1647,51 @@ object CardCatalog {
         )
     )
 
+    private val twinFangKatana = CardDefinition(
+        id = "TWIN_FANG_KATANA",
+        name = "Katana Bipartida",
+        description = "Uma lâmina que se move em dois tempos. Todo crítico libera um segundo corte automático — rápido demais para ser bloqueado.",
+        type = CardType.EQUIPMENT,
+        rarity = Rarity.LEGENDARY,
+        slot = EquipmentSlot.WEAPON,
+        baseStats = mapOf(
+            Stat.ATK to 22.0,
+            Stat.SPEED to 12.0,
+            Stat.CRIT_CHANCE to 0.16,
+            Stat.CRIT_DAMAGE to 0.35
+        ),
+        statsPerLevel = mapOf(
+            Stat.ATK to 2.0,
+            Stat.SPEED to 0.8,
+            Stat.CRIT_CHANCE to 0.01
+        ),
+        tags = setOf("katana", "crit", "speed"),
+        abilities = listOf(
+            Ability(
+                name = "Corte Bipartido",
+                description = "Ao acertar um crítico, desfere imediatamente um segundo golpe que causa 65% do ATK como dano físico.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnCrit,
+                effects = listOf(
+                    Effect.Custom("Double strike 65% ATK") { self, target, state ->
+                        if (target == null || target.hp <= 0) return@Custom
+                        val damage = (self.stats[Stat.ATK] ?: 0.0) * 0.65
+                        state.combatLog += "⚡ ${self.card.name} disparou um segundo corte!"
+                        state.queue.add(
+                            CombatEvent.BeforeDamage(
+                                source = self,
+                                target = target,
+                                damage = damage,
+                                damageType = DamageType.PHYSICAL,
+                                canCrit = false
+                            )
+                        )
+                    }
+                )
+            )
+        )
+    )
+
     // =========================================================================
     // NEW — MYTHIC EQUIPMENT
     // =========================================================================
@@ -1696,6 +1704,7 @@ object CardCatalog {
         description = "Uma esfera de poder cósmico. Amplifica imensamente o ATK e HP — mas corrói completamente a capacidade defensiva do portador.",
         type = CardType.EQUIPMENT,
         rarity = Rarity.MYTHIC,
+        slot = EquipmentSlot.TRINKET,
         baseStats = mapOf(
             Stat.ATK to 60.0,
             Stat.HP to 100.0,
@@ -1772,7 +1781,7 @@ object CardCatalog {
         voidMage,
         // Characters — Mythic
         unleashedJuniorKnight,
-        phoenix,
+
         // Characters — Kono (system, not pullable)
         kono,
         dummy,
@@ -1803,6 +1812,7 @@ object CardCatalog {
         allInEmblem,
         siegebreaker,
         eternalFlame,
+        twinFangKatana,
         // Equipment — Mythic
         undefined,
         sunGodGreatsword,

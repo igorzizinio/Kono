@@ -34,4 +34,25 @@ suspend fun Kord.awaitButtonInteraction(
     }
 }
 
+suspend fun Kord.awaitFirstButtonInteraction(
+    ids: Collection<String>,
+    allowedUserId: Long,
+    timeout: Duration = 60.seconds
+): Pair<String, ButtonInteractionCreateEvent>? {
+    val result = CompletableDeferred<Pair<String, ButtonInteractionCreateEvent>>()
+
+    val listener = on<ButtonInteractionCreateEvent> {
+        val customId = interaction.component.customId ?: return@on
+        if (customId !in ids) return@on
+        if (interaction.user.id.value.toLong() != allowedUserId) return@on
+        if (!result.isCompleted) result.complete(customId to this)
+    }
+
+    return try {
+        withTimeoutOrNull(timeout) { result.await() }
+    } finally {
+        listener.cancel()
+    }
+}
+
 

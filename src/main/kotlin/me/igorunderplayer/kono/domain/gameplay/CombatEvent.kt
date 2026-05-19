@@ -21,7 +21,8 @@ sealed class CombatEvent {
         val damageType: DamageType = DamageType.PHYSICAL,
         val canCrit: Boolean = true,
         val canBeDodged: Boolean = true,
-        val sourceAbilityType: AbilityType? = null
+        val sourceAbilityType: AbilityType? = null,
+        val wasCritical: Boolean = false
     ) : CombatEvent()
 
     data class AfterDamage(

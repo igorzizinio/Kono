@@ -9,6 +9,7 @@ data class CardDefinition(
 
     val type: CardType,
     val rarity: Rarity,
+    val slot: EquipmentSlot? = null,
 
     val faction: String? = null,
 

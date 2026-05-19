@@ -83,7 +83,8 @@ CREATE TABLE tb_equipped_cards (
         ON DELETE CASCADE,
 
     CONSTRAINT unique_slot UNIQUE (character_instance_id, slot),
-    CONSTRAINT unique_card_instance UNIQUE (card_instance_id)
+    CONSTRAINT unique_card_instance UNIQUE (card_instance_id),
+    CONSTRAINT valid_slot CHECK (slot >= 0 AND slot <= 4)
 );
 
 -- =========================

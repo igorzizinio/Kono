@@ -15,5 +15,7 @@ sealed class AbilityTrigger {
     data class OnBellowHealth(val threshold: Double, val target: AbilityTarget = AbilityTarget.SELF) : AbilityTrigger()
     data object OnDeath : AbilityTrigger()
 
+    data object OnCrit : AbilityTrigger()
+
     data object Manual : AbilityTrigger()
 }

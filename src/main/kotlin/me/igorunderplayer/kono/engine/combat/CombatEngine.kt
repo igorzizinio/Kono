@@ -320,14 +320,21 @@ class CombatEngine(
 
                 state.combatLog += "⚔️ ${unitLabel(event.attacker, state)} atacando ${unitLabel(event.target, state)}"
 
-                val damage = calculateDamage(event.attacker)
+                val baseDamage = calculateDamage(event.attacker)
+                val critChance = (event.attacker.stats[Stat.CRIT_CHANCE] ?: 0.0).coerceIn(0.0, 1.0)
+                val critDmgMult = (event.attacker.stats[Stat.CRIT_DAMAGE] ?: 1.5).coerceAtLeast(1.0)
+                val isCrit = state.rng.nextDouble() < critChance
+                val finalDamage = if (isCrit) baseDamage * critDmgMult else baseDamage
+
+                if (isCrit) state.combatLog += "✨ Crítico! ${unitLabel(event.attacker, state)} acertou um golpe certeiro!"
 
                 enqueue(
                     CombatEvent.BeforeDamage(
                         source = event.attacker,
                         target = event.target,
-                        damage = damage,
-                        damageType = DamageType.PHYSICAL
+                        damage = finalDamage,
+                        damageType = DamageType.PHYSICAL,
+                        wasCritical = isCrit
                     )
                 )
             }
@@ -346,7 +353,8 @@ class CombatEngine(
                     target = event.target,
                     damage = targetDamage,
                     damageType = event.damageType,
-                    sourceAbilityType = event.sourceAbilityType
+                    sourceAbilityType = event.sourceAbilityType,
+                    wasCritical = event.wasCritical
                 )
 
                 if (guardian != null && redirectedDamage > 0.0) {
@@ -388,7 +396,8 @@ class CombatEngine(
         target: Unit,
         damage: Double,
         damageType: DamageType = DamageType.PHYSICAL,
-        sourceAbilityType: AbilityType? = null
+        sourceAbilityType: AbilityType? = null,
+        wasCritical: Boolean = false
     ) {
         val finalDamage = damage.coerceAtLeast(0.0)
         if (finalDamage <= 0.0 || target.hp <= 0.0) return
@@ -408,6 +417,7 @@ class CombatEngine(
                 target = target,
                 damage = finalDamage,
                 damageType = damageType,
+                wasCritical = wasCritical,
                 sourceAbilityType = sourceAbilityType
             )
         )
@@ -478,6 +488,7 @@ class CombatEngine(
                 }
             }
             AbilityTrigger.OnDeath -> event is CombatEvent.Death && event.unit == owner
+            AbilityTrigger.OnCrit -> event is CombatEvent.AfterDamage && event.source == owner && event.wasCritical
             AbilityTrigger.Manual -> false
         }
     }
