@@ -165,3 +165,6 @@ ALTER TABLE tb_users
 
 ALTER TABLE tb_users
     ALTER COLUMN konos TYPE BIGINT;
+
+ALTER TABLE tb_users
+    ADD COLUMN story_progress INT DEFAULT -1;

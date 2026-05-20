@@ -145,4 +145,11 @@ class UserRepository(private val databaseManager: DatabaseManager) {
         }
         return@withContext updated > 0
     }
+
+    suspend fun updateStoryProgress(userId: Int, progress: Int): Boolean = withContext(Dispatchers.IO) {
+        database.update(Users) {
+            set(it.storyProgress, progress)
+            where { it.id eq userId }
+        } > 0
+    }
 }

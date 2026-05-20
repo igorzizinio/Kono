@@ -28,6 +28,8 @@ interface User : Entity<User> {
 
     val pityLegendary: Int
     val pityEpic: Int
+
+    var storyProgress: Int
 }
 
 object Users : Table<User>("tb_users") {
@@ -55,4 +57,6 @@ object Users : Table<User>("tb_users") {
 
     val pityLegendary = int("pity_legendary").bindTo { it.pityLegendary }
     val pityEpic = int("pity_epic").bindTo { it.pityEpic }
+
+    val storyProgress = int("story_progress").bindTo { it.storyProgress }
 }
