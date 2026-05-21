@@ -7,7 +7,6 @@ import dev.kord.core.entity.interaction.SubCommand
 import dev.kord.core.event.interaction.ChatInputCommandInteractionCreateEvent
 import me.igorunderplayer.kono.commands.KonoSlashCommand
 import me.igorunderplayer.kono.commands.KonoSlashSubCommand
-import me.igorunderplayer.kono.commands.slash.game.subcommand.BatalhaBot
 import me.igorunderplayer.kono.commands.slash.game.subcommand.BatalhaJogador
 import me.igorunderplayer.kono.services.TeamBattleService
 
@@ -15,10 +14,9 @@ class BatalhaSlashCommand(
     teamBattleService: TeamBattleService
 ) : KonoSlashCommand {
     override val name = "batalha"
-    override val description = "Luta de times 3v3 — desafie bots ou outros jogadores"
+    override val description = "Luta de times 3v3 — desafie outros jogadores"
 
     private val subCommands: List<KonoSlashSubCommand> = listOf(
-        BatalhaBot(teamBattleService),
         BatalhaJogador(teamBattleService)
     )
 

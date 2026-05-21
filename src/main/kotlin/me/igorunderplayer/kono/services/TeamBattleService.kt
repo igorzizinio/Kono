@@ -79,11 +79,16 @@ class TeamBattleService(
 				return RosterResult.Failure("❌ ${definition.name} não é um personagem de batalha.")
 			}
 
+			val equips = member.equipmentIds.mapNotNull { equipId ->
+				val equip = CardCatalog.getById(equipId)
+				if (equip == null || equip.type != CardType.EQUIPMENT) null else equip
+			}
+
 			CombatUnitFactory.createUnit(
 				unitId = "bot_${enemy.id}_$index",
 				definition = definition,
 				level = member.level,
-				equips = emptyList()
+				equips = equips
 			)
 		}
 

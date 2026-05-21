@@ -1755,6 +1755,40 @@ object CardCatalog {
         )
     )
 
+    private val royalCrossbowman = CardDefinition(
+        id = "ROYAL_CROSSBOWMAN",
+        name = "Besteiro Real",
+        description = "Besteiro treinado pela guarda real. Constante e preciso — a cada três disparos, perfura a armadura do alvo definitivamente.",
+        type = CardType.CHARACTER,
+        rarity = Rarity.RARE,
+        baseStats = mapOf(
+            Stat.HP to 460.0,
+            Stat.ATK to 50.0,
+            Stat.DEF to 18.0,
+            Stat.SPEED to 88.0,
+            Stat.CRIT_CHANCE to 0.12,
+            Stat.CRIT_DAMAGE to 1.35
+        ),
+        statsPerLevel = mapOf(
+            Stat.HP to 4.0,
+            Stat.ATK to 2.5,
+            Stat.SPEED to 0.5
+        ),
+        tags = setOf("archer", "marksman"),
+        abilities = listOf(
+            Ability(
+                name = "Flecha Perfurante",
+                description = "A cada 3 ataques, dispara uma flecha carregada que causa 26 de dano extra e reduz permanentemente a DEF do alvo em 6.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnAttackEvery(3),
+                effects = listOf(
+                    Effect.Damage(value = 26.0, target = AbilityTarget.ENEMY),
+                    Effect.BuffStat(stat = Stat.DEF, value = -6.0, target = AbilityTarget.ENEMY)
+                )
+            )
+        )
+    )
+
     // =========================================================================
     // CATALOG
     // =========================================================================
@@ -1767,6 +1801,7 @@ object CardCatalog {
         // Characters — Rare
         thief,
         ironGuardian,
+        royalCrossbowman,
         // Characters — Epic
         jorge,
         veyn,
