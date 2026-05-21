@@ -50,7 +50,7 @@ class CharacterCommand(
                 val instanceId = args[0].toIntOrNull()
                 if (instanceId == null || instanceId <= 0) {
                     event.message.reply {
-                        content = "Instance ID inválido. Use um número inteiro positivo, exemplo: `setactive 42`."
+                        content = "Instance ID inválido. Use um número inteiro positivo, exemplo: `character set 42`."
                     }
                     return
                 }
@@ -124,7 +124,7 @@ class CharacterCommand(
 
                     is BuildUnitHandler.Result.NoActiveCard -> {
                         event.message.reply {
-                            content = "Nenhum personagem ativo selecionado. Use: setactive <instance_id>"
+                            content = "Nenhum personagem ativo selecionado. Use: character set <instance_id>"
                         }
                     }
 
@@ -231,7 +231,7 @@ class CharacterCommand(
                     }
 
                     is UpgradeCharacterHandler.PreviewResult.NoActiveCharacter -> {
-                        event.message.reply { content = "Nenhum personagem ativo selecionado. Use `char set <id>`." }
+                        event.message.reply { content = "Nenhum personagem ativo selecionado. Use `character set <id>`." }
                     }
 
                     is UpgradeCharacterHandler.PreviewResult.CharacterNotFound -> {
@@ -250,13 +250,13 @@ class CharacterCommand(
 
                     is UpgradeCharacterHandler.PreviewResult.NotEnoughKonos -> {
                         event.message.reply {
-                            content = "Konos insuficientes: precisa de ${preview.required}, voce tem ${preview.current}."
+                            content = "Konos insuficientes: precisa de ${preview.required}, você tem ${preview.current}."
                         }
                     }
 
                     is UpgradeCharacterHandler.PreviewResult.NotEnoughCopies -> {
                         event.message.reply {
-                            content = "Copias insuficientes: precisa de ${preview.required}, voce tem ${preview.current}."
+                            content = "Copias insuficientes: precisa de ${preview.required}, você tem ${preview.current}."
                         }
                     }
                 }
@@ -267,7 +267,7 @@ class CharacterCommand(
     private suspend fun buildUpgradeHint(discordId: Long): String? {
         return when (val preview = upgradeCharacterHandler.previewActiveCharacter(discordId)) {
             is UpgradeCharacterHandler.PreviewResult.Ready -> {
-                "🆙 **Upgrade disponivel!** Use `char upgrade` (custo: ${preview.cost.konosCost} konos, ${preview.cost.copiesRequired} copias)."
+                "🆙 **Upgrade disponivel!** Use `character upgrade` (custo: ${preview.cost.konosCost} Konos, ${preview.cost.copiesRequired} copias)."
             }
 
             else -> null

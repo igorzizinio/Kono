@@ -46,7 +46,7 @@ class InventoryCommand(
         val discordId = event.message.author?.id?.value?.toLong() ?: return
         val filterToken = args.getOrNull(0)?.lowercase()
         if (filterToken == null) {
-            event.message.reply { content = "Use: `inventory item <pagina>` ou `inventory perso <pagina>`." }
+            event.message.reply { content = "Use: `inventory item <pagina>` ou `inventory char <pagina>`." }
             return
         }
 
