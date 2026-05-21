@@ -10,7 +10,6 @@ import dev.kord.core.event.interaction.ChatInputCommandInteractionCreateEvent
 import dev.kord.rest.builder.message.embed
 import me.igorunderplayer.kono.commands.KonoSlashCommand
 import me.igorunderplayer.kono.data.entities.CardInstance
-import me.igorunderplayer.kono.data.entities.EquippedCard
 import me.igorunderplayer.kono.data.repositories.CardInstanceRepository
 import me.igorunderplayer.kono.data.repositories.CardRepository
 import me.igorunderplayer.kono.data.repositories.EquippedCardsRepository
