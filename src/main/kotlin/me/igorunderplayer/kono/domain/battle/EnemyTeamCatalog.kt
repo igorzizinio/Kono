@@ -63,8 +63,8 @@ object EnemyTeamCatalog {
             essenceReward = 120,
             members = listOf(
                 EnemyTeamMember("GOBLIN", 6, equipmentIds = listOf("DAGGER")),
-                EnemyTeamMember("GOBLIN", 4),
-                EnemyTeamMember("GOBLIN", 5)
+                EnemyTeamMember("GOBLIN", 5, equipmentIds = listOf("IRON_ARMOR")),
+                EnemyTeamMember("GOBLIN", 6, equipmentIds = listOf("DAGGER"))
             ),
             storyOrder = 2,
             storyChapterTitle = "A Emboscada",
@@ -91,9 +91,9 @@ object EnemyTeamCatalog {
             description = "Criminosos locais que controlam a entrada da cidade.",
             essenceReward = 165,
             members = listOf(
-                EnemyTeamMember("THIEF", 7, equipmentIds = listOf("WOODEN_SWORD", "IRON_ARMOR")),
-                EnemyTeamMember("THIEF", 5, equipmentIds = listOf("DAGGER")),
-                EnemyTeamMember("THIEF", 6)
+                EnemyTeamMember("THIEF", 8, equipmentIds = listOf("IRON_SWORD", "IRON_ARMOR")),
+                EnemyTeamMember("THIEF", 6, equipmentIds = listOf("DAGGER", "IRON_ARMOR")),
+                EnemyTeamMember("THIEF", 7, equipmentIds = listOf("KATANA"))
             ),
             storyOrder = 3,
             storyChapterTitle = "A Entrada da Cidade",
@@ -122,11 +122,11 @@ object EnemyTeamCatalog {
             id = "MARKUS_HENCHMEN",
             name = "Capangas de Markus",
             description = "Os homens de confiança do grande apostador.",
-            essenceReward = 210,
+            essenceReward = 270,
             members = listOf(
-                EnemyTeamMember("VEYN", 7, equipmentIds = listOf("QUICK_BOOTS", "VAMPIRE_RING")),
-                EnemyTeamMember("JORGE", 7, equipmentIds = listOf("IRON_SHIELD")),
-                EnemyTeamMember("AURUM", 7, equipmentIds = listOf("BONE_STAFF"))
+                EnemyTeamMember("VEYN", 9, equipmentIds = listOf("POLISHED_KATANA", "QUICK_BOOTS")),
+                EnemyTeamMember("JORGE", 9, equipmentIds = listOf("HEAVY_IRON_ARMOR", "IRON_SHIELD")),
+                EnemyTeamMember("AURUM", 9, equipmentIds = listOf("BONE_STAFF", "IRON_ARMOR"))
             ),
             storyOrder = 4,
             storyChapterTitle = "O Cassino Dourado",
@@ -153,11 +153,11 @@ object EnemyTeamCatalog {
             id = "MARKUS_GANG",
             name = "Esquadrão das Apostas",
             description = "Markus e seu grupo apostam tudo em combate.",
-            essenceReward = 320,
+            essenceReward = 420,
             members = listOf(
-                EnemyTeamMember("MARKUS", 8, equipmentIds = listOf("ALL_IN_EMBLEM", "GAMBLER_CHARM")),
-                EnemyTeamMember("JORGE", 11, equipmentIds = listOf("HEAVY_IRON_ARMOR", "IRON_SHIELD")),
-                EnemyTeamMember("VEYN", 11, equipmentIds = listOf("POLISHED_KATANA", "GAMBLER_CHARM"))
+                EnemyTeamMember("MARKUS", 12, equipmentIds = listOf("ALL_IN_EMBLEM", "GAMBLER_CHARM")),
+                EnemyTeamMember("JORGE", 14, equipmentIds = listOf("HEAVY_IRON_ARMOR", "IRON_SHIELD", "ELIXIR_VIAL")),
+                EnemyTeamMember("VEYN", 14, equipmentIds = listOf("POLISHED_KATANA", "GAMBLER_CHARM", "VAMPIRE_RING"))
             ),
             storyOrder = 5,
             storyChapterTitle = "O Grande Apostador",
@@ -218,11 +218,11 @@ object EnemyTeamCatalog {
             id = "BLADE_GRAVEYARD",
             name = "Ecos da Guerra Antiga",
             description = "Algo ainda habita o antigo campo de batalha.",
-            essenceReward = 380,
+            essenceReward = 460,
             members = listOf(
-                EnemyTeamMember("IRON_GUARDIAN", 11),
-                EnemyTeamMember("BERSERKER", 9),
-                EnemyTeamMember("SHADOW", 9, equipmentIds = listOf("DAGGER"))
+                EnemyTeamMember("IRON_GUARDIAN", 14, equipmentIds = listOf("HEAVY_IRON_ARMOR", "IRON_SHIELD")),
+                EnemyTeamMember("BERSERKER", 12, equipmentIds = listOf("IRON_SWORD", "VAMPIRE_RING")),
+                EnemyTeamMember("SHADOW", 12, equipmentIds = listOf("POLISHED_KATANA", "QUICK_BOOTS"))
             ),
             storyOrder = 7,
             storyChapterTitle = "O Cemitério de Lâminas",
@@ -264,14 +264,14 @@ object EnemyTeamCatalog {
             id = "AUREA_GATE",
             name = "Guardas dos Portões de Aurea",
             description = "Soldados de elite treinados para impedir que ameaças entrem pela porta principal.",
-            essenceReward = 500,
+            essenceReward = 620,
             members = listOf(
                 EnemyTeamMember(
-                    "GOLDEN_KNIGHT", 12,
-                    equipmentIds = listOf("HEAVY_IRON_ARMOR", "IRON_SHIELD")
+                    "GOLDEN_KNIGHT", 16,
+                    equipmentIds = listOf("HEAVY_IRON_ARMOR", "IRON_SHIELD", "ELIXIR_VIAL")
                 ),
-                EnemyTeamMember("AUREA_SOLDIER", 10, equipmentIds = listOf("IRON_SWORD")),
-                EnemyTeamMember("AUREA_SOLDIER", 9)
+                EnemyTeamMember("AUREA_SOLDIER", 13, equipmentIds = listOf("IRON_SWORD", "IRON_ARMOR")),
+                EnemyTeamMember("AUREA_SOLDIER", 12, equipmentIds = listOf("BONE_STAFF", "IRON_ARMOR"))
             ),
             storyOrder = 8,
             storyChapterTitle = "A Cidade Dourada",
@@ -370,19 +370,19 @@ object EnemyTeamCatalog {
             id = "SOLAR_TOURNAMENT",
             name = "Campeões do Torneio da Chama",
             description = "Os três guerreiros mais fortes de Aurea. Vencê-los é a maior honra que um forasteiro pode receber.",
-            essenceReward = 660,
+            essenceReward = 820,
             members = listOf(
                 EnemyTeamMember(
-                    "GOLDEN_KNIGHT", 14,
+                    "GOLDEN_KNIGHT", 17,
                     equipmentIds = listOf("HEAVY_IRON_ARMOR", "IRON_SHIELD", "SOLARBRAND")
                 ),
                 EnemyTeamMember(
-                    "AUREA_SOLDIER", 13,
-                    equipmentIds = listOf("AURE_GOLDEN_ARMOR", "IRON_SWORD")
+                    "AUREA_SOLDIER", 16,
+                    equipmentIds = listOf("AURE_GOLDEN_ARMOR", "GREATSWORD")
                 ),
                 EnemyTeamMember(
-                    "SUN_PRIESTESS", 12,
-                    equipmentIds = listOf("DEVOTION_STAFF")
+                    "SUN_PRIESTESS", 15,
+                    equipmentIds = listOf("DEVOTION_STAFF", "AURE_GOLDEN_ARMOR")
                 )
             ),
             storyOrder = 9,
@@ -482,19 +482,19 @@ object EnemyTeamCatalog {
             id = "AURE_KING_DUEL",
             name = "O Rei de Aurea",
             description = "O monarca não confia em palavras. Nunca confiou. Cada aliança que Aurea já fez começou com um duelo.",
-            essenceReward = 900,
+            essenceReward = 1100,
             members = listOf(
                 EnemyTeamMember(
-                    "AURE_KING", 15,
+                    "AURE_KING", 19,
                     equipmentIds = listOf("SOLARBRAND", "AURE_GOLDEN_ARMOR")
                 ),
                 EnemyTeamMember(
-                    "GOLDEN_KNIGHT", 14,
-                    equipmentIds = listOf("HEAVY_IRON_ARMOR", "IRON_SHIELD")
+                    "GOLDEN_KNIGHT", 17,
+                    equipmentIds = listOf("HEAVY_IRON_ARMOR", "IRON_SHIELD", "ELIXIR_VIAL")
                 ),
                 EnemyTeamMember(
-                    "GOLDEN_KNIGHT", 13,
-                    equipmentIds = listOf("HEAVY_IRON_ARMOR")
+                    "GOLDEN_KNIGHT", 16,
+                    equipmentIds = listOf("AURE_GOLDEN_ARMOR", "SIEGEBREAKER")
                 )
             ),
             storyOrder = 10,

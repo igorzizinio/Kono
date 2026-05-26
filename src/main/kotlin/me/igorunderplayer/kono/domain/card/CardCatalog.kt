@@ -287,12 +287,12 @@ object CardCatalog {
         abilities = listOf(
             Ability(
                 name = "Graça Contínua",
-                description = "A cada turno, Lumina cura todos os aliados vivos em 12% de seu ATK.",
+                description = "A cada turno, Lumina cura todos os aliados vivos em 8% de seu ATK.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnTurnStart,
                 effects = listOf(
-                    Effect.Custom("Heal allies 12% ATK") { self, _, state ->
-                        val healAmount = (self.stats[Stat.ATK] ?: 0.0) * 0.12
+                    Effect.Custom("Heal allies 8% ATK") { self, _, state ->
+                        val healAmount = (self.stats[Stat.ATK] ?: 0.0) * 0.08
                         if (healAmount <= 0) return@Custom
                         val team = state.teams.firstOrNull { it.units.contains(self) } ?: return@Custom
                         team.units.filter { it.hp > 0 }.forEach { ally ->
@@ -307,15 +307,15 @@ object CardCatalog {
             ),
             Ability(
                 name = "Bênção da Aurora",
-                description = "A cada 3 turnos, Lumina concede a todos os aliados +20% ATK e +20% DEF temporários por 2 rodadas.",
+                description = "A cada 3 turnos, Lumina concede a todos os aliados +15% ATK e +15% DEF temporários por 2 rodadas.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnTurnEvery(3),
                 effects = listOf(
-                    Effect.Custom("Temp buff ATK+DEF 20%") { self, _, state ->
+                    Effect.Custom("Temp buff ATK+DEF 15%") { self, _, state ->
                         val atk = self.stats[Stat.ATK] ?: 0.0
                         val def = self.stats[Stat.DEF] ?: 0.0
-                        val atkBuff = atk * 0.20
-                        val defBuff = def * 0.20
+                        val atkBuff = atk * 0.15
+                        val defBuff = def * 0.15
                         val team = state.teams.firstOrNull { it.units.contains(self) } ?: return@Custom
                         team.units.filter { it.hp > 0 }.forEach { ally ->
                             ally.stats[Stat.ATK] = (ally.stats[Stat.ATK] ?: 0.0) + atkBuff
@@ -1365,20 +1365,20 @@ object CardCatalog {
             ),
             Ability(
                 name = "Regeneração Lenta",
-                description = "A cada 2 turnos, a pedra se reconstrói sozinha, curando 40 HP.",
+                description = "A cada 2 turnos, a pedra se reconstrói sozinha, curando 28 HP.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnTurnEvery(2),
-                effects = listOf(Effect.Heal(value = 40.0, target = AbilityTarget.SELF))
+                effects = listOf(Effect.Heal(value = 28.0, target = AbilityTarget.SELF))
             ),
             Ability(
                 name = "Contra-Ataque de Pedra",
-                description = "Ao receber dano físico, emite uma onda de pedra que causa 20% da sua DEF atual como dano mágico a todos os inimigos.",
+                description = "Ao receber dano físico, emite uma onda de pedra que causa 15% da sua DEF atual como dano mágico a todos os inimigos.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnDamageTaken(DamageType.PHYSICAL),
                 effects = listOf(
                     Effect.DamageBasedOnStat(
                         stat = Stat.DEF,
-                        scaling = 0.20,
+                        scaling = 0.15,
                         statSource = StatSource.SELF,
                         target = AbilityTarget.ALL_ENEMIES,
                         damageType = DamageType.MAGIC
@@ -2130,11 +2130,11 @@ object CardCatalog {
         abilities = listOf(
             Ability(
                 name = "Chama do Amanhecer",
-                description = "A cada turno, a lâmina aquece e ganha +6 ATK permanente.",
+                description = "A cada turno, a lâmina aquece e ganha +4 ATK permanente.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnTurnStart,
                 effects = listOf(
-                    Effect.BuffStat(stat = Stat.ATK, value = 6.0, target = AbilityTarget.SELF)
+                    Effect.BuffStat(stat = Stat.ATK, value = 4.0, target = AbilityTarget.SELF)
                 )
             ),
             Ability(
@@ -2199,9 +2199,38 @@ object CardCatalog {
                     "Leve como luz e rápida como pensamento, ela foi criada para eliminar ameaças antes mesmo que pudessem reagir. " +
                     "Sozinha, já é considerada uma arma divina.\n\n" +
                     "Mas sua verdadeira força apenas desperta ao lado de sua irmã.",
-        baseStats = mapOf(),
+        baseStats = mapOf(
+            Stat.ATK to 125.0,
+            Stat.CRIT_CHANCE to 0.15,
+            Stat.CRIT_DAMAGE to 0.8,
+        ),
         statsPerLevel = mapOf(),
-        abilities = listOf(),
+        abilities = listOf(
+            Ability(
+                name = "Benção das laminas irmãs",
+                type = AbilityType.PASSIVE,
+                once = true,
+                trigger = AbilityTrigger.OnBattleStart,
+                effects = listOf(
+                    Effect.Custom("Double twin stats") { self, _, state ->
+                        val twin = self.equipments.find { it.id == "KONO_TWINBLADE_L" }
+
+                        if (twin != null) {
+                            state.combatLog += "⚔️ As laminas gemêas estão juntas novamente... seu poder real foi despertado"
+
+                            val int = self.stats[Stat.INT] ?: 0.0
+                            self.stats[Stat.INT] = int * 2.0
+
+                            val speed = self.stats[Stat.SPEED] ?: 0.0
+                            self.stats[Stat.SPEED] = speed * 2.0
+
+                            val hp = self.stats[Stat.HP] ?: 0.0
+                            self.stats[Stat.HP] = hp * 2.0
+                        }
+                    }
+                )
+            )
+        ),
     )
 
     val konoTwinbladeL = CardDefinition(
@@ -2215,9 +2244,36 @@ object CardCatalog {
                 "Dizem que ela corta não apenas carne, mas intenção.\n\n" +
                 "Mesmo separada de sua contraparte, ainda carrega poder suficiente para destruir exércitos.\n\n" +
                 "Quando ambas as lâminas lutam juntas… batalhas terminam antes mesmo de começarem.",
-        baseStats = mapOf(),
+        baseStats = mapOf(
+            Stat.INT to 125.0,
+            Stat.SPEED to 25.0,
+            Stat.HP to 125.0
+        ),
         statsPerLevel = mapOf(),
-        abilities = listOf(),
+        abilities = listOf(
+            Ability(
+                name = "Benção das laminas irmãs",
+                type = AbilityType.PASSIVE,
+                once = true,
+                trigger = AbilityTrigger.OnBattleStart,
+                effects = listOf(
+                    Effect.Custom("Double twin stats") { self, _, state ->
+                        val twin = self.equipments.find { it -> it.id == "KONO_TWINBLADE_R" }
+
+                        if (twin != null) {
+                            val atk = self.stats[Stat.ATK] ?: 0.0
+                            self.stats[Stat.ATK] = atk * 2.0
+
+                            val critRate = self.stats[Stat.CRIT_CHANCE] ?: 0.0
+                            self.stats[Stat.CRIT_CHANCE] = critRate * 2.0
+
+                            val critDamage = self.stats[Stat.CRIT_DAMAGE] ?: 0.0
+                            self.stats[Stat.CRIT_DAMAGE] = critDamage * 2.0
+                        }
+                    }
+                )
+            )
+        ),
     )
 
     // =========================================================================
@@ -2271,7 +2327,9 @@ object CardCatalog {
         siegebreaker, twinFangKatana,
         solarbrand,          // NOVO
         // Equipment — Mythic
-        undefined, sunGodGreatsword, cosmicOrb
+        undefined, sunGodGreatsword, cosmicOrb,
+
+        konoSister, konoTwinbladeL, konoTwinbladeR
     )
 
     private val byId = all.associateBy { it.id }

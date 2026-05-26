@@ -6,6 +6,7 @@ import kotlin.math.roundToInt
 enum class Stat {
     HP,
     ATK,
+    INT,
     DEF,
     CRIT_CHANCE,
     CRIT_DAMAGE,
@@ -23,6 +24,7 @@ fun Stat.prettyName(): String {
     return when (this) {
         Stat.HP -> "\uD83D\uDC9A HP"
         Stat.ATK -> "⚔️ ATK"
+        Stat.INT -> "INT"
         Stat.DEF -> "🛡️ DEF"
         Stat.CRIT_CHANCE -> "🎯 Crit Chance"
         Stat.CRIT_DAMAGE -> "💥 Crit Damage"
