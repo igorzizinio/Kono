@@ -11,7 +11,7 @@ sealed class AbilityTrigger {
     data class OnAttackEvery(val attacks: Int) : AbilityTrigger()
     data class OnAttackAgainstTag(val tag: String) : AbilityTrigger()
     data object OnDamageDealt : AbilityTrigger()
-    data object OnDamageTaken : AbilityTrigger()
+    data class OnDamageTaken(val damageType: DamageType? = null) : AbilityTrigger()
     data class OnBellowHealth(val threshold: Double, val target: AbilityTarget = AbilityTarget.SELF) : AbilityTrigger()
     data object OnDeath : AbilityTrigger()
 

@@ -467,7 +467,7 @@ class CombatEngine(
                     event.target.tags.any { it.equals(trigger.tag, ignoreCase = true) }
                 }
             }
-            AbilityTrigger.OnDamageTaken -> event is CombatEvent.BeforeDamage && event.target == owner
+            is AbilityTrigger.OnDamageTaken -> event is CombatEvent.BeforeDamage && event.target == owner && (trigger.damageType == null || trigger.damageType == event.damageType)
             AbilityTrigger.OnDamageDealt -> event is CombatEvent.AfterDamage && event.source == owner
             is AbilityTrigger.OnBellowHealth -> {
                 if (event !is CombatEvent.AfterDamage || event.target != owner) {

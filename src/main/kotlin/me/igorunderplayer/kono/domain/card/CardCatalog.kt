@@ -152,7 +152,7 @@ object CardCatalog {
                 name = "Fortaleza Viva",
                 description = "Ao receber dano, Jorge se cura em 10 HP, sustentando sua presença na linha de frente.",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnDamageTaken,
+                trigger = AbilityTrigger.OnDamageTaken(),
                 effects = listOf(Effect.Heal(value = 10.0, target = AbilityTarget.SELF))
             ),
             Ability(
@@ -566,7 +566,7 @@ object CardCatalog {
                 name = "Resposta Paradoxal",
                 description = "A cada golpe recebido, Kono distorce a realidade, se cura e fortalece.",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnDamageTaken,
+                trigger = AbilityTrigger.OnDamageTaken(),
                 effects = listOf(
                     Effect.Heal(value = 40.0, target = AbilityTarget.SELF),
                     Effect.BuffStat(stat = Stat.ATK, value = 10.0),
@@ -1154,7 +1154,7 @@ object CardCatalog {
                 name = "Provação Divina",
                 description = "Ao receber dano, a fé é testada e o ATK cresce em +5 permanentemente.",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnDamageTaken,
+                trigger = AbilityTrigger.OnDamageTaken(),
                 effects = listOf(Effect.BuffStat(stat = Stat.ATK, value = 5.0))
             ),
             Ability(
@@ -1313,7 +1313,7 @@ object CardCatalog {
                 name = "Fúria",
                 description = "A cada golpe recebido, o Berserker entra em fúria e ganha +5 de ATK permanente.",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnDamageTaken,
+                trigger = AbilityTrigger.OnDamageTaken(),
                 effects = listOf(Effect.BuffStat(stat = Stat.ATK, value = 5.0, target = AbilityTarget.SELF))
             ),
             Ability(
@@ -1372,9 +1372,9 @@ object CardCatalog {
             ),
             Ability(
                 name = "Contra-Ataque de Pedra",
-                description = "Ao receber qualquer dano, emite uma onda de pedra que causa 20% da sua DEF atual como dano mágico a todos os inimigos.",
+                description = "Ao receber dano físico, emite uma onda de pedra que causa 20% da sua DEF atual como dano mágico a todos os inimigos.",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnDamageTaken,
+                trigger = AbilityTrigger.OnDamageTaken(DamageType.PHYSICAL),
                 effects = listOf(
                     Effect.DamageBasedOnStat(
                         stat = Stat.DEF,
@@ -1517,9 +1517,9 @@ object CardCatalog {
         abilities = listOf(
             Ability(
                 name = "Espinhos de Ferro",
-                description = "Ao receber dano, emite espinhos mágicos causando 25% da DEF atual como dano mágico a todos os inimigos.",
+                description = "Ao receber dano físico, emite espinhos mágicos causando 25% da DEF atual como dano mágico a todos os inimigos.",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnDamageTaken,
+                trigger = AbilityTrigger.OnDamageTaken(DamageType.PHYSICAL),
                 effects = listOf(
                     Effect.DamageBasedOnStat(
                         stat = Stat.DEF,

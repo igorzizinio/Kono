@@ -21,6 +21,11 @@ object EnemyTeamCatalog {
     )
 
     private val teams = listOf(
+
+        // =========================================================================
+        // CHAPTER 1 — A FLORESTA
+        // =========================================================================
+
         EnemyTeamDefinition(
             id = "SLIME_SWARM",
             name = "Enxame de Slimes",
@@ -33,13 +38,28 @@ object EnemyTeamCatalog {
             ),
             storyOrder = 1,
             storyChapterTitle = "A Floresta",
-            preText = "Você deixa sua aldeia e parte para a cidade grande. A estrada corta uma floresta densa e quieta demais. De repente, o chão ao redor brilha e estremece. Três massas gelatinosas emergem das sombras — Slimes, famintos e agressivos.",
-            postText = "Os slimes explodem em gosma pelo chão da floresta. Você limpa a bota com folhas e continua caminhando. A estrada principal ainda está distante, mas ao menos a floresta ficou para trás."
+            preText =
+                "Você deixa sua aldeia ao amanhecer.\n\n" +
+                        "A estrada principal corta uma floresta densa e silenciosa. " +
+                        "O cheiro de terra molhada domina o ar.\n\n" +
+                        "Então algo se move.\n\n" +
+                        "Pequenas massas gelatinosas emergem entre raízes e pedras. " +
+                        "Slimes.\n\n" +
+                        "Criaturas fracas… mas famintas.",
+            postText =
+                "Os slimes explodem em gosma pelo chão da floresta.\n\n" +
+                        "Você limpa a lâmina nas folhas e continua seguindo estrada adentro.\n\n" +
+                        "A cidade ainda está longe."
         ),
+
+        // =========================================================================
+        // CHAPTER 2 — A EMBOSCADA
+        // =========================================================================
+
         EnemyTeamDefinition(
             id = "GOBLIN_AMBUSH",
             name = "Emboscada Goblin",
-            description = "Três goblins ágeis que confiam na velocidade para surpreender e abater antes de serem respondidos.",
+            description = "Goblinóides rápidos e oportunistas.",
             essenceReward = 110,
             members = listOf(
                 EnemyTeamMember("GOBLIN", 5, equipmentIds = listOf("DAGGER")),
@@ -48,13 +68,27 @@ object EnemyTeamCatalog {
             ),
             storyOrder = 2,
             storyChapterTitle = "A Emboscada",
-            preText = "A estrada principal leva direto à cidade. Você já consegue ver as luzes ao longe quando três goblins saltam dos arbustos, brandindo facas enferrujadas e gritando algo incompreensível. Simples e irritantes — mas ainda assim, no seu caminho.",
-            postText = "Os goblins fogem berrando floresta adentro. Ao longe, o som de sinos, músicas e moedas preenche o ar. Uma placa torta na beira da estrada lê: \"CIDADE DAS APOSTAS — 500m\". Você está chegando."
+            preText =
+                "As árvores começam a se abrir.\n\n" +
+                        "Ao longe, você já consegue enxergar fumaça, luzes e sinais de civilização.\n\n" +
+                        "Então um grito ecoa dos arbustos.\n\n" +
+                        "\"PEGUEM ELE!\"\n\n" +
+                        "Três goblins saltam na estrada com armas improvisadas e olhos famintos.",
+            postText =
+                "Os goblins fogem desesperados floresta adentro.\n\n" +
+                        "A estrada principal finalmente aparece diante de você.\n\n" +
+                        "Ao longe, uma placa torta balança com o vento:\n\n" +
+                        "\"CIDADE DAS APOSTAS — 500m\""
         ),
+
+        // =========================================================================
+        // CHAPTER 3 — A ENTRADA DA CIDADE
+        // =========================================================================
+
         EnemyTeamDefinition(
             id = "BLADE_TRIO",
             name = "Trio das Lâminas",
-            description = "Time equilibrado com pressão constante e foco em alvo único.",
+            description = "Criminosos locais que controlam a entrada da cidade.",
             essenceReward = 90,
             members = listOf(
                 EnemyTeamMember("THIEF", 6, equipmentIds = listOf("WOODEN_SWORD", "IRON_ARMOR")),
@@ -63,13 +97,31 @@ object EnemyTeamCatalog {
             ),
             storyOrder = 3,
             storyChapterTitle = "A Entrada da Cidade",
-            preText = "Na entrada da cidade, três homens bloqueiam o caminho. Lâminas nas mãos, olhares tortos e a postura de quem cobra pedágio há anos. \"Quer entrar? Aqui a gente cobra pelo prazer.\" Um deles passa a faca entre os dedos com um sorriso.",
-            postText = "Os três caem no chão gemendo. A multidão ao redor assiste em silêncio por um momento — depois volta a se mover, indiferente. Um velho encostado na parede cospe no chão e murmura: \"São capangas de Markus. Você vai se arrepender disso, viajante.\""
+            preText =
+                "A cidade pulsa.\n\n" +
+                        "Músicas altas.\n" +
+                        "Moedas tilintando.\n" +
+                        "Gente bêbada.\n\n" +
+                        "Mas antes mesmo de cruzar os portões, três homens bloqueiam seu caminho.\n\n" +
+                        "\"Pedágio.\"\n\n" +
+                        "Um deles gira a faca entre os dedos enquanto sorri.\n\n" +
+                        "\"Todo mundo paga pra entrar.\"",
+            postText =
+                "Os três caem derrotados diante dos portões.\n\n" +
+                        "A multidão observa em silêncio por alguns segundos… antes de voltar à rotina.\n\n" +
+                        "Um velho encostado na parede cospe no chão.\n\n" +
+                        "\"Capangas do Markus.\"\n\n" +
+                        "\"Você acabou de chamar atenção.\""
         ),
+
+        // =========================================================================
+        // CHAPTER 4 — O CASSINO DOURADO
+        // =========================================================================
+
         EnemyTeamDefinition(
             id = "MARKUS_HENCHMEN",
             name = "Capangas de Markus",
-            description = "Os capangas de Markus, o grande Apostador",
+            description = "Os homens de confiança do grande apostador.",
             essenceReward = 160,
             members = listOf(
                 EnemyTeamMember("VEYN", 9, equipmentIds = listOf("QUICK_BOOTS", "VAMPIRE_RING")),
@@ -78,23 +130,129 @@ object EnemyTeamCatalog {
             ),
             storyOrder = 4,
             storyChapterTitle = "O Cassino Dourado",
-            preText = "A cidade pulsa. Luzes em toda esquina, dados rolando, fichas trocando de mão. No centro, o Cassino Dourado domina tudo — um prédio imenso com letras douradas acesas. Ao se aproximar da entrada, três figuras surgem bloqueando o caminho: Veyn, Jorge e Aurum. \"Negócio fechado para estranhos.\"",
-            postText = "Os três recuam sem dizer palavra. A porta de madeira pesada do cassino se abre sozinha — lenta, como se te convidasse para entrar. Do interior, o som de aplausos lentos e ritmados ecoa. Alguém lá dentro estava te assistindo o tempo todo."
+            preText =
+                "No centro da cidade existe um prédio impossível de ignorar.\n\n" +
+                        "O Cassino Dourado.\n\n" +
+                        "Luzes douradas iluminam a rua inteira.\n" +
+                        "Guardas observam cada movimento.\n\n" +
+                        "Quando você sobe os degraus da entrada… três figuras surgem bloqueando o caminho.\n\n" +
+                        "\"Negócio fechado pra estranhos.\"",
+            postText =
+                "Os três recuam em silêncio.\n\n" +
+                        "As portas do cassino se abrem lentamente.\n\n" +
+                        "Lá dentro… alguém bate palmas.\n\n" +
+                        "Lentas.\n\n" +
+                        "Como se estivesse esperando por você."
         ),
+
+        // =========================================================================
+        // CHAPTER 5 — O GRANDE APOSTADOR
+        // =========================================================================
+
         EnemyTeamDefinition(
             id = "MARKUS_GANG",
             name = "Esquadrão das Apostas",
-            description = "Time agressivo de Markus, com risco e burst.",
+            description = "Markus e seu grupo apostam tudo em combate.",
             essenceReward = 260,
             members = listOf(
                 EnemyTeamMember("MARKUS", 6, equipmentIds = listOf("ALL_IN_EMBLEM", "GAMBLER_CHARM")),
-                EnemyTeamMember("JORGE", 11, equipmentIds = listOf("HEAVY_IRON_ARMOR", "IRON_SHIELD", "GAMBLER_CHARM")),
+                EnemyTeamMember("JORGE", 11, equipmentIds = listOf("HEAVY_IRON_ARMOR", "IRON_SHIELD")),
                 EnemyTeamMember("VEYN", 11, equipmentIds = listOf("POLISHED_KATANA", "GAMBLER_CHARM"))
             ),
             storyOrder = 5,
             storyChapterTitle = "O Grande Apostador",
-            preText = "O interior do cassino é dourado do chão ao teto. Mesas de cartas, roletas, fichas — mas tudo parado. Todos os olhares te seguem. No centro da sala, numa cadeira que parece mais um trono, Markus se levanta devagar. \"Você chegou até aqui.\" Ele sorri, ajeitando o colete. \"Impressionante. Mas essa aposta... você com certeza vai perder.\"",
-            postText = "Markus cai de joelhos, ainda sorrindo enquanto respira fundo. \"Boa jogada, viajante. A casa sempre ganha — mas hoje, você foi a casa.\" Ele lança uma bolsa pesada de essence aos seus pés. As moedas tilintam no chão de mármore. A cidade das apostas, ao menos por hoje, é sua."
+            preText =
+                "O interior do cassino está vazio.\n\n" +
+                        "Mesas abandonadas.\n" +
+                        "Roletas paradas.\n" +
+                        "Fichas espalhadas pelo chão.\n\n" +
+                        "No centro da sala, sentado como um rei em seu trono, Markus observa você.\n\n" +
+                        "\"Impressionante.\"\n\n" +
+                        "Ele sorri.\n\n" +
+                        "\"Mas toda aposta termina da mesma forma.\"\n\n" +
+                        "\"A casa sempre ganha.\"",
+            postText =
+                "Markus cai de joelhos ainda sorrindo.\n\n" +
+                        "\"Boa jogada, viajante...\"\n\n" +
+                        "\"Hoje... você foi a casa.\" \n\n" +
+                        "Ele joga uma bolsa pesada de essence aos seus pés.\n\n" +
+                        "Pela primeira vez desde que chegou na cidade… ninguém ousa ficar no seu caminho."
+        ),
+
+        // =========================================================================
+        // CHAPTER 6 — LADRÕES DE ESTRADA
+        // =========================================================================
+
+        EnemyTeamDefinition(
+            id = "ROAD_BANDITS",
+            name = "Ladrões de Estrada",
+            description = "Bandidos fracos tentando lucrar com sua fama.",
+            essenceReward = 120,
+            members = listOf(
+                EnemyTeamMember("THIEF", 7, equipmentIds = listOf("DAGGER")),
+                EnemyTeamMember("GOBLIN", 11),
+                EnemyTeamMember("THIEF", 6)
+            ),
+            storyOrder = 6,
+            storyChapterTitle = "Estrada Silenciosa",
+            preText =
+                "A cidade das apostas fica para trás.\n\n" +
+                        "A estrada volta a ficar silenciosa.\n\n" +
+                        "\"Ei. Mochila no chão.\" \n\n" +
+                        "Três figuras surgem ao lado de uma carroça quebrada.\n\n" +
+                        "\"Você saiu daquele cassino vivo.\"\n\n" +
+                        "\"Então deve estar carregando muita essence.\"",
+            postText =
+                "Os homens fogem desesperados estrada abaixo.\n\n" +
+                        "Um deles tropeça antes de desaparecer no escuro.\n\n" +
+                        "\"Seu monstro...\"\n\n" +
+                        "\"Vai pro Norte então!\"\n\n" +
+                        "\"Vai morrer igual todos os outros!\""
+        ),
+
+        // =========================================================================
+        // CHAPTER 7 — O CEMITÉRIO DE LÂMINAS
+        // =========================================================================
+
+        EnemyTeamDefinition(
+            id = "BLADE_GRAVEYARD",
+            name = "Ecos da Guerra Antiga",
+            description = "Algo ainda habita o antigo campo de batalha.",
+            essenceReward = 320,
+            members = listOf(
+                EnemyTeamMember("IRON_GUARDIAN", 10),
+                EnemyTeamMember("BERSERKER", 8),
+                EnemyTeamMember("SHADOW", 9)
+            ),
+            storyOrder = 7,
+            storyChapterTitle = "O Cemitério de Lâminas",
+            preText =
+                "A estrada muda.\n\n" +
+                        "A vegetação desaparece aos poucos, substituída por terra escura e seca.\n\n" +
+                        "Não existem pássaros.\n\n" +
+                        "Não existe vento.\n\n" +
+                        "Então você vê.\n\n" +
+                        "Lâminas.\n\n" +
+                        "Centenas.\n\n" +
+                        "Não… milhares.\n\n" +
+                        "Espadas, lanças e armaduras cobrem o vale inteiro como lápides de uma guerra esquecida.\n\n" +
+                        "No centro do campo…\n\n" +
+                        "Uma espada colossal atravessa a terra.\n\n" +
+                        "Grande demais para qualquer humano empunhar.\n\n" +
+                        "E mesmo séculos depois…\n\n" +
+                        "Ela não possui um único sinal de ferrugem.",
+            postText =
+                "O silêncio retorna.\n\n" +
+                        "Mas algo parece errado.\n\n" +
+                        "Você sente.\n\n" +
+                        "Como se alguma coisa naquele lugar ainda estivesse viva.\n\n" +
+                        "Ao tocar uma das lâminas enterradas…\n\n" +
+                        "Imagens invadem sua mente.\n\n" +
+                        "Um campo em chamas.\n" +
+                        "O céu partido.\n" +
+                        "Exércitos inteiros caindo.\n\n" +
+                        "E ao longe…\n\n" +
+                        "Uma figura colossal caminhando sozinha através da guerra."
         )
     )
 
@@ -105,5 +263,6 @@ object EnemyTeamCatalog {
 
     fun storyTeamsInOrder(): List<EnemyTeamDefinition> = storyTeams
 
-    fun getStoryChapter(chapterIndex: Int): EnemyTeamDefinition? = storyTeams.getOrNull(chapterIndex)
+    fun getStoryChapter(chapterIndex: Int): EnemyTeamDefinition? =
+        storyTeams.getOrNull(chapterIndex)
 }
