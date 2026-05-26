@@ -30,7 +30,7 @@ object EnemyTeamCatalog {
             id = "SLIME_SWARM",
             name = "Enxame de Slimes",
             description = "Três criaturas viscosas que abusam de volume.",
-            essenceReward = 60,
+            essenceReward = 70,
             members = listOf(
                 EnemyTeamMember("SLIME", 3),
                 EnemyTeamMember("SLIME", 3),
@@ -60,11 +60,11 @@ object EnemyTeamCatalog {
             id = "GOBLIN_AMBUSH",
             name = "Emboscada Goblin",
             description = "Goblinóides rápidos e oportunistas.",
-            essenceReward = 110,
+            essenceReward = 120,
             members = listOf(
-                EnemyTeamMember("GOBLIN", 5, equipmentIds = listOf("DAGGER")),
-                EnemyTeamMember("GOBLIN", 3),
-                EnemyTeamMember("GOBLIN", 4)
+                EnemyTeamMember("GOBLIN", 6, equipmentIds = listOf("DAGGER")),
+                EnemyTeamMember("GOBLIN", 4),
+                EnemyTeamMember("GOBLIN", 5)
             ),
             storyOrder = 2,
             storyChapterTitle = "A Emboscada",
@@ -89,11 +89,11 @@ object EnemyTeamCatalog {
             id = "BLADE_TRIO",
             name = "Trio das Lâminas",
             description = "Criminosos locais que controlam a entrada da cidade.",
-            essenceReward = 90,
+            essenceReward = 165,
             members = listOf(
-                EnemyTeamMember("THIEF", 6, equipmentIds = listOf("WOODEN_SWORD", "IRON_ARMOR")),
-                EnemyTeamMember("THIEF", 4, equipmentIds = listOf("DAGGER")),
-                EnemyTeamMember("THIEF", 5)
+                EnemyTeamMember("THIEF", 7, equipmentIds = listOf("WOODEN_SWORD", "IRON_ARMOR")),
+                EnemyTeamMember("THIEF", 5, equipmentIds = listOf("DAGGER")),
+                EnemyTeamMember("THIEF", 6)
             ),
             storyOrder = 3,
             storyChapterTitle = "A Entrada da Cidade",
@@ -122,11 +122,11 @@ object EnemyTeamCatalog {
             id = "MARKUS_HENCHMEN",
             name = "Capangas de Markus",
             description = "Os homens de confiança do grande apostador.",
-            essenceReward = 160,
+            essenceReward = 210,
             members = listOf(
-                EnemyTeamMember("VEYN", 9, equipmentIds = listOf("QUICK_BOOTS", "VAMPIRE_RING")),
-                EnemyTeamMember("JORGE", 6, equipmentIds = listOf("IRON_SHIELD")),
-                EnemyTeamMember("AURUM", 6, equipmentIds = listOf("BONE_STAFF"))
+                EnemyTeamMember("VEYN", 7, equipmentIds = listOf("QUICK_BOOTS", "VAMPIRE_RING")),
+                EnemyTeamMember("JORGE", 7, equipmentIds = listOf("IRON_SHIELD")),
+                EnemyTeamMember("AURUM", 7, equipmentIds = listOf("BONE_STAFF"))
             ),
             storyOrder = 4,
             storyChapterTitle = "O Cassino Dourado",
@@ -153,9 +153,9 @@ object EnemyTeamCatalog {
             id = "MARKUS_GANG",
             name = "Esquadrão das Apostas",
             description = "Markus e seu grupo apostam tudo em combate.",
-            essenceReward = 260,
+            essenceReward = 320,
             members = listOf(
-                EnemyTeamMember("MARKUS", 6, equipmentIds = listOf("ALL_IN_EMBLEM", "GAMBLER_CHARM")),
+                EnemyTeamMember("MARKUS", 8, equipmentIds = listOf("ALL_IN_EMBLEM", "GAMBLER_CHARM")),
                 EnemyTeamMember("JORGE", 11, equipmentIds = listOf("HEAVY_IRON_ARMOR", "IRON_SHIELD")),
                 EnemyTeamMember("VEYN", 11, equipmentIds = listOf("POLISHED_KATANA", "GAMBLER_CHARM"))
             ),
@@ -187,7 +187,7 @@ object EnemyTeamCatalog {
             id = "ROAD_BANDITS",
             name = "Ladrões de Estrada",
             description = "Bandidos fracos tentando lucrar com sua fama.",
-            essenceReward = 120,
+            essenceReward = 200,
             members = listOf(
                 EnemyTeamMember("THIEF", 7, equipmentIds = listOf("DAGGER")),
                 EnemyTeamMember("GOBLIN", 11),
@@ -218,11 +218,11 @@ object EnemyTeamCatalog {
             id = "BLADE_GRAVEYARD",
             name = "Ecos da Guerra Antiga",
             description = "Algo ainda habita o antigo campo de batalha.",
-            essenceReward = 320,
+            essenceReward = 380,
             members = listOf(
-                EnemyTeamMember("IRON_GUARDIAN", 10),
-                EnemyTeamMember("BERSERKER", 8),
-                EnemyTeamMember("SHADOW", 9)
+                EnemyTeamMember("IRON_GUARDIAN", 11),
+                EnemyTeamMember("BERSERKER", 9),
+                EnemyTeamMember("SHADOW", 9, equipmentIds = listOf("DAGGER"))
             ),
             storyOrder = 7,
             storyChapterTitle = "O Cemitério de Lâminas",
@@ -253,7 +253,390 @@ object EnemyTeamCatalog {
                         "Exércitos inteiros caindo.\n\n" +
                         "E ao longe…\n\n" +
                         "Uma figura colossal caminhando sozinha através da guerra."
-        )
+        ),
+
+
+        // =========================================================================
+        // CHAPTER 8 — A CIDADE DOURADA
+        // =========================================================================
+
+        EnemyTeamDefinition(
+            id = "AUREA_GATE",
+            name = "Guardas dos Portões de Aurea",
+            description = "Soldados de elite treinados para impedir que ameaças entrem pela porta principal.",
+            essenceReward = 500,
+            members = listOf(
+                EnemyTeamMember(
+                    "GOLDEN_KNIGHT", 12,
+                    equipmentIds = listOf("HEAVY_IRON_ARMOR", "IRON_SHIELD")
+                ),
+                EnemyTeamMember("AUREA_SOLDIER", 10, equipmentIds = listOf("IRON_SWORD")),
+                EnemyTeamMember("AUREA_SOLDIER", 9)
+            ),
+            storyOrder = 8,
+            storyChapterTitle = "A Cidade Dourada",
+            preText =
+                "Você a vê antes de chegar.\n\n" +
+                        "Não porque ela é alta.\n" +
+                        "Não porque ela é grande.\n\n" +
+                        "Porque ela brilha.\n\n" +
+                        "Aurea.\n\n" +
+                        "Uma cidade construída inteira de pedra clara\n" +
+                        "com detalhes dourados que capturam o sol\n" +
+                        "e o devolvem em ângulos que parecem calculados por alguém\n" +
+                        "que passou a vida inteira pensando em como a luz se move.\n\n" +
+                        "Torres que não existem para impor.\n" +
+                        "Existem para iluminar.\n\n" +
+                        "O cheiro de incenso chega antes do barulho.\n" +
+                        "E o barulho de Aurea é diferente de qualquer cidade que você já visitou.\n\n" +
+                        "Não é o barulho do comércio.\n" +
+                        "Não é o barulho da guerra.\n\n" +
+                        "É o barulho de pessoas que acreditam em algo\n" +
+                        "e constroem esse algo toda manhã com as próprias mãos.\n\n" +
+                        "Sinos.\n" +
+                        "Passos ritmados em formação.\n" +
+                        "O som metálico de armas em treinamento que nunca para.\n\n" +
+                        "Você chega aos portões.\n\n" +
+                        "E percebe que os guardas não estavam esperando.\n" +
+                        "Estavam treinando.\n\n" +
+                        "Mesmo em postura de guarda.\n" +
+                        "Mesmo parados.\n" +
+                        "Há algo nos ombros deles, na forma como seguram as armas,\n" +
+                        "que diz que o treino nunca acabou.\n" +
+                        "Apenas pausou.\n\n" +
+                        "\"Viajante.\"\n\n" +
+                        "O Cavaleiro Dourado no centro fala sem hesitação.\n\n" +
+                        "\"Você vem do Sul.\"\n" +
+                        "\"Pelo caminho que atravessa o vale.\"\n\n" +
+                        "Ele te olha de cima a baixo.\n" +
+                        "Não com desdém.\n" +
+                        "Com avaliação.\n\n" +
+                        "\"Esse caminho passa pelo Cemitério de Lâminas.\"\n\n" +
+                        "Uma pausa.\n\n" +
+                        "\"Ninguém que passa pelo Cemitério\n" +
+                        "entra em Aurea sem demonstrar que veio em paz.\"\n\n" +
+                        "Ele dá um passo à frente.\n\n" +
+                        "\"Aqui em Aurea, paz se demonstra de uma forma só.\"\n\n" +
+                        "A mão vai para a empunhadura.\n\n" +
+                        "\"No campo.\"\n\n" +
+                        "Os dois soldados atrás dele assumem posição.\n\n" +
+                        "\"Se você vencer, as portas abrem.\"\n" +
+                        "\"Se você perder…\"\n\n" +
+                        "Ele desembainha.\n\n" +
+                        "\"Vai saber que não estava pronto para entrar.\"",
+            postText =
+                "O Cavaleiro Dourado cai sobre um joelho.\n\n" +
+                        "Respira fundo.\n\n" +
+                        "Então ergue a cabeça e te olha com algo que não estava lá antes.\n\n" +
+                        "Respeito.\n\n" +
+                        "Não o respeito de quem tem medo.\n" +
+                        "O respeito de um guerreiro que reconheceu outro.\n\n" +
+                        "\"Bem-vindo a Aurea.\"\n\n" +
+                        "Os portões se abrem.\n\n" +
+                        "Por dentro a cidade é diferente do que você esperava.\n\n" +
+                        "Não é um lugar de silêncio e veneração.\n" +
+                        "É um lugar de movimento.\n\n" +
+                        "Soldados treinando em cada praça aberta.\n" +
+                        "Jovens correndo com pesos nas costas pelas ruas de pedra.\n" +
+                        "Ferreiros que trabalham com uma precisão que parece ritual.\n" +
+                        "Crianças que imitam posturas de combate\n" +
+                        "com gravidade que não deveria ser possível nessa idade.\n\n" +
+                        "Em Aurea, força não é uma conquista.\n" +
+                        "É uma obrigação.\n\n" +
+                        "No topo da escadaria da catedral central:\n\n" +
+                        "Uma mulher de vestes brancas e douradas.\n" +
+                        "Parada.\n" +
+                        "Observando você desde quando entrou.\n\n" +
+                        "Ela desce dois degraus.\n\n" +
+                        "\"Viajante.\"\n\n" +
+                        "A voz é calma.\n" +
+                        "Não performática.\n" +
+                        "Calma de quem não precisa elevar o tom para ser ouvida.\n\n" +
+                        "\"Meu nome é Lumina.\"\n\n" +
+                        "Ela olha para os guardas ainda se recuperando.\n\n" +
+                        "\"Poucos chegam até a porta e vencem a primeira prova.\"\n\n" +
+                        "Um leve inclinar de cabeça.\n\n" +
+                        "\"Você deve ter muitas perguntas.\"\n" +
+                        "\"E eu tenho algumas também.\"\n\n" +
+                        "\"Venha.\"\n" +
+                        "\"O Rei vai querer saber que você chegou.\""
+        ),
+
+        // =========================================================================
+        // CHAPTER 9 — A CHAMA DO SOL
+        // =========================================================================
+
+        EnemyTeamDefinition(
+            id = "SOLAR_TOURNAMENT",
+            name = "Campeões do Torneio da Chama",
+            description = "Os três guerreiros mais fortes de Aurea. Vencê-los é a maior honra que um forasteiro pode receber.",
+            essenceReward = 660,
+            members = listOf(
+                EnemyTeamMember(
+                    "GOLDEN_KNIGHT", 14,
+                    equipmentIds = listOf("HEAVY_IRON_ARMOR", "IRON_SHIELD", "SOLARBRAND")
+                ),
+                EnemyTeamMember(
+                    "AUREA_SOLDIER", 13,
+                    equipmentIds = listOf("AURE_GOLDEN_ARMOR", "IRON_SWORD")
+                ),
+                EnemyTeamMember(
+                    "SUN_PRIESTESS", 12,
+                    equipmentIds = listOf("DEVOTION_STAFF")
+                )
+            ),
+            storyOrder = 9,
+            storyChapterTitle = "A Chama do Sol",
+            preText =
+                "Lumina explicou por horas.\n\n" +
+                        "Sobre Aurea.\n" +
+                        "Sobre o Sol.\n" +
+                        "Sobre a crença de que o poder solar que existiu na era antiga\n" +
+                        "ainda está no mundo na forma de fé praticada.\n\n" +
+                        "\"Em Aurea, fé não é o que você sente.\"\n" +
+                        "\"É o que você faz.\"\n\n" +
+                        "Ela disse isso com a convicção de quem nunca duvidou.\n" +
+                        "E você percebeu:\n" +
+                        "ela está certa sobre pelo menos isso.\n\n" +
+                        "Cada pessoa que você viu desde que entrou na cidade\n" +
+                        "não está esperando o Sol aparecer.\n" +
+                        "Está construindo algo.\n" +
+                        "Treinando algo.\n" +
+                        "Forjando algo.\n\n" +
+                        "\"O Torneio da Chama acontece toda lua nova.\"\n" +
+                        "Lumina disse enquanto guiava você pela cidade.\n" +
+                        "\"É a forma que temos de medir onde estamos.\"\n" +
+                        "\"E de descobrir quem ainda tem o que crescer.\"\n\n" +
+                        "\"O Rei assiste a todos os torneios.\"\n" +
+                        "\"Pessoalmente.\"\n" +
+                        "\"Sempre.\"\n\n" +
+                        "\"E quando vê algo que lhe interessa…\"\n" +
+                        "\"ele convida para uma conversa.\"\n\n" +
+                        "Ela parou na entrada de uma arena aberta ao céu.\n\n" +
+                        "Centenas de pessoas nas arquibancadas.\n" +
+                        "O calor de uma tarde de sol pleno pressionando de cima.\n" +
+                        "E no centro do campo:\n" +
+                        "terra batida marcada pelos passos de incontáveis torneios anteriores.\n\n" +
+                        "\"Você poderia observar.\"\n" +
+                        "Lumina falou sem olhar para você.\n" +
+                        "\"Mas imagino que não é esse o seu estilo.\"\n\n" +
+                        "As arquibancadas começaram a perceber sua presença.\n" +
+                        "Murmúrios.\n" +
+                        "Um forasteiro.\n\n" +
+                        "No camarote mais alto:\n" +
+                        "uma figura de armadura dourada observa tudo com braços cruzados.\n\n" +
+                        "O Rei de Aurea.\n\n" +
+                        "Ele não demonstra reação quando te vê.\n" +
+                        "Mas também não desvia o olhar.\n\n" +
+                        "Os três campeões do torneio deste ciclo entram no campo.\n\n" +
+                        "E um arauto anuncia:\n\n" +
+                        "\"O forasteiro aceita o desafio da Chama.\"\n\n" +
+                        "Você não disse isso ainda.\n" +
+                        "Mas todo mundo nas arquibancadas já sabe que vai.\n\n" +
+                        "E honestamente…\n\n" +
+                        "eles não estão errados.",
+            postText =
+                "O último campeão cai.\n\n" +
+                        "A arena fica em silêncio por exatamente três segundos.\n\n" +
+                        "Então explode.\n\n" +
+                        "Não o barulho de uma multidão empolgada.\n" +
+                        "O barulho específico de pessoas que estão vendo algo\n" +
+                        "que não achavam que veriam em vida.\n\n" +
+                        "Os três campeões estão no chão.\n" +
+                        "Os três melhores guerreiros de Aurea.\n" +
+                        "Ao mesmo tempo.\n" +
+                        "Por um único forasteiro.\n\n" +
+                        "Lumina, ao lado do campo, não demonstra surpresa.\n" +
+                        "Ela sorri.\n" +
+                        "Levemente.\n" +
+                        "Como alguém que apostou em algo e ganhou\n" +
+                        "mas que considerava educado não vibrar demais.\n\n" +
+                        "Do camarote:\n\n" +
+                        "O Rei de Aurea se levanta.\n\n" +
+                        "Devagar.\n" +
+                        "Com o peso de alguém que não faz movimentos sem intenção.\n\n" +
+                        "Ele te olha do alto.\n\n" +
+                        "A distância é grande o suficiente para que você não veja\n" +
+                        "a expressão no rosto dele com clareza.\n\n" +
+                        "Mas você vê o gesto.\n\n" +
+                        "Ele aponta para você.\n" +
+                        "Depois aponta para cima.\n" +
+                        "Para o camarote.\n\n" +
+                        "Um convite.\n\n" +
+                        "Lumina se aproxima.\n\n" +
+                        "\"Isso não acontece normalmente.\"\n\n" +
+                        "Uma pausa.\n\n" +
+                        "\"Na verdade, isso nunca aconteceu.\"\n\n" +
+                        "\"Vá.\"\n" +
+                        "\"Mas saiba:\"\n\n" +
+                        "\"O Rei de Aurea não convida para conversa.\"\n" +
+                        "\"Ele convida para mais um teste.\"\n\n" +
+                        "\"E o próximo não vai ser com espadas.\""
+        ),
+
+        // =========================================================================
+        // CHAPTER 10 — O REI DE AUREA
+        // =========================================================================
+
+        EnemyTeamDefinition(
+            id = "AURE_KING_DUEL",
+            name = "O Rei de Aurea",
+            description = "O monarca não confia em palavras. Nunca confiou. Cada aliança que Aurea já fez começou com um duelo.",
+            essenceReward = 900,
+            members = listOf(
+                EnemyTeamMember(
+                    "AURE_KING", 15,
+                    equipmentIds = listOf("SOLARBRAND", "AURE_GOLDEN_ARMOR")
+                ),
+                EnemyTeamMember(
+                    "GOLDEN_KNIGHT", 14,
+                    equipmentIds = listOf("HEAVY_IRON_ARMOR", "IRON_SHIELD")
+                ),
+                EnemyTeamMember(
+                    "GOLDEN_KNIGHT", 13,
+                    equipmentIds = listOf("HEAVY_IRON_ARMOR")
+                )
+            ),
+            storyOrder = 10,
+            storyChapterTitle = "O Rei de Aurea",
+            preText =
+                "O camarote do Rei é simples.\n\n" +
+                        "Isso é a primeira coisa que você nota.\n\n" +
+                        "Sem ornamentos desnecessários.\n" +
+                        "Sem tapetes caros.\n" +
+                        "Sem serventes esperando com comida e vinho.\n\n" +
+                        "Uma cadeira.\n" +
+                        "Uma mesa com mapas.\n" +
+                        "E o Rei de Aurea, que já estava de pé\n" +
+                        "quando você entrou.\n\n" +
+                        "De perto, ele é exatamente o que a armadura sugeria à distância.\n\n" +
+                        "Grande.\n" +
+                        "Não de forma intimidatória.\n" +
+                        "De forma funcional.\n" +
+                        "Como alguém cujo corpo foi construído por décadas de exigência real\n" +
+                        "e não por vaidade.\n\n" +
+                        "Os cabelos grisalhos cortados curtos.\n" +
+                        "Uma cicatriz que vai do queixo até a orelha esquerda.\n" +
+                        "Olhos escuros que te avaliam com a mesma precisão\n" +
+                        "com que os guardas da porta te avaliaram.\n" +
+                        "Mas com mais camadas.\n\n" +
+                        "Mais história.\n\n" +
+                        "\"Você derrotou três campeões.\"\n\n" +
+                        "Não é elogio.\n" +
+                        "É dado.\n\n" +
+                        "\"Dois deles eu não conseguiria derrotar ao mesmo tempo\n" +
+                        "quando tinha sua idade.\"\n\n" +
+                        "Ele dobra os braços.\n\n" +
+                        "\"Isso me interessa.\"\n" +
+                        "\"E me preocupa.\"\n\n" +
+                        "\"Me interessa porque poder assim é raro.\"\n" +
+                        "\"Me preocupa porque poder assim indo para o Norte…\"\n\n" +
+                        "Uma pausa.\n\n" +
+                        "\"Não costuma terminar bem para ninguém.\"\n\n" +
+                        "Ele pega os mapas da mesa e os dobra com cuidado.\n" +
+                        "Metódico.\n" +
+                        "Como se precisasse das mãos ocupadas para pensar direito.\n\n" +
+                        "\"Lumina me disse que você passou pelo Cemitério.\"\n" +
+                        "\"E que seus olhos tinham o peso de quem tocou as lâminas\n" +
+                        "e viu o que não devia ver.\"\n\n" +
+                        "Ele te olha direto.\n\n" +
+                        "\"Então vou ser direto também.\"\n\n" +
+                        "\"Minha família guarda algo há seis gerações.\"\n" +
+                        "\"Um registro.\"\n" +
+                        "\"Sobre o que existia no Norte antes de Kono reorganizar o mundo.\"\n\n" +
+                        "\"Nunca mostrei a ninguém.\"\n" +
+                        "\"Nunca pretendi mostrar.\"\n\n" +
+                        "\"Mas preciso saber primeiro se você é capaz de carregar\n" +
+                        "o peso do que vai ler.\"\n\n" +
+                        "Os dois Cavaleiros Dourados atrás dele assumem posição.\n\n" +
+                        "O Rei desembainha a lâmina.\n\n" +
+                        "Não com ameaça.\n" +
+                        "Com a naturalidade de quem fez isso dez mil vezes\n" +
+                        "e vai fazer dez mil mais.\n\n" +
+                        "\"Em Aurea a gente não usa palavras para medir pessoas.\"\n\n" +
+                        "\"Você sabe o que fazemos.\"\n\n" +
+                        "Ele assume postura.\n\n" +
+                        "Perfeita.\n" +
+                        "Sem esforço aparente.\n\n" +
+                        "\"Mostre-me que você merece saber.\"",
+            postText =
+                "O Rei cai sobre um joelho.\n\n" +
+                        "A lâmina crava no chão à sua frente.\n\n" +
+                        "Os dois Cavaleiros Dourados trocam um olhar.\n" +
+                        "Nenhum dos dois diz nada.\n" +
+                        "Não existe palavra para o que acabaram de ver.\n\n" +
+                        "O Rei respira fundo.\n\n" +
+                        "Uma vez.\n" +
+                        "Duas.\n\n" +
+                        "Então ri.\n\n" +
+                        "Baixo.\n" +
+                        "Genuíno.\n" +
+                        "O riso de alguém que não ria assim fazia tempo.\n\n" +
+                        "\"Bom.\"\n\n" +
+                        "Ele se levanta sem ajuda.\n" +
+                        "Com dificuldade, mas sem aceitar ajuda.\n" +
+                        "Você aprende algo sobre ele nisso.\n\n" +
+                        "\"Venha.\"\n\n" +
+                        "---\n\n" +
+                        "O registro fica numa câmara abaixo do camarote.\n\n" +
+                        "Menor do que o espaço acima.\n" +
+                        "Mais velha.\n" +
+                        "Com paredes de pedra que pertencem a uma construção anterior\n" +
+                        "à cidade que existe hoje.\n\n" +
+                        "No centro:\n" +
+                        "uma caixa de ferro.\n" +
+                        "Simples.\n" +
+                        "Sem ornamentos.\n\n" +
+                        "O Rei a abre sem cerimônia.\n\n" +
+                        "Dentro:\n" +
+                        "um único documento.\n" +
+                        "Dobrado.\n" +
+                        "Com uma caligrafia que você não reconhece,\n" +
+                        "mas numa língua que ainda é legível.\n\n" +
+                        "O Rei não o entrega.\n" +
+                        "Apenas lê em voz alta.\n\n" +
+                        "\"'O portador das lâminas solares não era deus.\"\n" +
+                        "\"Não era rei.\"\n" +
+                        "\"Não era homem.\"\n" +
+                        "\"Era algo que existia antes de qualquer nome\"\n" +
+                        "\"que pudéssemos dar a poder.\"\n" +
+                        "\"E quando ele empunhou o fogo solar,\"\n" +
+                        "\"os deuses da era antiga não recuaram por fraqueza.\"\n" +
+                        "\"Recuaram por reconhecimento.\"\n" +
+                        "\"Como se afasta de um incêndio\"\n" +
+                        "\"não por medo, mas por respeito ao que o fogo é.\"'\n\n" +
+                        "O Rei fecha o documento.\n" +
+                        "Dobra de volta.\n" +
+                        "Coloca na caixa.\n\n" +
+                        "\"Seis gerações da minha família acreditaram\n" +
+                        "que esse portador era Aurea.\"\n" +
+                        "\"Que nossa cidade foi fundada por seus descendentes.\"\n" +
+                        "\"Que o poder solar que celebramos é herança direta dele.\"\n\n" +
+                        "Ele fecha a caixa.\n\n" +
+                        "\"Eu acreditei nisso a vida inteira.\"\n\n" +
+                        "Uma pausa que pesa mais do que deveria.\n\n" +
+                        "\"Mas há algo que nunca coube na história.\"\n\n" +
+                        "Ele te olha.\n\n" +
+                        "\"Se o portador era de Aurea…\"\n" +
+                        "\"por que o único registro que temos dele\"\n" +
+                        "\"nunca menciona a cidade?\"\n\n" +
+                        "\"Por que as lâminas que carregava\"\n" +
+                        "\"nunca foram encontradas nos nossos registros de armas?\"\n\n" +
+                        "\"Por que quando eu olho para o Norte…\"\n\n" +
+                        "Ele não termina a frase.\n\n" +
+                        "\"Vá.\"\n" +
+                        "\"Mas saiba:\"\n\n" +
+                        "\"O que você vai encontrar lá em cima\"\n" +
+                        "\"não pertence a Aurea.\"\n\n" +
+                        "\"E suspeito que também não pertencia\"\n" +
+                        "\"a quem quer que tenha tentado reivindicá-lo antes.\"\n\n" +
+                        "Ele apaga a tocha da câmara.\n\n" +
+                        "\"Lumina vai te dar provisões para o Norte.\"\n" +
+                        "\"E se você sobreviver ao que está lá…\"\n\n" +
+                        "Uma última pausa na escuridão.\n\n" +
+                        "\"Volte.\"\n" +
+                        "\"Eu quero saber como essa história termina.\""
+        ),
     )
 
     private val byId = teams.associateBy { it.id }

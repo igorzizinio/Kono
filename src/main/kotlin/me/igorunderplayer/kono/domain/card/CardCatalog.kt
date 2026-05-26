@@ -270,7 +270,7 @@ object CardCatalog {
         description = "Sacerdotisa da fé. Cura aliados todo turno, concede buffs em rotação e cresce em poder através de sua devoção.",
         type = CardType.CHARACTER,
         rarity = Rarity.EPIC,
-        faction = "faith",
+        faction = "sol",
         baseStats = mapOf(
             Stat.HP to 660.0,
             Stat.ATK to 58.0,
@@ -389,7 +389,7 @@ object CardCatalog {
         description = "Guerreiro sagrado que converte força em resistência. Lento, mas quase indestrutível em uma equipe de fé.",
         type = CardType.CHARACTER,
         rarity = Rarity.LEGENDARY,
-        faction = "faith",
+        faction = "sol",
         baseStats = mapOf(
             Stat.HP to 900.0,
             Stat.ATK to 65.0,
@@ -403,7 +403,7 @@ object CardCatalog {
             Stat.ATK to 6.0,
             Stat.DEF to 6.0
         ),
-        tags = setOf("tank", "bruiser", "faith", "scaling", "sustain"),
+        tags = setOf("tank", "bruiser", "sol", "scaling", "sustain"),
         abilities = listOf(
             Ability(
                 name = "Corpo Consagrado",
@@ -443,13 +443,13 @@ object CardCatalog {
             ),
             Ability(
                 name = "Juramento Sagrado",
-                description = "Enquanto houver aliados da facção faith, o Paladino ganha DEF temporária (1 turno) e compartilha resistência com o time.",
+                description = "Enquanto houver aliados da facção sol, o Paladino ganha DEF temporária (1 turno) e compartilha resistência com o time.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnTurnStart,
                 effects = listOf(
                     Effect.Custom("Faith synergy DEF share") { self, _, state ->
                         val team = state.teams.firstOrNull { it.units.contains(self) } ?: return@Custom
-                        val faithAllies = team.units.count { it.card.faction == "faith" && it.hp > 0 }
+                        val faithAllies = team.units.count { it.card.faction == "sol" && it.hp > 0 }
                         if (faithAllies <= 1) return@Custom
                         val bonusDef = 6.0 * faithAllies
                         self.stats[Stat.DEF] = (self.stats[Stat.DEF] ?: 0.0) + bonusDef
@@ -474,7 +474,7 @@ object CardCatalog {
         description = "Após sua mãe aprovar seu sonho, o Cavaleirinho treinou sem parar. Agora em sua forma final, é um guerreiro divino — de coração puro e força incomparável.",
         type = CardType.CHARACTER,
         rarity = Rarity.MYTHIC,
-        faction = "faith",
+        faction = "sol",
         baseStats = mapOf(
             Stat.HP to 980.0,
             Stat.ATK to 115.0,
@@ -906,13 +906,13 @@ object CardCatalog {
         type = CardType.EQUIPMENT,
         rarity = Rarity.EPIC,
         slot = EquipmentSlot.WEAPON,
-        faction = "faith",
+        faction = "sol",
         baseStats = mapOf(
             Stat.ATK to 44.0,
             Stat.SPEED to -14.0
         ),
         statsPerLevel = mapOf(Stat.ATK to 6.0),
-        tags = setOf("faith", "support", "scaling"),
+        tags = setOf("sol", "faith", "support", "scaling"),
         abilities = listOf(
             Ability(
                 name = "Conversão Divina",
@@ -924,13 +924,13 @@ object CardCatalog {
                         val atk = self.stats[Stat.ATK] ?: 0.0
                         val team = state.teams.firstOrNull { it.units.contains(self) } ?: return@Custom
                         team.units.filter { it.hp > 0 }.forEach { ally ->
-                            val isFaith = ally.card.faction == "faith"
+                            val isFaith = ally.card.faction == "sol"
                             val healAmount = atk * (if (isFaith) 0.11 else 0.06)
                             val maxHp = ally.stats[Stat.HP] ?: return@forEach
                             val before = ally.hp
                             ally.hp = (ally.hp + healAmount).coerceAtMost(maxHp)
                             val healed = ally.hp - before
-                            if (healed > 0) state.combatLog += "✨ ${ally.card.name} recebeu ${"%.1f".format(healed)} de cura (${if (isFaith) "fé" else "normal"})."
+                            if (healed > 0) state.combatLog += "✨ ${ally.card.name} recebeu ${"%.1f".format(healed)} de cura (${if (isFaith) "solar" else "normal"})."
                         }
                     }
                 )
@@ -941,14 +941,14 @@ object CardCatalog {
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnTurnEvery(2),
                 effects = listOf(
-                    Effect.Custom("Faith shield") { self, _, state ->
+                    Effect.Custom("Solar shield") { self, _, state ->
                         val atk = self.stats[Stat.ATK] ?: 0.0
                         val team = state.teams.firstOrNull { it.units.contains(self) } ?: return@Custom
                         team.units.filter { it.hp > 0 }.forEach { ally ->
-                            val isFaith = ally.card.faction == "faith"
+                            val isFaith = ally.card.faction == "sol"
                             val shieldValue = atk * (if (isFaith) 0.16 else 0.08)
                             state.temporaryStatModifiers += TemporaryStatModifier(unitId = ally.id, stat = Stat.HP, delta = shieldValue, remainingRounds = 1, source = "DEVOTION_SHIELD")
-                            state.combatLog += "🛡️ ${ally.card.name} recebeu ${shieldValue.toInt()} de escudo (${if (isFaith) "fé" else "normal"})."
+                            state.combatLog += "🛡️ ${ally.card.name} recebeu ${shieldValue.toInt()} de escudo (${if (isFaith) "solar" else "normal"})."
                         }
                     }
                 )
@@ -1112,7 +1112,7 @@ object CardCatalog {
         type = CardType.EQUIPMENT,
         rarity = Rarity.MYTHIC,
         slot = EquipmentSlot.WEAPON,
-        faction = "god",
+        faction = "sol",
         baseStats = mapOf(
             Stat.ATK to 80.0,
             Stat.CRIT_CHANCE to 0.18,
@@ -1771,6 +1771,456 @@ object CardCatalog {
     )
 
     // =========================================================================
+// SOL — PERSONAGENS
+// =========================================================================
+
+    // RARE — Linha de frente padrão de Aurea.
+// Estatísticas comparadas com: THIEF (ofensivo), IRON_GUARDIAN (defensivo),
+// ROYAL_CROSSBOWMAN (equilibrado) — Soldado é o equilíbrio físico da facção.
+    private val aureaSoldier = CardDefinition(
+        id = "AUREA_SOLDIER",
+        name = "Soldado de Aurea",
+        description = "Treinado desde cedo para tratar combate como devoção. Individualmente sólido — em grupo, perigoso.",
+        type = CardType.CHARACTER,
+        rarity = Rarity.RARE,
+        faction = "sol",
+        baseStats = mapOf(
+            Stat.HP to 490.0,
+            Stat.ATK to 40.0,
+            Stat.DEF to 26.0,
+            Stat.SPEED to 80.0,
+            Stat.CRIT_CHANCE to 0.09,
+            Stat.CRIT_DAMAGE to 1.28
+        ),
+        statsPerLevel = mapOf(
+            Stat.HP to 10.0,
+            Stat.ATK to 3.5,
+            Stat.DEF to 2.5
+        ),
+        tags = setOf("sol", "frontline"),
+        abilities = listOf(
+            Ability(
+                name = "Formação Solar",
+                description = "No início da batalha, para cada aliado da facção 'sol' no time, ganha +8 ATK e +5 DEF.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnBattleStart,
+                effects = listOf(
+                    Effect.Custom("Sol formation bonus") { self, _, state ->
+                        val team = state.teams.firstOrNull { it.units.contains(self) } ?: return@Custom
+                        val solCount = team.units.count { it.card.faction == "sol" && it.hp > 0 }
+                        if (solCount <= 1) return@Custom
+                        val allies = solCount - 1
+                        val atkBonus = 8.0 * allies
+                        val defBonus = 5.0 * allies
+                        self.stats[Stat.ATK] = (self.stats[Stat.ATK] ?: 0.0) + atkBonus
+                        self.stats[Stat.DEF] = (self.stats[Stat.DEF] ?: 0.0) + defBonus
+                        state.combatLog += "☀️ ${self.card.name} entrou em formação solar com $allies aliado(s): +${atkBonus.toInt()} ATK, +${defBonus.toInt()} DEF."
+                    }
+                )
+            )
+        )
+    )
+
+    // EPIC — Tank da facção. Cresce em DEF cada vez que é atingido
+// e protege os aliados solares. Comparado com JORGE (tank protetor)
+// e BERSERKER (escala com dano recebido) — combina os dois conceitos no estilo Sol.
+    private val goldenKnight = CardDefinition(
+        id = "GOLDEN_KNIGHT",
+        name = "Cavaleiro Dourado",
+        description = "A linha de frente de Aurea. Cada golpe recebido fortalece sua armadura — e ao cair, transfere esse poder aos aliados.",
+        type = CardType.CHARACTER,
+        rarity = Rarity.EPIC,
+        faction = "sol",
+        baseStats = mapOf(
+            Stat.HP to 710.0,
+            Stat.ATK to 44.0,
+            Stat.DEF to 56.0,
+            Stat.SPEED to 72.0,
+            Stat.CRIT_CHANCE to 0.10,
+            Stat.CRIT_DAMAGE to 1.30
+        ),
+        statsPerLevel = mapOf(
+            Stat.HP to 16.0,
+            Stat.ATK to 3.0,
+            Stat.DEF to 5.0
+        ),
+        tags = setOf("sol", "tank", "frontline", "defense"),
+        abilities = listOf(
+            Ability(
+                name = "Têmpera Solar",
+                description = "Ao receber dano, a armadura absorve o impacto e endurece: ganha +3 DEF permanente.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnDamageTaken(),
+                effects = listOf(
+                    Effect.BuffStat(stat = Stat.DEF, value = 3.0, target = AbilityTarget.SELF)
+                )
+            ),
+            Ability(
+                name = "Guardião da Cidade",
+                description = "A cada 3 turnos, concede +10 DEF temporária (2 turnos) a todos os aliados da facção 'sol'.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnTurnEvery(3),
+                effects = listOf(
+                    Effect.Custom("Sol DEF share") { self, _, state ->
+                        val team = state.teams.firstOrNull { it.units.contains(self) } ?: return@Custom
+                        val targets = team.units.filter { it.card.faction == "sol" && it.hp > 0 && it.id != self.id }
+                        if (targets.isEmpty()) return@Custom
+                        targets.forEach { ally ->
+                            ally.stats[Stat.DEF] = (ally.stats[Stat.DEF] ?: 0.0) + 10.0
+                            state.temporaryStatModifiers += TemporaryStatModifier(
+                                unitId = ally.id,
+                                stat = Stat.DEF,
+                                delta = 10.0,
+                                remainingRounds = 2,
+                                source = "GOLDEN_KNIGHT_GUARDIAN"
+                            )
+                            state.combatLog += "🛡️ ${ally.card.name} recebeu +10 DEF temporária (Guardião da Cidade)."
+                        }
+                    }
+                )
+            ),
+            Ability(
+                name = "Legado da Batalha",
+                description = "Ao morrer, converte 40% da DEF acumulada em ATK permanente para todos os aliados 'sol' vivos.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnDeath,
+                once = true,
+                effects = listOf(
+                    Effect.Custom("Death DEF transfer") { self, _, state ->
+                        val team = state.teams.firstOrNull { it.units.contains(self) } ?: return@Custom
+                        val legacyAtk = (self.stats[Stat.DEF] ?: 0.0) * 0.40
+                        if (legacyAtk <= 0) return@Custom
+                        val targets = team.units.filter { it.card.faction == "sol" && it.hp > 0 }
+                        targets.forEach { ally ->
+                            ally.stats[Stat.ATK] = (ally.stats[Stat.ATK] ?: 0.0) + legacyAtk
+                            state.combatLog += "⚔️ ${ally.card.name} herdou +${legacyAtk.toInt()} ATK do Cavaleiro Dourado."
+                        }
+                    }
+                )
+            )
+        )
+    )
+
+    // EPIC — Suporte e cura de Aurea. Versão Sol de Lumina — mais agressiva
+// nos buffs ofensivos, menos passiva. Comparada com LUMINA e AURUM
+// (escalada de time) — aqui a escalada é via aliados solares vivos.
+    private val sunPriestess = CardDefinition(
+        id = "SUN_PRIESTESS",
+        name = "Sacerdotisa do Sol",
+        description = "A fé de Aurea tem uma face marcial e uma espiritual. Ela é a segunda — mas não confunda espiritualidade com passividade.",
+        type = CardType.CHARACTER,
+        rarity = Rarity.EPIC,
+        faction = "sol",
+        baseStats = mapOf(
+            Stat.HP to 590.0,
+            Stat.ATK to 54.0,
+            Stat.DEF to 32.0,
+            Stat.SPEED to 85.0,
+            Stat.CRIT_CHANCE to 0.10,
+            Stat.CRIT_DAMAGE to 1.30
+        ),
+        statsPerLevel = mapOf(
+            Stat.HP to 14.0,
+            Stat.ATK to 5.0,
+            Stat.DEF to 2.5
+        ),
+        tags = setOf("sol", "support", "healing"),
+        abilities = listOf(
+            Ability(
+                name = "Cura pela Luz",
+                description = "A cada turno, cura aliados: membros 'sol' recebem 10% do ATK, demais recebem 5%.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnTurnStart,
+                effects = listOf(
+                    Effect.Custom("Sol heal") { self, _, state ->
+                        val atk = self.stats[Stat.ATK] ?: 0.0
+                        val team = state.teams.firstOrNull { it.units.contains(self) } ?: return@Custom
+                        team.units.filter { it.hp > 0 }.forEach { ally ->
+                            val isSol = ally.card.faction == "sol"
+                            val heal = atk * if (isSol) 0.10 else 0.05
+                            val maxHp = ally.stats[Stat.HP] ?: return@forEach
+                            val before = ally.hp
+                            ally.hp = (ally.hp + heal).coerceAtMost(maxHp)
+                            val healed = ally.hp - before
+                            if (healed > 0)
+                                state.combatLog += "☀️ ${ally.card.name} curado em ${"%.1f".format(healed)} (${if (isSol) "solar" else "normal"})."
+                        }
+                    }
+                )
+            ),
+            Ability(
+                name = "Bênção do Zênite",
+                description = "A cada 4 turnos, concede +15% ATK e +15% DEF temporários (2 turnos) a todos os aliados 'sol'.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnTurnEvery(4),
+                effects = listOf(
+                    Effect.Custom("Sol zenith buff") { self, _, state ->
+                        val team = state.teams.firstOrNull { it.units.contains(self) } ?: return@Custom
+                        team.units.filter { it.card.faction == "sol" && it.hp > 0 }.forEach { ally ->
+                            val atkBonus = (ally.stats[Stat.ATK] ?: 0.0) * 0.15
+                            val defBonus = (ally.stats[Stat.DEF] ?: 0.0) * 0.15
+                            ally.stats[Stat.ATK] = (ally.stats[Stat.ATK] ?: 0.0) + atkBonus
+                            ally.stats[Stat.DEF] = (ally.stats[Stat.DEF] ?: 0.0) + defBonus
+                            state.temporaryStatModifiers += TemporaryStatModifier(
+                                unitId = ally.id, stat = Stat.ATK,
+                                delta = atkBonus, remainingRounds = 2,
+                                source = "ZENITH_BUFF"
+                            )
+                            state.temporaryStatModifiers += TemporaryStatModifier(
+                                unitId = ally.id, stat = Stat.DEF,
+                                delta = defBonus, remainingRounds = 2,
+                                source = "ZENITH_BUFF"
+                            )
+                            state.combatLog += "🌞 ${ally.card.name} recebeu Bênção do Zênite (+${atkBonus.toInt()} ATK, +${defBonus.toInt()} DEF)."
+                        }
+                    }
+                )
+            )
+        )
+    )
+
+    // LEGENDARY — Líder de Aurea. Ofensivo e escalável.
+// Comparado com MARKUS (rng/escalada de coins) e SOLAR_PALADIN (tanque de fé).
+// O Rei é o oposto: ATK puro, sem aleatório, sem defesa como mecânica central.
+// Ponto fraco intencional: DEF média para um Legendary — ele não é um tank.
+    private val aureKing = CardDefinition(
+        id = "AURE_KING",
+        name = "Rei de Aurea",
+        description = "O monarca não reina com decretos. Reina com o exemplo. Cada batalha que travou, travou na frente.",
+        type = CardType.CHARACTER,
+        rarity = Rarity.LEGENDARY,
+        faction = "sol",
+        baseStats = mapOf(
+            Stat.HP to 860.0,
+            Stat.ATK to 74.0,
+            Stat.DEF to 52.0,
+            Stat.SPEED to 88.0,
+            Stat.CRIT_CHANCE to 0.18,
+            Stat.CRIT_DAMAGE to 1.65
+        ),
+        statsPerLevel = mapOf(
+            Stat.HP to 20.0,
+            Stat.ATK to 7.0,
+            Stat.DEF to 4.0,
+            Stat.CRIT_CHANCE to 0.01
+        ),
+        tags = setOf("sol", "boss", "king", "scaling", "bruiser"),
+        abilities = listOf(
+            Ability(
+                name = "Presença Real",
+                description = "No início da batalha, todos os aliados ganham +12 ATK. Aliados 'sol' ganham +12 ATK e +8 DEF adicionais.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnBattleStart,
+                effects = listOf(
+                    Effect.Custom("Royal aura") { self, _, state ->
+                        val team = state.teams.firstOrNull { it.units.contains(self) } ?: return@Custom
+                        team.units.filter { it.hp > 0 && it.id != self.id }.forEach { ally ->
+                            val isSol = ally.card.faction == "sol"
+                            val atkBonus = if (isSol) 24.0 else 12.0
+                            val defBonus = if (isSol) 8.0 else 0.0
+                            ally.stats[Stat.ATK] = (ally.stats[Stat.ATK] ?: 0.0) + atkBonus
+                            if (defBonus > 0) ally.stats[Stat.DEF] = (ally.stats[Stat.DEF] ?: 0.0) + defBonus
+                            state.combatLog += "👑 ${ally.card.name} recebeu Presença Real ${if (isSol) "(+${ atkBonus.toInt()} ATK, +${defBonus.toInt()} DEF)" else "(+${atkBonus.toInt()} ATK)"}."
+                        }
+                    }
+                )
+            ),
+            Ability(
+                name = "Chama do Trono",
+                description = "A cada ataque, o Rei acumula calor solar: +4 ATK permanente.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnAttack,
+                effects = listOf(
+                    Effect.BuffStat(stat = Stat.ATK, value = 4.0, target = AbilityTarget.SELF)
+                )
+            ),
+            Ability(
+                name = "Cólera Solar",
+                description = "Ao cair abaixo de 45% de vida, a coroa arde: +60% ATK e +25% SPEED. Ocorre uma única vez.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnBellowHealth(0.45),
+                once = true,
+                effects = listOf(
+                    Effect.StatIncreasePercent(stat = Stat.ATK, percent = 0.60),
+                    Effect.StatIncreasePercent(stat = Stat.SPEED, percent = 0.25)
+                )
+            ),
+            Ability(
+                name = "Execução do Rei",
+                description = "Ao causar dano, executa inimigos com menos de 20% de vida.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnDamageDealt,
+                effects = listOf(
+                    Effect.ExecuteBellowHealth(threshold = 0.20)
+                )
+            )
+        )
+    )
+
+// =========================================================================
+// SOL — EQUIPAMENTOS
+// =========================================================================
+
+    // EPIC ARMOR — Defesa com sustentação solar por aliados.
+// Comparada com THORNMAIL (counter tank) e HEAVY_IRON_ARMOR (DEF pura).
+// AURE_GOLDEN_ARMOR oferece DEF menor, mas com cura passiva escalada por time.
+    private val aureGoldenArmor = CardDefinition(
+        id = "AURE_GOLDEN_ARMOR",
+        name = "Armadura Dourada de Aurea",
+        description = "Forjada sob o sol de Aurea por gerações. Cura o portador proporcionalmente ao time solar que o cerca.",
+        type = CardType.EQUIPMENT,
+        rarity = Rarity.EPIC,
+        slot = EquipmentSlot.ARMOR,
+        faction = "sol",
+        baseStats = mapOf(
+            Stat.DEF to 44.0,
+            Stat.HP to 80.0
+        ),
+        statsPerLevel = mapOf(
+            Stat.DEF to 5.0,
+            Stat.HP to 12.0
+        ),
+        tags = setOf("sol", "armor", "defense", "sustain"),
+        abilities = listOf(
+            Ability(
+                name = "Reflexo Solar",
+                description = "A cada 2 turnos, cura o portador em 12 HP por cada aliado da facção 'sol' vivo no time.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnTurnEvery(2),
+                effects = listOf(
+                    Effect.Custom("Sol armor regen") { self, _, state ->
+                        val team = state.teams.firstOrNull { it.units.contains(self) } ?: return@Custom
+                        val solCount = team.units.count { it.card.faction == "sol" && it.hp > 0 }
+                        if (solCount == 0) return@Custom
+                        val heal = 12.0 * solCount
+                        val maxHp = self.stats[Stat.HP] ?: return@Custom
+                        val before = self.hp
+                        self.hp = (self.hp + heal).coerceAtMost(maxHp)
+                        val healed = self.hp - before
+                        if (healed > 0)
+                            state.combatLog += "☀️ Reflexo Solar: +${healed.toInt()} HP ($solCount aliado(s) solar(es))."
+                    }
+                )
+            )
+        )
+    )
+
+    // LEGENDARY WEAPON — Escala infinitamente com o tempo de batalha.
+// Comparada com SIEGEBREAKER (48 ATK, armor shred) e TWIN_FANG_KATANA (crit).
+// SOLARBRAND tem ATK similar mas troca o utility por escalada pura de ATK
+// e burst de dano verdadeiro a cada 3 ataques — ideal para combates longos.
+    private val solarbrand = CardDefinition(
+        id = "SOLARBRAND",
+        name = "Lâmina da Aurora",
+        description = "Uma espada forjada pelos ferreiros de Aurea que imita o movimento do sol — lenta no amanhecer, devastadora ao meio-dia.",
+        type = CardType.EQUIPMENT,
+        rarity = Rarity.LEGENDARY,
+        slot = EquipmentSlot.WEAPON,
+        faction = "sol",
+        baseStats = mapOf(
+            Stat.ATK to 42.0,
+            Stat.CRIT_CHANCE to 0.12,
+            Stat.CRIT_DAMAGE to 0.30
+        ),
+        statsPerLevel = mapOf(
+            Stat.ATK to 5.5,
+            Stat.CRIT_CHANCE to 0.01
+        ),
+        tags = setOf("sol", "weapon", "scaling"),
+        abilities = listOf(
+            Ability(
+                name = "Chama do Amanhecer",
+                description = "A cada turno, a lâmina aquece e ganha +6 ATK permanente.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnTurnStart,
+                effects = listOf(
+                    Effect.BuffStat(stat = Stat.ATK, value = 6.0, target = AbilityTarget.SELF)
+                )
+            ),
+            Ability(
+                name = "Golpe Abrasador",
+                description = "A cada 3 ataques, o calor acumulado explode: causa 80% do ATK atual como dano verdadeiro.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnAttackEvery(3),
+                effects = listOf(
+                    Effect.DamageBasedOnStat(
+                        stat = Stat.ATK,
+                        scaling = 0.80,
+                        statSource = StatSource.SELF,
+                        target = AbilityTarget.ENEMY,
+                        damageType = DamageType.TRUE
+                    )
+                )
+            )
+        )
+    )
+
+    val konoSister = CardDefinition(
+        id = "KONO_SISTER",
+        name = "A Gemea de Kono",
+        rarity = Rarity.KONO,
+        description = "A Espada Gêmea de Kono.\n" +
+                "\n" +
+                "Seu verdadeiro nome foi perdido há muito tempo, levado pelos ventos da guerra antiga.\n" +
+                "\n" +
+                "Ela própria o abandonou.\n" +
+                "\n" +
+                "Tudo o que restou foi seu propósito.\n" +
+                "\n" +
+                "Tornar-se a espada definitiva de Kono.\n" +
+                "\n" +
+                "Desde então, dedicou sua existência apenas a isso.\n" +
+                "\n" +
+                "Não possui reino.\n" +
+                "Não possui ambições.\n" +
+                "Não possui desejos além de proteger sua irmã.\n" +
+                "\n" +
+                "Dizem que seus passos são mais rápidos que o som do aço.\n" +
+                "\n" +
+                "Que suas lâminas dançam antes mesmo que o inimigo perceba a própria morte.\n" +
+                "\n" +
+                "E em todas as eras…\n" +
+                "\n" +
+                "Nunca perdeu uma batalha.",
+        type = CardType.CHARACTER,
+        baseStats = mapOf(),
+        statsPerLevel = mapOf(),
+        abilities = listOf()
+    )
+
+    val konoTwinbladeR = CardDefinition(
+        id = "KONO_TWINBLADE_R",
+        name = "Lamina Gemea do Alvorecer",
+        rarity = Rarity.KONO,
+        type = CardType.EQUIPMENT,
+        slot = EquipmentSlot.WEAPON,
+        description =
+            "A lâmina direita da Espada Gêmea de Kono. " +
+                    "Leve como luz e rápida como pensamento, ela foi criada para eliminar ameaças antes mesmo que pudessem reagir. " +
+                    "Sozinha, já é considerada uma arma divina.\n\n" +
+                    "Mas sua verdadeira força apenas desperta ao lado de sua irmã.",
+        baseStats = mapOf(),
+        statsPerLevel = mapOf(),
+        abilities = listOf(),
+    )
+
+    val konoTwinbladeL = CardDefinition(
+        id = "KONO_TWINBLADE_L",
+        name = "Lamina Gemea do Crepusculo",
+        rarity = Rarity.KONO,
+        type = CardType.EQUIPMENT,
+        slot = EquipmentSlot.SECONDARY,
+        description =  "A lâmina esquerda da Espada Gêmea de Kono. " +
+                "Silenciosa e mortal, seus golpes jamais desperdiçam movimento. " +
+                "Dizem que ela corta não apenas carne, mas intenção.\n\n" +
+                "Mesmo separada de sua contraparte, ainda carrega poder suficiente para destruir exércitos.\n\n" +
+                "Quando ambas as lâminas lutam juntas… batalhas terminam antes mesmo de começarem.",
+        baseStats = mapOf(),
+        statsPerLevel = mapOf(),
+        abilities = listOf(),
+    )
+
+    // =========================================================================
     // CATALOG
     // =========================================================================
 
@@ -1783,6 +2233,7 @@ object CardCatalog {
         thief,
         ironGuardian,
         royalCrossbowman,
+        aureaSoldier,        // NOVO
         // Characters — Epic
         jorge,
         veyn,
@@ -1790,48 +2241,37 @@ object CardCatalog {
         lumina,
         shadow,
         berserker,
+        goldenKnight,        // NOVO
+        sunPriestess,        // NOVO
         // Characters — Legendary
         markus,
         solarPaladin,
         ironGargoyle,
         voidMage,
+        aureKing,
         // Characters — Mythic
         unleashedJuniorKnight,
 
-        // Characters — Kono (system, not pullable)
+        // Characters — Kono
         kono,
         dummy,
 
         // Equipment — Common
-        woodenSword,
-        dagger,
-        ironArmor,
+        woodenSword, dagger, ironArmor,
         // Equipment — Rare
-        ironSword,
-        ironShield,
-        heavyIronArmor,
-        katana,
-        vampireRing,
-        quickBoots,
-        boneStaff,
+        ironSword, ironShield, heavyIronArmor,
+        katana, vampireRing, quickBoots, boneStaff,
         // Equipment — Epic
-        polishedKatana,
-        vampireCore,
-        greatsword,
-        gamblerCharm,
-        devotionStaff,
-        thornmail,
+        polishedKatana, vampireCore, greatsword,
+        gamblerCharm, devotionStaff, thornmail,
         elixirVial,
+        aureGoldenArmor,     // NOVO
         // Equipment — Legendary
-        critfish,
-        demonHunterCrossbow,
-        allInEmblem,
-        siegebreaker,
-        twinFangKatana,
+        critfish, demonHunterCrossbow, allInEmblem,
+        siegebreaker, twinFangKatana,
+        solarbrand,          // NOVO
         // Equipment — Mythic
-        undefined,
-        sunGodGreatsword,
-        cosmicOrb
+        undefined, sunGodGreatsword, cosmicOrb
     )
 
     private val byId = all.associateBy { it.id }
