@@ -44,92 +44,89 @@ class EquipamentosSlashCommand(
         val deferred = event.interaction.deferEphemeralResponse()
         val discordId = event.interaction.user.id.value.toLong()
 
-        val equipped = cardInstanceRepository.getEquippedItemsForActiveCharacter(discordId)
-        val embedColor = equipped
-            .mapNotNull { Rarity.entries.getOrNull(it.rarity.ordinal) }
-            .maxByOrNull { it.ordinal }
-            ?.colorDefinition()
-            ?: Color(0x2b2d31)
-
-        val equipButtonId = "equip-btn-${discordId}-${System.currentTimeMillis()}"
-        val removeButtonId = "remove-btn-${discordId}-${System.currentTimeMillis() + 1}"
+        var equipped = cardInstanceRepository.getEquippedItemsForActiveCharacter(discordId)
+        var statusMessage: String? = null
+        var equipButtonId = newId("equip-btn", discordId)
+        var removeButtonId = newId("remove-btn", discordId)
 
         val response = deferred.respond {
             embed {
                 title = "🧩 Equipamentos"
-                color = embedColor
-                description = buildString {
-                    for (slot in EquipmentSlot.entries) {
-                        val item = equipped.firstOrNull { it.slot == slot.index }
-                        if (item == null) {
-                            appendLine("${slot.icon} **${slot.displayName}** — *vazio*")
-                        } else {
-                            appendLine("${slot.icon} **${slot.displayName}** — **${item.name}** ${item.rarity.toDisplayEmoji()}")
-                        }
-                    }
-                }
+                color = embedColor(equipped)
+                description = slotDescription(equipped)
                 footer { text = "Escolha uma ação abaixo" }
             }
-            addComponent(ActionRowBuilder().apply {
-                interactionButton(ButtonStyle.Success, equipButtonId) {
-                    label = "Equipar"
-                    emoji = DiscordPartialEmoji(name = "🎒")
+            addComponent(overviewButtons(equipButtonId, removeButtonId, equipped.isNotEmpty()))
+        }
+
+        while (true) {
+            val buttonIds = buildList {
+                add(equipButtonId)
+                if (equipped.isNotEmpty()) add(removeButtonId)
+            }
+
+            val clicked = event.kord.awaitFirstButtonInteraction(buttonIds, discordId) ?: run {
+                response.edit { content = "⏰ Tempo esgotado."; components = mutableListOf() }
+                return
+            }
+
+            val (clickedId, clickEvent) = clicked
+
+            // null = timeout in sub-flow; non-null = success or error message to show in footer
+            val result = if (clickedId == equipButtonId) {
+                handleEquipFlow(event, discordId, clickEvent)
+            } else {
+                handleRemoveFlow(event, discordId, clickEvent, equipped)
+            }
+
+            if (result == null) {
+                response.edit { content = "⏰ Tempo esgotado."; components = mutableListOf() }
+                return
+            }
+
+            equipped = cardInstanceRepository.getEquippedItemsForActiveCharacter(discordId)
+            statusMessage = result
+            equipButtonId = newId("equip-btn", discordId)
+            removeButtonId = newId("remove-btn", discordId)
+
+            response.edit {
+                embed {
+                    title = "🧩 Equipamentos"
+                    color = embedColor(equipped)
+                    description = slotDescription(equipped)
+                    footer { text = statusMessage }
                 }
-                if (equipped.isNotEmpty()) {
-                    interactionButton(ButtonStyle.Danger, removeButtonId) {
-                        label = "Remover"
-                        emoji = DiscordPartialEmoji(name = "🗑️")
-                    }
-                }
-            })
-        }
-
-        val buttonIds = buildList {
-            add(equipButtonId)
-            if (equipped.isNotEmpty()) add(removeButtonId)
-        }
-
-        val clicked = event.kord.awaitFirstButtonInteraction(buttonIds, discordId)
-        if (clicked == null) {
-            response.edit { content = "⏰ Tempo esgotado."; components = mutableListOf() }
-            return
-        }
-
-        val (clickedId, clickEvent) = clicked
-
-        if (clickedId == equipButtonId) {
-            handleEquipFlow(event, discordId, clickEvent, response)
-        } else {
-            handleRemoveFlow(event, discordId, clickEvent, response, equipped)
+                components = mutableListOf()
+                addComponent(overviewButtons(equipButtonId, removeButtonId, equipped.isNotEmpty()))
+            }
         }
     }
 
+    // Returns a status message (success or error) to show in the footer, or null on timeout.
     private suspend fun handleEquipFlow(
         event: ChatInputCommandInteractionCreateEvent,
         discordId: Long,
-        buttonEvent: ButtonInteractionCreateEvent,
-        response: dev.kord.core.behavior.interaction.response.EphemeralMessageInteractionResponseBehavior
-    ) {
+        buttonEvent: ButtonInteractionCreateEvent
+    ): String? {
         val user = userRepository.getUserByDiscordId(discordId) ?: run {
-            response.edit { content = "❌ Conta não encontrada."; components = mutableListOf() }
-            return
+            buttonEvent.interaction.deferEphemeralMessageUpdate()
+            return "❌ Conta não encontrada."
         }
 
-        // Single bulk query for all equipped IDs — no N+1
         val equippedIds = equippedCardsRepository.getEquippedCardInstanceIdsForUser(user.id)
         val unequipped = cardInstanceRepository.getOwnedEquipmentsWithDefinition(user.id)
             .filter { (instance, _) -> instance.id !in equippedIds }
             .sortedWith(compareByDescending<Pair<CardInstance, CardDefinition>> { it.second.rarity.ordinal }.thenBy { it.second.name })
 
         if (unequipped.isEmpty()) {
-            response.edit { content = "🎒 Nenhum equipamento disponível para equipar."; components = mutableListOf() }
-            return
+            buttonEvent.interaction.deferEphemeralMessageUpdate()
+            return "🎒 Nenhum equipamento disponível para equipar."
         }
 
-        val selectId = "equip-select-${discordId}-${System.currentTimeMillis()}"
-        val update = buttonEvent.interaction.deferEphemeralMessageUpdate()
+        val selectId = newId("equip-select", discordId)
+        val buttonUpdate = buttonEvent.interaction.deferEphemeralMessageUpdate()
 
-        update.edit {
+        buttonUpdate.edit {
             embed {
                 title = "🎒 Escolha um item"
                 description = "Selecione qual item equipar no personagem ativo."
@@ -151,51 +148,41 @@ class EquipamentosSlashCommand(
             })
         }
 
-        val selectEvent = event.kord.awaitStringSelectInteraction(selectId, discordId) ?: run {
-            response.edit { content = "⏰ Tempo esgotado."; components = mutableListOf() }
-            return
-        }
+        val selectEvent = event.kord.awaitStringSelectInteraction(selectId, discordId) ?: return null
 
         val itemInstanceId = selectEvent.interaction.values.firstOrNull()?.toIntOrNull() ?: run {
-            response.edit { content = "❌ Seleção inválida."; components = mutableListOf() }
-            return
+            selectEvent.interaction.deferEphemeralMessageUpdate()
+            return "❌ Seleção inválida."
         }
 
-        val selectUpdate = selectEvent.interaction.deferEphemeralMessageUpdate()
+        selectEvent.interaction.deferEphemeralMessageUpdate()
 
-        when (val result = equipItemHandler.execute(discordId, itemInstanceId)) {
+        return when (val result = equipItemHandler.execute(discordId, itemInstanceId)) {
             is EquipItemHandler.Result.Success -> {
                 val replaced = if (result.replaced) " (substituiu o item anterior)" else ""
-                selectUpdate.edit {
-                    content = "✅ Item equipado em ${result.slot.icon} **${result.slot.displayName}**$replaced."
-                    components = mutableListOf()
-                }
+                "✅ Item equipado em ${result.slot.icon} **${result.slot.displayName}**$replaced."
             }
-            is EquipItemHandler.Result.InvalidSlot ->
-                selectUpdate.edit { content = "❌ Esse item não possui slot de equipamento."; components = mutableListOf() }
-            is EquipItemHandler.Result.NoActiveCharacter ->
-                selectUpdate.edit { content = "❌ Defina um personagem ativo antes de equipar itens."; components = mutableListOf() }
-            is EquipItemHandler.Result.InvalidItem ->
-                selectUpdate.edit { content = "❌ Item inválido ou não pertence a você."; components = mutableListOf() }
-            is EquipItemHandler.Result.ItemAlreadyEquipped ->
-                selectUpdate.edit { content = "❌ Esse item já está equipado."; components = mutableListOf() }
+            is EquipItemHandler.Result.InvalidSlot -> "❌ Esse item não possui slot de equipamento."
+            is EquipItemHandler.Result.NoActiveCharacter -> "❌ Defina um personagem ativo antes de equipar itens."
+            is EquipItemHandler.Result.InvalidItem -> "❌ Item inválido ou não pertence a você."
+            is EquipItemHandler.Result.ItemAlreadyEquipped -> "❌ Esse item já está equipado."
         }
     }
 
+    // Returns a status message (success or error) to show in the footer, or null on timeout.
     private suspend fun handleRemoveFlow(
         event: ChatInputCommandInteractionCreateEvent,
         discordId: Long,
         buttonEvent: ButtonInteractionCreateEvent,
-        response: dev.kord.core.behavior.interaction.response.EphemeralMessageInteractionResponseBehavior,
         equipped: List<EquippedItemView>
-    ) {
-        val selectId = "remove-select-${discordId}-${System.currentTimeMillis()}"
-        val update = buttonEvent.interaction.deferEphemeralMessageUpdate()
+    ): String? {
+        val selectId = newId("remove-select", discordId)
+        val buttonUpdate = buttonEvent.interaction.deferEphemeralMessageUpdate()
 
-        update.edit {
+        buttonUpdate.edit {
             embed {
                 title = "🗑️ Remover equipamento"
-                description = "Selecione o slot que deseja desquipar."
+                description = "Selecione o slot que deseja desequipar."
             }
             components = mutableListOf()
             addComponent(ActionRowBuilder().apply {
@@ -214,32 +201,56 @@ class EquipamentosSlashCommand(
             })
         }
 
-        val selectEvent = event.kord.awaitStringSelectInteraction(selectId, discordId) ?: run {
-            response.edit { content = "⏰ Tempo esgotado."; components = mutableListOf() }
-            return
-        }
+        val selectEvent = event.kord.awaitStringSelectInteraction(selectId, discordId) ?: return null
 
         val slotInput = selectEvent.interaction.values.firstOrNull() ?: run {
-            response.edit { content = "❌ Seleção inválida."; components = mutableListOf() }
-            return
+            selectEvent.interaction.deferEphemeralMessageUpdate()
+            return "❌ Seleção inválida."
         }
 
-        val selectUpdate = selectEvent.interaction.deferEphemeralMessageUpdate()
+        selectEvent.interaction.deferEphemeralMessageUpdate()
 
-        when (val result = unequipItemHandler.execute(discordId, slotInput)) {
+        return when (val result = unequipItemHandler.execute(discordId, slotInput)) {
             is UnequipItemHandler.Result.Success -> {
                 val itemName = equipped.firstOrNull { EquipmentSlot.fromIndex(it.slot)?.name == slotInput }?.name ?: "Item"
-                selectUpdate.edit {
-                    content = "✅ **$itemName** removido do slot ${result.slot.icon} **${result.slot.displayName}**."
-                    components = mutableListOf()
-                }
+                "✅ **$itemName** removido do slot ${result.slot.icon} **${result.slot.displayName}**."
             }
-            is UnequipItemHandler.Result.InvalidSlot ->
-                selectUpdate.edit { content = "❌ Slot inválido: `${result.input}`."; components = mutableListOf() }
-            is UnequipItemHandler.Result.NoActiveCharacter ->
-                selectUpdate.edit { content = "❌ Defina um personagem ativo antes de remover itens."; components = mutableListOf() }
-            is UnequipItemHandler.Result.EmptySlot ->
-                selectUpdate.edit { content = "❌ Esse slot não possui item equipado."; components = mutableListOf() }
+            is UnequipItemHandler.Result.InvalidSlot -> "❌ Slot inválido: `${result.input}`."
+            is UnequipItemHandler.Result.NoActiveCharacter -> "❌ Defina um personagem ativo antes de remover itens."
+            is UnequipItemHandler.Result.EmptySlot -> "❌ Esse slot não possui item equipado."
         }
     }
+
+    private fun slotDescription(equipped: List<EquippedItemView>) = buildString {
+        for (slot in EquipmentSlot.entries) {
+            val item = equipped.firstOrNull { it.slot == slot.index }
+            if (item == null) {
+                appendLine("${slot.icon} **${slot.displayName}** — *vazio*")
+            } else {
+                appendLine("${slot.icon} **${slot.displayName}** — **${item.name}** ${item.rarity.toDisplayEmoji()}")
+            }
+        }
+    }
+
+    private fun embedColor(equipped: List<EquippedItemView>) = equipped
+        .mapNotNull { Rarity.entries.getOrNull(it.rarity.ordinal) }
+        .maxByOrNull { it.ordinal }
+        ?.colorDefinition()
+        ?: Color(0x2b2d31)
+
+    private fun overviewButtons(equipButtonId: String, removeButtonId: String, hasEquipped: Boolean) =
+        ActionRowBuilder().apply {
+            interactionButton(ButtonStyle.Success, equipButtonId) {
+                label = "Equipar"
+                emoji = DiscordPartialEmoji(name = "🎒")
+            }
+            if (hasEquipped) {
+                interactionButton(ButtonStyle.Danger, removeButtonId) {
+                    label = "Remover"
+                    emoji = DiscordPartialEmoji(name = "🗑️")
+                }
+            }
+        }
+
+    private fun newId(prefix: String, discordId: Long) = "$prefix-$discordId-${System.currentTimeMillis()}"
 }
