@@ -63,7 +63,7 @@ object CardCatalog {
         baseStats = mapOf(
             Stat.HP to 500.0,
             Stat.ATK to 34.0,
-            Stat.DEF to 40.0,
+            Stat.DEF to 28.0,
             Stat.SPEED to 70.0,
             Stat.CRIT_CHANCE to 0.05,
             Stat.CRIT_DAMAGE to 1.20
@@ -71,7 +71,7 @@ object CardCatalog {
         statsPerLevel = mapOf(
             Stat.HP to 5.0,
             Stat.ATK to 2.0,
-            Stat.DEF to 2.0
+            Stat.DEF to 1.5
         ),
         tags = setOf("starter"),
         abilities = emptyList()
@@ -157,12 +157,12 @@ object CardCatalog {
             ),
             Ability(
                 name = "Muralha do Esquadrão",
-                description = "A cada turno, Jorge ganha +2 DEF permanente e cura todos os aliados em 6 HP.",
+                description = "A cada turno, Jorge ganha +1 DEF permanente e cura todos os aliados em 4 HP.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnTurnStart,
                 effects = listOf(
-                    Effect.BuffStat(stat = Stat.DEF, value = 2.0, target = AbilityTarget.SELF),
-                    Effect.Heal(value = 6.0, target = AbilityTarget.ALL_ALLIES)
+                    Effect.BuffStat(stat = Stat.DEF, value = 1.0, target = AbilityTarget.SELF),
+                    Effect.Heal(value = 4.0, target = AbilityTarget.ALL_ALLIES)
                 )
             )
         )
@@ -193,10 +193,10 @@ object CardCatalog {
         abilities = listOf(
             Ability(
                 name = "Rajada Rítmica",
-                description = "A cada 2 ataques, Veyn libera uma rajada precisa que causa 18 de dano extra ao alvo.",
+                description = "A cada 2 ataques, Veyn libera uma rajada precisa que causa 25 de dano extra ao alvo.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnAttackEvery(2),
-                effects = listOf(Effect.Damage(value = 18.0, target = AbilityTarget.ENEMY))
+                effects = listOf(Effect.Damage(value = 25.0, target = AbilityTarget.ENEMY))
             ),
             Ability(
                 name = "Ritmo de Cassino",
@@ -287,12 +287,12 @@ object CardCatalog {
         abilities = listOf(
             Ability(
                 name = "Graça Contínua",
-                description = "A cada turno, Lumina cura todos os aliados vivos em 16% de seu ATK.",
+                description = "A cada turno, Lumina cura todos os aliados vivos em 12% de seu ATK.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnTurnStart,
                 effects = listOf(
-                    Effect.Custom("Heal allies 16% ATK") { self, _, state ->
-                        val healAmount = (self.stats[Stat.ATK] ?: 0.0) * 0.16
+                    Effect.Custom("Heal allies 12% ATK") { self, _, state ->
+                        val healAmount = (self.stats[Stat.ATK] ?: 0.0) * 0.12
                         if (healAmount <= 0) return@Custom
                         val team = state.teams.firstOrNull { it.units.contains(self) } ?: return@Custom
                         team.units.filter { it.hp > 0 }.forEach { ally ->
@@ -329,14 +329,13 @@ object CardCatalog {
             ),
             Ability(
                 name = "Fé Crescente",
-                description = "A cada 4 turnos, Lumina fortalece sua própria fé e ganha +6 ATK e +25 HP permanentes.",
+                description = "A cada 4 turnos, Lumina fortalece sua própria fé e ganha +6 ATK permanente.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnTurnEvery(4),
                 effects = listOf(
-                    Effect.Custom("Self-scale ATK+HP") { self, _, state ->
+                    Effect.Custom("Self-scale ATK") { self, _, state ->
                         self.stats[Stat.ATK] = (self.stats[Stat.ATK] ?: 0.0) + 6.0
-                        self.stats[Stat.HP] = (self.stats[Stat.HP] ?: 0.0) + 25.0
-                        state.combatLog += "🙏 ${self.card.name} fortaleceu sua fé (+6 ATK, +25 HP)."
+                        state.combatLog += "🙏 ${self.card.name} fortaleceu sua fé (+6 ATK)."
                     }
                 )
             )
@@ -408,7 +407,7 @@ object CardCatalog {
         abilities = listOf(
             Ability(
                 name = "Corpo Consagrado",
-                description = "A cada turno, converte 22% do ATK em cura e 12% do ATK em DEF adicional.",
+                description = "A cada turno, converte 22% do ATK em cura e 12% do ATK em DEF temporária (1 turno).",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnTurnStart,
                 effects = listOf(
@@ -420,8 +419,9 @@ object CardCatalog {
                         val before = self.hp
                         self.hp = (self.hp + heal).coerceAtMost(maxHp)
                         self.stats[Stat.DEF] = (self.stats[Stat.DEF] ?: 0.0) + defBonus
+                        state.temporaryStatModifiers += TemporaryStatModifier(unitId = self.id, stat = Stat.DEF, delta = defBonus, remainingRounds = 1, source = "PALADIN_CORPO")
                         val healed = self.hp - before
-                        if (healed > 0) state.combatLog += "☀️ ${self.card.name} converteu força em ${"%.1f".format(healed)} de cura."
+                        if (healed > 0) state.combatLog += "☀️ ${self.card.name} converteu força em ${"%.1f".format(healed)} de cura e +${defBonus.toInt()} DEF temporária."
                     }
                 )
             ),
@@ -443,7 +443,7 @@ object CardCatalog {
             ),
             Ability(
                 name = "Juramento Sagrado",
-                description = "Enquanto houver aliados da facção faith, o Paladino ganha DEF adicional e compartilha resistência com o time.",
+                description = "Enquanto houver aliados da facção faith, o Paladino ganha DEF temporária (1 turno) e compartilha resistência com o time.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnTurnStart,
                 effects = listOf(
@@ -453,6 +453,7 @@ object CardCatalog {
                         if (faithAllies <= 1) return@Custom
                         val bonusDef = 6.0 * faithAllies
                         self.stats[Stat.DEF] = (self.stats[Stat.DEF] ?: 0.0) + bonusDef
+                        state.temporaryStatModifiers += TemporaryStatModifier(unitId = self.id, stat = Stat.DEF, delta = bonusDef, remainingRounds = 1, source = "PALADIN_FAITH")
                         team.units.filter { it.id != self.id && it.hp > 0 }.forEach { ally ->
                             state.temporaryStatModifiers += TemporaryStatModifier(unitId = ally.id, stat = Stat.DEF, delta = bonusDef * 0.5, remainingRounds = 1, source = "PALADIN_FAITH")
                         }
@@ -1190,7 +1191,7 @@ object CardCatalog {
         rarity = Rarity.COMMON,
         baseStats = mapOf(
             Stat.HP to 330.0,
-            Stat.ATK to 44.0,
+            Stat.ATK to 38.0,
             Stat.DEF to 4.0,
             Stat.SPEED to 98.0,
             Stat.CRIT_CHANCE to 0.06,
@@ -1232,10 +1233,10 @@ object CardCatalog {
         abilities = listOf(
             Ability(
                 name = "Postura Defensiva",
-                description = "A cada 2 turnos, o Guardião endurece sua armadura, ganhando +5 DEF permanente.",
+                description = "A cada 2 turnos, o Guardião endurece sua armadura, ganhando +3 DEF permanente.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnTurnEvery(2),
-                effects = listOf(Effect.BuffStat(stat = Stat.DEF, value = 5.0, target = AbilityTarget.SELF))
+                effects = listOf(Effect.BuffStat(stat = Stat.DEF, value = 3.0, target = AbilityTarget.SELF))
             )
         )
     )
@@ -1261,6 +1262,7 @@ object CardCatalog {
             Stat.CRIT_DAMAGE to 1.55
         ),
         statsPerLevel = mapOf(
+            Stat.HP to 3.0,
             Stat.ATK to 4.0,
             Stat.SPEED to 2.0,
             Stat.CRIT_CHANCE to 0.01
@@ -1276,10 +1278,10 @@ object CardCatalog {
             ),
             Ability(
                 name = "Lâmina Sombria",
-                description = "Ao causar dano, executa alvos com menos de 12% de vida.",
+                description = "Ao causar dano, executa alvos com menos de 15% de vida.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnDamageDealt,
-                effects = listOf(Effect.ExecuteBellowHealth(threshold = 0.12))
+                effects = listOf(Effect.ExecuteBellowHealth(threshold = 0.15))
             )
         )
     )
@@ -1309,10 +1311,10 @@ object CardCatalog {
         abilities = listOf(
             Ability(
                 name = "Fúria",
-                description = "A cada golpe recebido, o Berserker entra em fúria e ganha +8 de ATK permanente.",
+                description = "A cada golpe recebido, o Berserker entra em fúria e ganha +5 de ATK permanente.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnDamageTaken,
-                effects = listOf(Effect.BuffStat(stat = Stat.ATK, value = 8.0, target = AbilityTarget.SELF))
+                effects = listOf(Effect.BuffStat(stat = Stat.ATK, value = 5.0, target = AbilityTarget.SELF))
             ),
             Ability(
                 name = "Última Resistência",
@@ -1395,12 +1397,12 @@ object CardCatalog {
         type = CardType.CHARACTER,
         rarity = Rarity.LEGENDARY,
         baseStats = mapOf(
-            Stat.HP to 580.0,
-            Stat.ATK to 88.0,
+            Stat.HP to 520.0,
+            Stat.ATK to 68.0,
             Stat.DEF to 15.0,
             Stat.SPEED to 102.0,
-            Stat.CRIT_CHANCE to 0.22,
-            Stat.CRIT_DAMAGE to 1.80
+            Stat.CRIT_CHANCE to 0.18,
+            Stat.CRIT_DAMAGE to 1.5
         ),
         statsPerLevel = mapOf(
             Stat.HP to 6.0,
@@ -1452,7 +1454,7 @@ object CardCatalog {
         rarity = Rarity.RARE,
         slot = EquipmentSlot.BOOTS,
         baseStats = mapOf(
-            Stat.SPEED to 35.0,
+            Stat.SPEED to 25.0,
             Stat.HP to -10.0
         ),
         statsPerLevel = mapOf(Stat.SPEED to 2.0),
@@ -1503,13 +1505,13 @@ object CardCatalog {
         slot = EquipmentSlot.ARMOR,
         baseStats = mapOf(
             Stat.HP to 60.0,
-            Stat.DEF to 32.0,
-            Stat.ATK to -8.0,
-            Stat.SPEED to -8.0
+            Stat.DEF to 48.0,
+            Stat.ATK to -16.0,
+            Stat.SPEED to -12.0
         ),
         statsPerLevel = mapOf(
-            Stat.DEF to 4.0,
-            Stat.HP to 5.0
+            Stat.DEF to 8.0,
+            Stat.HP to 12.0
         ),
         tags = setOf("defense", "counter", "thorns"),
         abilities = listOf(
@@ -1545,7 +1547,7 @@ object CardCatalog {
             Stat.LIFESTEAL to 0.12
         ),
         statsPerLevel = mapOf(
-            Stat.HP to 8.0,
+            Stat.HP to 18.0,
             Stat.LIFESTEAL to 0.01
         ),
         tags = setOf("sustain", "healing"),
@@ -1576,12 +1578,11 @@ object CardCatalog {
         rarity = Rarity.LEGENDARY,
         slot = EquipmentSlot.WEAPON,
         baseStats = mapOf(
-            Stat.ATK to 32.0,
-            Stat.SPEED to 10.0
+            Stat.ATK to 48.0,
+            Stat.HP to 120.0
         ),
         statsPerLevel = mapOf(
-            Stat.ATK to 3.0,
-            Stat.SPEED to 1.0
+            Stat.ATK to 2.5,
         ),
         tags = setOf("weapon", "armor-break"),
         abilities = listOf(
@@ -1743,7 +1744,7 @@ object CardCatalog {
         rarity = Rarity.RARE,
         baseStats = mapOf(
             Stat.HP to 460.0,
-            Stat.ATK to 50.0,
+            Stat.ATK to 42.0,
             Stat.DEF to 18.0,
             Stat.SPEED to 88.0,
             Stat.CRIT_CHANCE to 0.12,
@@ -1751,18 +1752,18 @@ object CardCatalog {
         ),
         statsPerLevel = mapOf(
             Stat.HP to 4.0,
-            Stat.ATK to 2.5,
+            Stat.ATK to 2.0,
             Stat.SPEED to 0.5
         ),
         tags = setOf("archer", "marksman"),
         abilities = listOf(
             Ability(
                 name = "Flecha Perfurante",
-                description = "A cada 3 ataques, dispara uma flecha carregada que causa 26 de dano extra e reduz permanentemente a DEF do alvo em 6.",
+                description = "A cada 3 ataques, dispara uma flecha carregada que causa 20 de dano extra e reduz permanentemente a DEF do alvo em 6.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnAttackEvery(3),
                 effects = listOf(
-                    Effect.Damage(value = 26.0, target = AbilityTarget.ENEMY),
+                    Effect.Damage(value = 20.0, target = AbilityTarget.ENEMY),
                     Effect.BuffStat(stat = Stat.DEF, value = -6.0, target = AbilityTarget.ENEMY)
                 )
             )
