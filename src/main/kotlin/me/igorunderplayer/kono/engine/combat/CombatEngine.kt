@@ -372,11 +372,13 @@ class CombatEngine(
             is CombatEvent.AfterDamage -> {
                 val damage = event.damage.coerceAtLeast(0.0)
 
-                event.source.stats[Stat.LIFESTEAL]?.let {
-                    if (it > 0.0) {
-                        val healAmount = damage * it
-                        state.combatLog += "🩸 ${unitLabel(event.source, state)} roubou ${"%.1f".format(healAmount)} HP com lifesteal."
-                        heal(event.source, healAmount)
+                if (event.damageType == DamageType.PHYSICAL) {
+                    event.source.stats[Stat.LIFESTEAL]?.let {
+                        if (it > 0.0) {
+                            val healAmount = damage * it
+                            state.combatLog += "🩸 ${unitLabel(event.source, state)} roubou ${"%.1f".format(healAmount)} HP com lifesteal."
+                            heal(event.source, healAmount)
+                        }
                     }
                 }
             }

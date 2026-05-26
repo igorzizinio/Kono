@@ -3,7 +3,7 @@ package me.igorunderplayer.kono.domain.card
 import me.igorunderplayer.kono.domain.card.ability.*
 import me.igorunderplayer.kono.domain.gameplay.CombatEvent
 import me.igorunderplayer.kono.domain.gameplay.TemporaryStatModifier
-import me.igorunderplayer.kono.domain.card.EquipmentSlot
+
 
 // =============================================================================
 // TIER RULES
@@ -959,36 +959,35 @@ object CardCatalog {
     // LEGENDARY EQUIPMENT
     // =========================================================================
 
+    // Easter egg item. Locks crit chance to 8% regardless of other sources, triples crit damage multiplier.
     private val critfish = CardDefinition(
         id = "CRITFISH",
         name = "Critfish",
-        description = "Uma relíquia bizarra de um peixe crítico. Não tem ATK — mas a cada 4 ataques, desfere um golpe garantido de 140% do ATK.",
+        description = "Um peixe misterioso de origem desconhecida. Raramente acerta um crítico — mas quando acerta, a realidade treme.",
         type = CardType.EQUIPMENT,
         rarity = Rarity.LEGENDARY,
         slot = EquipmentSlot.SECONDARY,
         baseStats = mapOf(
-            Stat.CRIT_CHANCE to 0.18,
-            Stat.CRIT_DAMAGE to 1.60
+            Stat.ATK to 10.0
         ),
         statsPerLevel = mapOf(
-            Stat.CRIT_CHANCE to 0.02,
-            Stat.CRIT_DAMAGE to 0.12
+            Stat.ATK to 1.0
         ),
-        tags = setOf("critfish", "critical"),
+        tags = setOf("critfish", "easter-egg", "critical"),
         abilities = listOf(
             Ability(
-                name = "Olho do Predador",
-                description = "A cada 4 ataques, o Critfish libera um golpe preciso e certeiro causando 140% do ATK do portador.",
+                name = "Natureza do Peixe",
+                description = "Trava a chance de crítico em 8%, independente de qualquer fonte. Em troca, triplica o multiplicador de dano crítico.",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnAttackEvery(4),
+                trigger = AbilityTrigger.OnBattleStart,
+                once = true,
                 effects = listOf(
-                    Effect.DamageBasedOnStat(
-                        stat = Stat.ATK,
-                        scaling = 1.4,
-                        statSource = StatSource.SELF,
-                        target = AbilityTarget.ENEMY,
-                        damageType = DamageType.PHYSICAL
-                    )
+                    Effect.Custom("CRITFISH_LOCK") { self, _, state ->
+                        val currentCritDmg = self.stats[Stat.CRIT_DAMAGE] ?: 1.5
+                        self.stats[Stat.CRIT_CHANCE] = 0.08
+                        self.stats[Stat.CRIT_DAMAGE] = currentCritDmg * 3.0
+                        state.combatLog += "🐟 Critfish travou o crítico em 8% e triplicou o multiplicador (${currentCritDmg}x → ${"%.2f".format(currentCritDmg * 3.0)}x)."
+                    }
                 )
             )
         )
@@ -1129,12 +1128,11 @@ object CardCatalog {
         abilities = listOf(
             Ability(
                 name = "Fé Ardente",
-                description = "Cada ataque fortalece a fé permanentemente: +3.5 ATK fixo e +1.5% ATK escalado.",
+                description = "Cada ataque fortalece a fé permanentemente: +3.5 ATK fixo.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnAttack,
                 effects = listOf(
-                    Effect.BuffStat(stat = Stat.ATK, value = 3.5),
-                    Effect.StatIncreasePercent(stat = Stat.ATK, percent = 0.015)
+                    Effect.BuffStat(stat = Stat.ATK, value = 3.5)
                 )
             ),
             Ability(
@@ -1533,12 +1531,12 @@ object CardCatalog {
         )
     )
 
-    // Sustain item. HP growth over time + lifesteal. No ATK contribution.
-    // Max lv14: HP +184, LIFESTEAL 0.25. Every 3 turns: +50 HP heal + +20 max HP permanently.
+    // Sustain item. Lifesteal + periodic heal. No ATK contribution.
+    // Max lv14: HP +184, LIFESTEAL 0.25. Every 3 turns: +50 HP heal.
     private val elixirVial = CardDefinition(
         id = "ELIXIR_VIAL",
         name = "Vial de Elixir",
-        description = "Um frasco de elixir que regenera e fortalece o corpo do portador. Cresce em HP permanentemente com o tempo.",
+        description = "Um frasco de elixir que regenera o portador ao longo do combate.",
         type = CardType.EQUIPMENT,
         rarity = Rarity.EPIC,
         slot = EquipmentSlot.TRINKET,
@@ -1554,12 +1552,11 @@ object CardCatalog {
         abilities = listOf(
             Ability(
                 name = "Poção Vital",
-                description = "A cada 3 turnos, cura 50 HP e ganha +20 de HP máximo permanente.",
+                description = "A cada 3 turnos, cura 50 HP.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnTurnEvery(3),
                 effects = listOf(
-                    Effect.Heal(value = 50.0, target = AbilityTarget.SELF),
-                    Effect.BuffStat(stat = Stat.HP, value = 20.0, target = AbilityTarget.SELF)
+                    Effect.Heal(value = 50.0, target = AbilityTarget.SELF)
                 )
             )
         )
@@ -1569,12 +1566,12 @@ object CardCatalog {
     // NEW — LEGENDARY EQUIPMENT
     // =========================================================================
 
-    // Armor shredder. Opens the fight with -30 DEF on all enemies, then corrodes further.
-    // Max lv18: ATK +83, SPEED +27. Powerful opener for any physical DPS team.
+    // Armor shredder. Percentage-based DEF shred — scales with enemy armor, cap ~28% total.
+    // Ruptura: -15% DEF opener to all enemies. Corrosivo: -5% per hit, 3 stacks max per enemy.
     private val siegebreaker = CardDefinition(
         id = "SIEGEBREAKER",
         name = "Quebra-Muralhas",
-        description = "Uma arma de cerco que corrói a armadura inimiga ao longo do combate. Inimigos blindados são o alvo principal.",
+        description = "Uma arma de cerco que corrói a armadura inimiga proporcionalmente. Quanto mais blindado o inimigo, mais ele sofre.",
         type = CardType.EQUIPMENT,
         rarity = Rarity.LEGENDARY,
         slot = EquipmentSlot.WEAPON,
@@ -1590,59 +1587,42 @@ object CardCatalog {
         abilities = listOf(
             Ability(
                 name = "Ruptura",
-                description = "No início da batalha, reduz a DEF de todos os inimigos em 30 permanentemente.",
+                description = "No início da batalha, corrói 15% da DEF atual de todos os inimigos.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnBattleStart,
-                effects = listOf(Effect.BuffStat(stat = Stat.DEF, value = -30.0, target = AbilityTarget.ALL_ENEMIES))
-            ),
-            Ability(
-                name = "Golpe Corrosivo",
-                description = "A cada 4 ataques, o golpe corrói a armadura do alvo, reduzindo sua DEF em 12 permanentemente.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnAttackEvery(4),
-                effects = listOf(Effect.BuffStat(stat = Stat.DEF, value = -12.0, target = AbilityTarget.ENEMY))
-            )
-        )
-    )
-
-    // On-death bomb. Passive on-hit magic, explodes for 300 on death. Suicide bomber fantasy.
-    // Max lv18: ATK +91.5. The explosion is always 300 (fixed), regardless of level.
-    private val eternalFlame = CardDefinition(
-        id = "ETERNAL_FLAME",
-        name = "Chama Eterna",
-        description = "Uma tocha que nunca se apaga. Queima inimigos a cada ataque — e ao ser destruída, explode em chamas que atingem todos.",
-        type = CardType.EQUIPMENT,
-        rarity = Rarity.LEGENDARY,
-        slot = EquipmentSlot.WEAPON,
-        baseStats = mapOf(
-            Stat.ATK to 28.0,
-            Stat.SPEED to 18.0
-        ),
-        statsPerLevel = mapOf(Stat.ATK to 3.5),
-        tags = setOf("fire", "explosive"),
-        abilities = listOf(
-            Ability(
-                name = "Chama Eterna",
-                description = "Cada ataque libera chamas que causam 25% do ATK como dano mágico adicional.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnAttack,
                 effects = listOf(
-                    Effect.DamageBasedOnStat(
-                        stat = Stat.ATK,
-                        scaling = 0.25,
-                        statSource = StatSource.SELF,
-                        target = AbilityTarget.ENEMY,
-                        damageType = DamageType.MAGIC
-                    )
+                    Effect.Custom("SIEGEBREAKER_RUPTURA") { self, _, state ->
+                        val ownerTeam = state.teams.firstOrNull { t -> t.units.any { u -> u.id == self.id } } ?: return@Custom
+                        val enemies = state.teams.filter { it != ownerTeam }.flatMap { it.units }
+                        for (enemy in enemies) {
+                            val def = enemy.stats[Stat.DEF] ?: 0.0
+                            val reduction = def * 0.15
+                            if (reduction <= 0) continue
+                            enemy.stats[Stat.DEF] = def - reduction
+                            state.combatLog += "🔩 Ruptura corroeu a armadura de ${enemy.card.name}: -${reduction.toInt()} DEF (-15%)"
+                        }
+                    }
                 )
             ),
             Ability(
-                name = "Explosão Final",
-                description = "Ao morrer, explode causando 300 de dano verdadeiro a todos os inimigos. Ocorre uma única vez.",
+                name = "Golpe Corrosivo",
+                description = "Cada ataque corrói 5% da DEF atual do alvo. Máximo de 3 acumulações por inimigo (~14% adicional).",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnDeath,
-                once = true,
-                effects = listOf(Effect.Damage(value = 300.0, target = AbilityTarget.ALL_ENEMIES, damageType = DamageType.TRUE))
+                trigger = AbilityTrigger.OnAttack,
+                effects = listOf(
+                    Effect.Custom("SIEGEBREAKER_CORROSIVE") { _, target, state ->
+                        if (target == null) return@Custom
+                        val stackKey = "sbc:${target.id}"
+                        val currentStacks = (state.globalFlags[stackKey] as? Int) ?: 0
+                        if (currentStacks >= 3) return@Custom
+                        val def = target.stats[Stat.DEF] ?: 0.0
+                        if (def <= 0.0) return@Custom
+                        val reduction = def * 0.05
+                        target.stats[Stat.DEF] = def - reduction
+                        state.globalFlags[stackKey] = currentStacks + 1
+                        state.combatLog += "🔩 Golpe Corrosivo: ${target.card.name} perdeu ${reduction.toInt()} DEF (${currentStacks + 1}/3 stacks)"
+                    }
+                )
             )
         )
     )
@@ -1846,7 +1826,6 @@ object CardCatalog {
         demonHunterCrossbow,
         allInEmblem,
         siegebreaker,
-        eternalFlame,
         twinFangKatana,
         // Equipment — Mythic
         undefined,

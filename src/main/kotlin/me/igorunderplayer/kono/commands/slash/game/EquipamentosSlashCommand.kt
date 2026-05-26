@@ -6,16 +6,18 @@ import dev.kord.common.entity.ButtonStyle
 import dev.kord.common.entity.DiscordPartialEmoji
 import dev.kord.core.behavior.interaction.response.edit
 import dev.kord.core.behavior.interaction.response.respond
-import dev.kord.core.builder.components.emoji
 import dev.kord.core.event.interaction.ButtonInteractionCreateEvent
 import dev.kord.core.event.interaction.ChatInputCommandInteractionCreateEvent
 import dev.kord.rest.builder.component.ActionRowBuilder
 import dev.kord.rest.builder.component.option
 import dev.kord.rest.builder.message.embed
 import me.igorunderplayer.kono.commands.KonoSlashCommand
+import me.igorunderplayer.kono.data.entities.CardInstance
 import me.igorunderplayer.kono.data.repositories.CardInstanceRepository
 import me.igorunderplayer.kono.data.repositories.EquippedCardsRepository
+import me.igorunderplayer.kono.data.repositories.EquippedItemView
 import me.igorunderplayer.kono.data.repositories.UserRepository
+import me.igorunderplayer.kono.domain.card.CardDefinition
 import me.igorunderplayer.kono.domain.card.EquipmentSlot
 import me.igorunderplayer.kono.domain.card.Rarity
 import me.igorunderplayer.kono.domain.card.colorDefinition
@@ -62,7 +64,7 @@ class EquipamentosSlashCommand(
                         if (item == null) {
                             appendLine("${slot.icon} **${slot.displayName}** — *vazio*")
                         } else {
-                            appendLine("${slot.icon} **${slot.displayName}** — **${item.name}** ${item.rarity.toDisplayEmoji()} `#${item.cardInstanceId}`")
+                            appendLine("${slot.icon} **${slot.displayName}** — **${item.name}** ${item.rarity.toDisplayEmoji()}")
                         }
                     }
                 }
@@ -70,12 +72,12 @@ class EquipamentosSlashCommand(
             }
             addComponent(ActionRowBuilder().apply {
                 interactionButton(ButtonStyle.Success, equipButtonId) {
-                    label = "Equipar item"
+                    label = "Equipar"
                     emoji = DiscordPartialEmoji(name = "🎒")
                 }
                 if (equipped.isNotEmpty()) {
                     interactionButton(ButtonStyle.Danger, removeButtonId) {
-                        label = "Remover item"
+                        label = "Remover"
                         emoji = DiscordPartialEmoji(name = "🗑️")
                     }
                 }
@@ -98,7 +100,7 @@ class EquipamentosSlashCommand(
         if (clickedId == equipButtonId) {
             handleEquipFlow(event, discordId, clickEvent, response)
         } else {
-            handleRemoveFlow(event, discordId, clickEvent, response)
+            handleRemoveFlow(event, discordId, clickEvent, response, equipped)
         }
     }
 
@@ -113,10 +115,11 @@ class EquipamentosSlashCommand(
             return
         }
 
-        val allEquipment = cardInstanceRepository.getOwnedEquipmentsWithDefinition(user.id)
-        val unequipped = allEquipment.filter { (instance, _) ->
-            !equippedCardsRepository.existsByCardInstanceId(instance.id)
-        }
+        // Single bulk query for all equipped IDs — no N+1
+        val equippedIds = equippedCardsRepository.getEquippedCardInstanceIdsForUser(user.id)
+        val unequipped = cardInstanceRepository.getOwnedEquipmentsWithDefinition(user.id)
+            .filter { (instance, _) -> instance.id !in equippedIds }
+            .sortedWith(compareByDescending<Pair<CardInstance, CardDefinition>> { it.second.rarity.ordinal }.thenBy { it.second.name })
 
         if (unequipped.isEmpty()) {
             response.edit { content = "🎒 Nenhum equipamento disponível para equipar."; components = mutableListOf() }
@@ -128,9 +131,9 @@ class EquipamentosSlashCommand(
 
         update.edit {
             embed {
-                title = "🎒 Equipar item"
-                description = "Selecione um item do inventário."
-                if (unequipped.size > 25) footer { text = "Exibindo os primeiros 25 de ${unequipped.size} itens" }
+                title = "🎒 Escolha um item"
+                description = "Selecione qual item equipar no personagem ativo."
+                if (unequipped.size > 25) footer { text = "Exibindo os 25 melhores de ${unequipped.size} itens" }
             }
             components = mutableListOf()
             addComponent(ActionRowBuilder().apply {
@@ -141,7 +144,7 @@ class EquipamentosSlashCommand(
                             label = "${def.rarity.toDisplayEmoji()} ${def.name}",
                             value = instance.id.toString()
                         ) {
-                            description = "${def.slot?.displayName ?: "?"} • Nível ${instance.level} • ${def.rarity.toDisplayName()}"
+                            description = "${def.slot?.icon ?: "?"} ${def.slot?.displayName ?: "Sem slot"} • Nv.${instance.level} • ${def.rarity.toDisplayName()}"
                         }
                     }
                 }
@@ -164,14 +167,14 @@ class EquipamentosSlashCommand(
             is EquipItemHandler.Result.Success -> {
                 val replaced = if (result.replaced) " (substituiu o item anterior)" else ""
                 selectUpdate.edit {
-                    content = "✅ Item equipado no slot ${result.slot.icon} **${result.slot.displayName}**$replaced."
+                    content = "✅ Item equipado em ${result.slot.icon} **${result.slot.displayName}**$replaced."
                     components = mutableListOf()
                 }
             }
             is EquipItemHandler.Result.InvalidSlot ->
                 selectUpdate.edit { content = "❌ Esse item não possui slot de equipamento."; components = mutableListOf() }
             is EquipItemHandler.Result.NoActiveCharacter ->
-                selectUpdate.edit { content = "❌ Selecione um personagem ativo antes de equipar."; components = mutableListOf() }
+                selectUpdate.edit { content = "❌ Defina um personagem ativo antes de equipar itens."; components = mutableListOf() }
             is EquipItemHandler.Result.InvalidItem ->
                 selectUpdate.edit { content = "❌ Item inválido ou não pertence a você."; components = mutableListOf() }
             is EquipItemHandler.Result.ItemAlreadyEquipped ->
@@ -183,17 +186,16 @@ class EquipamentosSlashCommand(
         event: ChatInputCommandInteractionCreateEvent,
         discordId: Long,
         buttonEvent: ButtonInteractionCreateEvent,
-        response: dev.kord.core.behavior.interaction.response.EphemeralMessageInteractionResponseBehavior
+        response: dev.kord.core.behavior.interaction.response.EphemeralMessageInteractionResponseBehavior,
+        equipped: List<EquippedItemView>
     ) {
-        val equipped = cardInstanceRepository.getEquippedItemsForActiveCharacter(discordId)
-
         val selectId = "remove-select-${discordId}-${System.currentTimeMillis()}"
         val update = buttonEvent.interaction.deferEphemeralMessageUpdate()
 
         update.edit {
             embed {
-                title = "🧩 Remover equipamento"
-                description = "Selecione o slot que deseja desequipar."
+                title = "🗑️ Remover equipamento"
+                description = "Selecione o slot que deseja desquipar."
             }
             components = mutableListOf()
             addComponent(ActionRowBuilder().apply {
@@ -225,15 +227,17 @@ class EquipamentosSlashCommand(
         val selectUpdate = selectEvent.interaction.deferEphemeralMessageUpdate()
 
         when (val result = unequipItemHandler.execute(discordId, slotInput)) {
-            is UnequipItemHandler.Result.Success ->
+            is UnequipItemHandler.Result.Success -> {
+                val itemName = equipped.firstOrNull { EquipmentSlot.fromIndex(it.slot)?.name == slotInput }?.name ?: "Item"
                 selectUpdate.edit {
-                    content = "✅ Item #${result.itemInstanceId} removido do slot ${result.slot.icon} **${result.slot.displayName}**."
+                    content = "✅ **$itemName** removido do slot ${result.slot.icon} **${result.slot.displayName}**."
                     components = mutableListOf()
                 }
+            }
             is UnequipItemHandler.Result.InvalidSlot ->
                 selectUpdate.edit { content = "❌ Slot inválido: `${result.input}`."; components = mutableListOf() }
             is UnequipItemHandler.Result.NoActiveCharacter ->
-                selectUpdate.edit { content = "❌ Selecione um personagem ativo antes de remover itens."; components = mutableListOf() }
+                selectUpdate.edit { content = "❌ Defina um personagem ativo antes de remover itens."; components = mutableListOf() }
             is UnequipItemHandler.Result.EmptySlot ->
                 selectUpdate.edit { content = "❌ Esse slot não possui item equipado."; components = mutableListOf() }
         }

@@ -50,6 +50,15 @@ class EquippedCardsRepository(
             .totalRecordsInAllPages > 0
     }
 
+    suspend fun getEquippedCardInstanceIdsForUser(userId: Int): Set<Int> = withContext(Dispatchers.IO) {
+        database.from(EquippedCards)
+            .innerJoin(CardInstances, on = EquippedCards.characterInstanceId eq CardInstances.id)
+            .select(EquippedCards.cardInstanceId)
+            .where { CardInstances.userId eq userId }
+            .mapNotNull { it[EquippedCards.cardInstanceId] }
+            .toSet()
+    }
+
     suspend fun findCardInstanceIdByCharacterAndSlot(characterId: Int, slot: Int): Int? = withContext(Dispatchers.IO) {
         database.from(EquippedCards)
             .select(EquippedCards.cardInstanceId)
