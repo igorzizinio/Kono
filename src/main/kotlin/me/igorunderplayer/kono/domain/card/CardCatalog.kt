@@ -38,9 +38,9 @@ object CardCatalog {
             Stat.CRIT_DAMAGE to 1.20
         ),
         statsPerLevel = mapOf(
-            Stat.HP to 6.0,
-            Stat.ATK to 1.5,
-            Stat.DEF to 1.0
+            Stat.HP to 10.0,
+            Stat.ATK to 2.5,
+            Stat.DEF to 1.5
         ),
         tags = setOf("slime", "starter"),
         abilities = listOf(
@@ -69,9 +69,9 @@ object CardCatalog {
             Stat.CRIT_DAMAGE to 1.20
         ),
         statsPerLevel = mapOf(
-            Stat.HP to 5.0,
-            Stat.ATK to 2.0,
-            Stat.DEF to 1.5
+            Stat.HP to 8.0,
+            Stat.ATK to 3.0,
+            Stat.DEF to 2.0
         ),
         tags = setOf("starter"),
         abilities = emptyList()
@@ -96,9 +96,9 @@ object CardCatalog {
             Stat.CRIT_DAMAGE to 1.40
         ),
         statsPerLevel = mapOf(
-            Stat.HP to 3.0,
-            Stat.ATK to 3.0,
-            Stat.SPEED to 1.5
+            Stat.HP to 5.0,
+            Stat.ATK to 4.5,
+            Stat.SPEED to 2.0
         ),
         tags = setOf("starter"),
         abilities = listOf(
@@ -132,9 +132,9 @@ object CardCatalog {
             Stat.CRIT_DAMAGE to 1.30
         ),
         statsPerLevel = mapOf(
-            Stat.HP to 8.0,
-            Stat.ATK to 1.0,
-            Stat.DEF to 2.0
+            Stat.HP to 15.0,
+            Stat.ATK to 1.5,
+            Stat.DEF to 3.0
         ),
         tags = setOf("gambler", "tank", "defense", "protector", "frontline"),
         abilities = listOf(
@@ -184,9 +184,9 @@ object CardCatalog {
             Stat.CRIT_DAMAGE to 1.30
         ),
         statsPerLevel = mapOf(
-            Stat.HP to 3.0,
-            Stat.ATK to 2.0,
-            Stat.SPEED to 1.5,
+            Stat.HP to 5.0,
+            Stat.ATK to 3.0,
+            Stat.SPEED to 2.0,
             Stat.CRIT_CHANCE to 0.01
         ),
         tags = setOf("rng", "gambler", "speed", "archer", "marksman", "risk"),
@@ -227,9 +227,9 @@ object CardCatalog {
             Stat.CRIT_DAMAGE to 1.40
         ),
         statsPerLevel = mapOf(
-            Stat.HP to 5.0,
-            Stat.ATK to 2.5,
-            Stat.DEF to 1.5
+            Stat.HP to 8.0,
+            Stat.ATK to 3.5,
+            Stat.DEF to 2.0
         ),
         tags = setOf("gambler", "economy", "scaling", "support"),
         abilities = listOf(
@@ -280,9 +280,9 @@ object CardCatalog {
             Stat.CRIT_DAMAGE to 1.30
         ),
         statsPerLevel = mapOf(
-            Stat.HP to 14.0,
-            Stat.ATK to 4.0,
-            Stat.DEF to 2.0
+            Stat.HP to 18.0,
+            Stat.ATK to 5.0,
+            Stat.DEF to 3.0
         ),
         abilities = listOf(
             Ability(
@@ -362,9 +362,9 @@ object CardCatalog {
             Stat.CRIT_DAMAGE to 1.60
         ),
         statsPerLevel = mapOf(
-            Stat.HP to 6.0,
-            Stat.ATK to 4.0,
-            Stat.DEF to 2.0,
+            Stat.HP to 10.0,
+            Stat.ATK to 5.5,
+            Stat.DEF to 2.5,
             Stat.CRIT_CHANCE to 0.01,
             Stat.CRIT_DAMAGE to 0.02
         ),
@@ -399,9 +399,9 @@ object CardCatalog {
             Stat.CRIT_DAMAGE to 1.50
         ),
         statsPerLevel = mapOf(
-            Stat.HP to 25.0,
-            Stat.ATK to 5.0,
-            Stat.DEF to 5.0
+            Stat.HP to 32.0,
+            Stat.ATK to 6.0,
+            Stat.DEF to 6.0
         ),
         tags = setOf("tank", "bruiser", "faith", "scaling", "sustain"),
         abilities = listOf(
@@ -650,7 +650,7 @@ object CardCatalog {
         rarity = Rarity.COMMON,
         slot = EquipmentSlot.WEAPON,
         baseStats = mapOf(Stat.ATK to 14.0),
-        statsPerLevel = mapOf(Stat.ATK to 1.5),
+        statsPerLevel = mapOf(Stat.ATK to 2.5),
         tags = setOf("starter"),
         abilities = emptyList()
     )
@@ -667,8 +667,8 @@ object CardCatalog {
             Stat.SPEED to 5.0
         ),
         statsPerLevel = mapOf(
-            Stat.ATK to 1.0,
-            Stat.SPEED to 0.5
+            Stat.ATK to 1.5,
+            Stat.SPEED to 1.0
         ),
         tags = setOf("starter"),
         abilities = emptyList()
@@ -682,7 +682,7 @@ object CardCatalog {
         rarity = Rarity.COMMON,
         slot = EquipmentSlot.ARMOR,
         baseStats = mapOf(Stat.DEF to 26.0),
-        statsPerLevel = mapOf(Stat.DEF to 2.0),
+        statsPerLevel = mapOf(Stat.DEF to 3.5),
         tags = setOf("armor", "defense"),
         abilities = emptyList()
     )
@@ -702,7 +702,7 @@ object CardCatalog {
             Stat.ATK to 28.0,
             Stat.SPEED to -4.0
         ),
-        statsPerLevel = mapOf(Stat.ATK to 2.0),
+        statsPerLevel = mapOf(Stat.ATK to 3.5),
         tags = setOf("weapon", "starter", "iron"),
         abilities = emptyList()
     )
@@ -720,8 +720,8 @@ object CardCatalog {
             Stat.ATK to -8.0
         ),
         statsPerLevel = mapOf(
-            Stat.DEF to 2.0,
-            Stat.HP to 8.0
+            Stat.DEF to 3.0,
+            Stat.HP to 12.0
         ),
         tags = setOf("shield", "starter", "iron"),
         abilities = emptyList()
@@ -738,7 +738,7 @@ object CardCatalog {
             Stat.DEF to 50.0,
             Stat.SPEED to -20.0
         ),
-        statsPerLevel = mapOf(Stat.DEF to 3.0),
+        statsPerLevel = mapOf(Stat.DEF to 5.0),
         tags = setOf("heavy", "armor", "defense"),
         abilities = emptyList()
     )
@@ -757,8 +757,8 @@ object CardCatalog {
             Stat.DEF to -6.0
         ),
         statsPerLevel = mapOf(
-            Stat.ATK to 0.8,
-            Stat.SPEED to 0.3,
+            Stat.ATK to 1.5,
+            Stat.SPEED to 0.8,
             Stat.CRIT_CHANCE to 0.01
         ),
         tags = setOf("iron", "speed", "crit"),
@@ -781,7 +781,7 @@ object CardCatalog {
         rarity = Rarity.RARE,
         slot = EquipmentSlot.TRINKET,
         baseStats = mapOf(Stat.LIFESTEAL to 0.12),
-        statsPerLevel = mapOf(Stat.LIFESTEAL to 0.01),
+        statsPerLevel = mapOf(Stat.LIFESTEAL to 0.015),
         tags = setOf("lifesteal", "vampire"),
         abilities = emptyList()
     )
@@ -803,9 +803,9 @@ object CardCatalog {
             Stat.SPEED to 12.0
         ),
         statsPerLevel = mapOf(
-            Stat.ATK to 1.5,
-            Stat.SPEED to 0.5,
-            Stat.CRIT_CHANCE to 0.01
+            Stat.ATK to 2.5,
+            Stat.SPEED to 1.0,
+            Stat.CRIT_CHANCE to 0.015
         ),
         tags = setOf("steel", "speed", "crit", "polished"),
         abilities = listOf(
@@ -832,8 +832,8 @@ object CardCatalog {
             Stat.LIFESTEAL to 0.20
         ),
         statsPerLevel = mapOf(
-            Stat.ATK to 2.0,
-            Stat.LIFESTEAL to 0.01
+            Stat.ATK to 3.0,
+            Stat.LIFESTEAL to 0.015
         ),
         tags = setOf("vampire", "lifesteal"),
         abilities = emptyList()
@@ -850,7 +850,7 @@ object CardCatalog {
             Stat.ATK to 44.0,
             Stat.SPEED to -20.0
         ),
-        statsPerLevel = mapOf(Stat.ATK to 6.0),
+        statsPerLevel = mapOf(Stat.ATK to 8.0),
         tags = setOf("iron", "great", "heavy"),
         abilities = listOf(
             Ability(
@@ -884,8 +884,8 @@ object CardCatalog {
             Stat.CRIT_DAMAGE to 0.22
         ),
         statsPerLevel = mapOf(
-            Stat.CRIT_CHANCE to 0.01,
-            Stat.CRIT_DAMAGE to 0.03
+            Stat.CRIT_CHANCE to 0.015,
+            Stat.CRIT_DAMAGE to 0.05
         ),
         tags = setOf("gambler", "chaos"),
         abilities = listOf(
@@ -911,7 +911,7 @@ object CardCatalog {
             Stat.ATK to 44.0,
             Stat.SPEED to -14.0
         ),
-        statsPerLevel = mapOf(Stat.ATK to 4.0),
+        statsPerLevel = mapOf(Stat.ATK to 6.0),
         tags = setOf("faith", "support", "scaling"),
         abilities = listOf(
             Ability(
@@ -972,7 +972,7 @@ object CardCatalog {
             Stat.ATK to 10.0
         ),
         statsPerLevel = mapOf(
-            Stat.ATK to 1.0
+            Stat.ATK to 2.0
         ),
         tags = setOf("critfish", "easter-egg", "critical"),
         abilities = listOf(
@@ -1005,7 +1005,7 @@ object CardCatalog {
             Stat.SPEED to 18.0,
             Stat.ATK to 18.0
         ),
-        statsPerLevel = mapOf(Stat.SPEED to 2.5),
+        statsPerLevel = mapOf(Stat.SPEED to 4.0),
         tags = setOf("speed"),
         abilities = listOf(
             Ability(
@@ -1039,8 +1039,8 @@ object CardCatalog {
             Stat.CRIT_CHANCE to 0.12
         ),
         statsPerLevel = mapOf(
-            Stat.ATK to 3.0,
-            Stat.CRIT_CHANCE to 0.01
+            Stat.ATK to 5.0,
+            Stat.CRIT_CHANCE to 0.015
         ),
         tags = setOf("gambler", "markus", "signature", "weapon", "risk", "chaos"),
         abilities = listOf(
@@ -1198,8 +1198,8 @@ object CardCatalog {
             Stat.CRIT_DAMAGE to 1.15
         ),
         statsPerLevel = mapOf(
-            Stat.HP to 4.0,
-            Stat.ATK to 3.0
+            Stat.HP to 7.0,
+            Stat.ATK to 4.5
         ),
         tags = setOf("starter", "fast"),
         abilities = emptyList()
@@ -1226,8 +1226,8 @@ object CardCatalog {
             Stat.CRIT_DAMAGE to 1.20
         ),
         statsPerLevel = mapOf(
-            Stat.HP to 8.0,
-            Stat.DEF to 4.0
+            Stat.HP to 14.0,
+            Stat.DEF to 6.0
         ),
         tags = setOf("tank", "defense"),
         abilities = listOf(
@@ -1262,9 +1262,9 @@ object CardCatalog {
             Stat.CRIT_DAMAGE to 1.55
         ),
         statsPerLevel = mapOf(
-            Stat.HP to 3.0,
-            Stat.ATK to 4.0,
-            Stat.SPEED to 2.0,
+            Stat.HP to 5.0,
+            Stat.ATK to 6.0,
+            Stat.SPEED to 2.5,
             Stat.CRIT_CHANCE to 0.01
         ),
         tags = setOf("fast", "assassin"),
@@ -1303,9 +1303,9 @@ object CardCatalog {
             Stat.CRIT_DAMAGE to 1.40
         ),
         statsPerLevel = mapOf(
-            Stat.HP to 6.0,
-            Stat.ATK to 3.0,
-            Stat.SPEED to 1.0
+            Stat.HP to 10.0,
+            Stat.ATK to 4.5,
+            Stat.SPEED to 1.5
         ),
         tags = setOf("rage", "bruiser"),
         abilities = listOf(
@@ -1350,9 +1350,9 @@ object CardCatalog {
             Stat.CRIT_DAMAGE to 1.25
         ),
         statsPerLevel = mapOf(
-            Stat.HP to 15.0,
-            Stat.DEF to 5.0,
-            Stat.ATK to 2.0
+            Stat.HP to 22.0,
+            Stat.DEF to 7.0,
+            Stat.ATK to 2.5
         ),
         tags = setOf("tank", "defense", "counter"),
         abilities = listOf(
@@ -1405,9 +1405,9 @@ object CardCatalog {
             Stat.CRIT_DAMAGE to 1.5
         ),
         statsPerLevel = mapOf(
-            Stat.HP to 6.0,
-            Stat.ATK to 6.0,
-            Stat.SPEED to 2.0,
+            Stat.HP to 10.0,
+            Stat.ATK to 8.0,
+            Stat.SPEED to 2.5,
             Stat.CRIT_CHANCE to 0.01
         ),
         tags = setOf("mage", "aoe", "glass-cannon"),
@@ -1457,7 +1457,7 @@ object CardCatalog {
             Stat.SPEED to 25.0,
             Stat.HP to -10.0
         ),
-        statsPerLevel = mapOf(Stat.SPEED to 2.0),
+        statsPerLevel = mapOf(Stat.SPEED to 3.5),
         tags = setOf("speed", "light"),
         abilities = emptyList()
     )
@@ -1475,7 +1475,7 @@ object CardCatalog {
             Stat.ATK to 20.0,
             Stat.DEF to -8.0
         ),
-        statsPerLevel = mapOf(Stat.ATK to 1.5),
+        statsPerLevel = mapOf(Stat.ATK to 2.5),
         tags = setOf("magic", "aoe"),
         abilities = listOf(
             Ability(
@@ -1510,8 +1510,8 @@ object CardCatalog {
             Stat.SPEED to -12.0
         ),
         statsPerLevel = mapOf(
-            Stat.DEF to 8.0,
-            Stat.HP to 12.0
+            Stat.DEF to 11.0,
+            Stat.HP to 16.0
         ),
         tags = setOf("defense", "counter", "thorns"),
         abilities = listOf(
@@ -1547,8 +1547,8 @@ object CardCatalog {
             Stat.LIFESTEAL to 0.12
         ),
         statsPerLevel = mapOf(
-            Stat.HP to 18.0,
-            Stat.LIFESTEAL to 0.01
+            Stat.HP to 24.0,
+            Stat.LIFESTEAL to 0.015
         ),
         tags = setOf("sustain", "healing"),
         abilities = listOf(
@@ -1582,7 +1582,7 @@ object CardCatalog {
             Stat.HP to 120.0
         ),
         statsPerLevel = mapOf(
-            Stat.ATK to 2.5,
+            Stat.ATK to 4.5,
         ),
         tags = setOf("weapon", "armor-break"),
         abilities = listOf(
@@ -1642,9 +1642,9 @@ object CardCatalog {
             Stat.CRIT_DAMAGE to 0.35
         ),
         statsPerLevel = mapOf(
-            Stat.ATK to 2.0,
-            Stat.SPEED to 0.8,
-            Stat.CRIT_CHANCE to 0.01
+            Stat.ATK to 3.5,
+            Stat.SPEED to 1.5,
+            Stat.CRIT_CHANCE to 0.015
         ),
         tags = setOf("katana", "crit", "speed"),
         abilities = listOf(
@@ -1693,8 +1693,8 @@ object CardCatalog {
             Stat.DEF to -35.0
         ),
         statsPerLevel = mapOf(
-            Stat.ATK to 8.0,
-            Stat.HP to 12.0
+            Stat.ATK to 12.0,
+            Stat.HP to 18.0
         ),
         tags = setOf("cosmic", "aoe", "scaling"),
         abilities = listOf(
@@ -1751,9 +1751,9 @@ object CardCatalog {
             Stat.CRIT_DAMAGE to 1.35
         ),
         statsPerLevel = mapOf(
-            Stat.HP to 4.0,
-            Stat.ATK to 2.0,
-            Stat.SPEED to 0.5
+            Stat.HP to 7.0,
+            Stat.ATK to 3.0,
+            Stat.SPEED to 1.0
         ),
         tags = setOf("archer", "marksman"),
         abilities = listOf(
