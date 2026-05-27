@@ -2317,6 +2317,51 @@ object CardCatalog {
         )
     )
 
+    private val swiftHunterCloth = CardDefinition(
+        id = "SWIFT_HUNTER_CLOTH",
+        name = "Manto do Vento Cortante",
+        description = "Tecido leve imbuído de ventos afiados. Privilegia quem atinge rápido e com precisão — e cada crítico acertado alimenta ainda mais velocidade.",
+        type = CardType.EQUIPMENT,
+        rarity = Rarity.EPIC,
+        slot = EquipmentSlot.ARMOR,
+        baseStats = mapOf(
+            Stat.SPEED to 32.0,
+            Stat.CRIT_CHANCE to 0.15,
+            Stat.CRIT_DAMAGE to 0.30,
+            Stat.DEF to -8.0
+        ),
+        statsPerLevel = mapOf(
+            Stat.SPEED to 3.0,
+            Stat.CRIT_CHANCE to 0.015
+        ),
+        tags = setOf("speed", "crit", "light"),
+        abilities = listOf(
+            Ability(
+                name = "Conversão Aerodinâmica",
+                description = "No início da batalha, converte 8% da SPEED atual em bônus de dano crítico permanente.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnBattleStart,
+                effects = listOf(
+                    Effect.Custom("Speed to crit damage") { self, _, state ->
+                        val speed = self.stats[Stat.SPEED] ?: 0.0
+                        val bonus = speed * 0.08
+                        self.stats[Stat.CRIT_DAMAGE] = (self.stats[Stat.CRIT_DAMAGE] ?: 0.0) + bonus
+                        state.combatLog += "💨 ${self.card.name} converteu velocidade em poder crítico (+${"%.2f".format(bonus)}x CRIT DMG)."
+                    }
+                )
+            ),
+            Ability(
+                name = "Aceleração Instintiva",
+                description = "Cada crítico acertado acelera o portador permanentemente: +2 SPEED.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnCrit,
+                effects = listOf(
+                    Effect.BuffStat(stat = Stat.SPEED, value = 2.0, target = AbilityTarget.SELF)
+                )
+            )
+        )
+    )
+
     private val heavySteelBoots = CardDefinition(
         id = "HAEVY_STEEL_BOOTS",
         name = "Botas de Aço Pesadas",
@@ -2344,6 +2389,37 @@ object CardCatalog {
                         target = AbilityTarget.ALL_ENEMIES,
                         damageType = DamageType.PHYSICAL
                     )
+                )
+            )
+        )
+    )
+
+    val renouncedSwordCloth = CardDefinition(
+        id = "RENOUNCED_SWORD_CLOTH",
+        name = "Vestes da Espada Renunciada",
+        description = "A vestimenta daquela que abandonou seu próprio nome para tornar-se apenas uma extensão da lâmina. Dizem que o tecido ainda pulsa ao ouvir o som de espadas gêmeas",
+        type = CardType.EQUIPMENT,
+        slot = EquipmentSlot.ARMOR,
+        rarity = Rarity.LEGENDARY,
+        faction = "kono",
+        tags = setOf("kono", "celestial", "physical", "magic"),
+        baseStats = mapOf(
+            Stat.ATK to 75.0,
+            Stat.INT to 75.0,
+            Stat.SPEED to 15.0
+        ),
+        statsPerLevel = mapOf(
+            Stat.ATK to 8.0,
+            Stat.INT to 8.0,
+        ),
+        abilities = listOf(
+            Ability(
+                name = "Corte Gêmeo Espectral",
+                description = "Um espectro replica os ataques da lâmina esquerda causando dano mágico adicional.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnAttack,
+                effects = listOf(
+                    Effect.DamageBasedOnStat(Stat.INT, 0.8, damageType = DamageType.MAGIC)
                 )
             )
         )
@@ -2421,6 +2497,55 @@ object CardCatalog {
                             val hp = self.stats[Stat.HP] ?: 0.0
                             self.stats[Stat.HP] = hp * 2.0
                         }
+                    }
+                )
+            ),
+            Ability(
+                name = "Benção das laminas irmãs",
+                type = AbilityType.PASSIVE,
+                once = true,
+                trigger = AbilityTrigger.OnBattleStart,
+                effects = listOf(
+                    Effect.Custom("Double twin stats") { self, _, state ->
+                        val twin = self.equipments.find { it.id == "KONO_TWINBLADE_L" }
+
+                        if (twin != null) {
+                            state.combatLog += "⚔️ As laminas gemêas estão juntas novamente... seu poder real foi despertado"
+
+                            val int = self.stats[Stat.INT] ?: 0.0
+                            self.stats[Stat.INT] = int * 2.0
+
+                            val speed = self.stats[Stat.SPEED] ?: 0.0
+                            self.stats[Stat.SPEED] = speed * 2.0
+
+                            val hp = self.stats[Stat.HP] ?: 0.0
+                            self.stats[Stat.HP] = hp * 2.0
+                        }
+                    }
+                )
+            ),
+            Ability(
+                name = "Redemoinho das Lâminas Gêmeas",
+                description = "Quando ambas as lâminas estão presentes, a cada 3 ataques desencadeia um giro devastador — 4 golpes alternados: físico (INT), mágico (ATK), físico (INT), mágico (ATK) — causando 45% por golpe.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnAttackEvery(3),
+                effects = listOf(
+                    Effect.Custom("Twin spin attack") { self, target, state ->
+                        val twin = self.equipments.find { it.id == "KONO_TWINBLADE_L" }
+                        if (twin == null || target == null || target.hp <= 0) return@Custom
+
+                        val intStat = self.stats[Stat.INT] ?: 0.0
+                        val atkStat = self.stats[Stat.ATK] ?: 0.0
+                        val physDamage = intStat * 0.45
+                        val magicDamage = atkStat * 0.45
+
+                        state.combatLog += "🌀 ${self.card.name} desencadeia o Redemoinho das Lâminas Gêmeas!"
+
+                        // Physical (INT) → Magic (ATK) → Physical (INT) → Magic (ATK)
+                        state.queue.add(CombatEvent.BeforeDamage(source = self, target = target, damage = physDamage, damageType = DamageType.PHYSICAL, canCrit = false))
+                        state.queue.add(CombatEvent.BeforeDamage(source = self, target = target, damage = magicDamage, damageType = DamageType.MAGIC, canCrit = false))
+                        state.queue.add(CombatEvent.BeforeDamage(source = self, target = target, damage = physDamage, damageType = DamageType.PHYSICAL, canCrit = false))
+                        state.queue.add(CombatEvent.BeforeDamage(source = self, target = target, damage = magicDamage, damageType = DamageType.MAGIC, canCrit = false))
                     }
                 )
             )
@@ -2515,12 +2640,12 @@ object CardCatalog {
         // Equipment — Epic
         polishedKatana, vampireCore, greatsword,
         gamblerCharm, devotionStaff, thornmail,
-        elixirVial, heavySteelBoots, aureGoldenArmor,
+        elixirVial, heavySteelBoots, swiftHunterCloth, aureGoldenArmor,
         bulwarkShield, arcaneFocus,
         // Equipment — Legendary
         critfish, demonHunterCrossbow, allInEmblem,
         siegebreaker, twinFangKatana, solarbrand,
-        stormBoots, soulPendant,
+        stormBoots, soulPendant, renouncedSwordCloth,
         // Equipment — Mythic
         undefined, sunGodGreatsword, cosmicOrb,
 

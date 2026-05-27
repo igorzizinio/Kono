@@ -51,6 +51,10 @@ class CombatEngine(
 
             val attackCount = resolveAttackCount(unit)
 
+            if (attackCount > 1) {
+                state.combatLog += "⚡ ${unitLabel(unit, state)} vai atacar $attackCount vezes este turno! (SPEED: ${unit.stats[Stat.SPEED]?.toInt() ?: 0})"
+            }
+
             repeat(attackCount) {
                 val target = findTarget(unit) ?: return@repeat
                 enqueue(CombatEvent.Attack(unit, target))
