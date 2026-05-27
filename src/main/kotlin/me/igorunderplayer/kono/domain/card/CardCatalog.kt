@@ -687,6 +687,25 @@ object CardCatalog {
         abilities = emptyList()
     )
 
+    private val ironTorc = CardDefinition(
+        id = "IRON_TORC",
+        name = "Torque de Ferro",
+        description = "Um anel de pescoço simples que fortalece levemente o portador. Sem magias, sem truques.",
+        type = CardType.EQUIPMENT,
+        rarity = Rarity.COMMON,
+        slot = EquipmentSlot.TRINKET,
+        baseStats = mapOf(
+            Stat.HP to 55.0,
+            Stat.DEF to 10.0
+        ),
+        statsPerLevel = mapOf(
+            Stat.HP to 6.0,
+            Stat.DEF to 1.0
+        ),
+        tags = setOf("starter", "defense"),
+        abilities = emptyList()
+    )
+
     // =========================================================================
     // RARE EQUIPMENT
     // =========================================================================
@@ -784,6 +803,50 @@ object CardCatalog {
         statsPerLevel = mapOf(Stat.LIFESTEAL to 0.015),
         tags = setOf("lifesteal", "vampire"),
         abilities = emptyList()
+    )
+
+    private val magicCrystal = CardDefinition(
+        id = "MAGIC_CRYSTAL",
+        name = "Cristal Arcano",
+        description = "Um fragmento de cristal carregado de energia mágica. Aguça a consciência arcana, aumentando a resistência a feitiços.",
+        type = CardType.EQUIPMENT,
+        rarity = Rarity.RARE,
+        slot = EquipmentSlot.TRINKET,
+        baseStats = mapOf(
+            Stat.INT to 28.0,
+            Stat.HP to -15.0
+        ),
+        statsPerLevel = mapOf(Stat.INT to 3.5),
+        tags = setOf("magic", "int"),
+        abilities = emptyList()
+    )
+
+    private val reinforcedPauldrons = CardDefinition(
+        id = "REINFORCED_PAULDRONS",
+        name = "Paramentos Reforçados",
+        description = "Ombros reforçados com placas extras. Oferece proteção sólida e endurece gradualmente durante o combate.",
+        type = CardType.EQUIPMENT,
+        rarity = Rarity.RARE,
+        slot = EquipmentSlot.ARMOR,
+        baseStats = mapOf(
+            Stat.DEF to 34.0,
+            Stat.HP to 55.0,
+            Stat.ATK to -6.0
+        ),
+        statsPerLevel = mapOf(
+            Stat.DEF to 3.5,
+            Stat.HP to 7.0
+        ),
+        tags = setOf("armor", "defense"),
+        abilities = listOf(
+            Ability(
+                name = "Enrijecer",
+                description = "A cada 3 turnos, as placas se ajustam e ganham +4 DEF permanente.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnTurnEvery(3),
+                effects = listOf(Effect.BuffStat(stat = Stat.DEF, value = 4.0, target = AbilityTarget.SELF))
+            )
+        )
     )
 
     // =========================================================================
@@ -956,6 +1019,71 @@ object CardCatalog {
         )
     )
 
+    private val bulwarkShield = CardDefinition(
+        id = "BULWARK_SHIELD",
+        name = "Escudo Fortaleza",
+        description = "Uma muralha portátil. Absorve dano expressivo — e quando o portador está à beira da morte, endurece ainda mais.",
+        type = CardType.EQUIPMENT,
+        rarity = Rarity.EPIC,
+        slot = EquipmentSlot.SECONDARY,
+        baseStats = mapOf(
+            Stat.DEF to 46.0,
+            Stat.HP to 90.0,
+            Stat.ATK to -16.0
+        ),
+        statsPerLevel = mapOf(
+            Stat.DEF to 4.5,
+            Stat.HP to 14.0
+        ),
+        tags = setOf("shield", "defense", "tank"),
+        abilities = listOf(
+            Ability(
+                name = "Última Barreira",
+                description = "Ao cair abaixo de 50% de vida, o escudo se fortalece: +30% DEF permanente. Ocorre uma única vez.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnBellowHealth(0.50),
+                once = true,
+                effects = listOf(Effect.StatIncreasePercent(stat = Stat.DEF, percent = 0.30))
+            )
+        )
+    )
+
+    private val arcaneFocus = CardDefinition(
+        id = "ARCANE_FOCUS",
+        name = "Foco Arcano",
+        description = "Um amuleto que canaliza energia mágica pura. Quanto mais INT o portador tiver, mais devastadora é a descarga periódica.",
+        type = CardType.EQUIPMENT,
+        rarity = Rarity.EPIC,
+        slot = EquipmentSlot.TRINKET,
+        baseStats = mapOf(
+            Stat.INT to 50.0,
+            Stat.ATK to 18.0,
+            Stat.DEF to -12.0
+        ),
+        statsPerLevel = mapOf(
+            Stat.INT to 5.0,
+            Stat.ATK to 2.0
+        ),
+        tags = setOf("magic", "int", "aoe"),
+        abilities = listOf(
+            Ability(
+                name = "Descarga Arcana",
+                description = "A cada 2 turnos, libera uma descarga de energia arcana causando 30% do INT atual como dano mágico a todos os inimigos.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnTurnEvery(2),
+                effects = listOf(
+                    Effect.DamageBasedOnStat(
+                        stat = Stat.INT,
+                        scaling = 0.30,
+                        statSource = StatSource.SELF,
+                        target = AbilityTarget.ALL_ENEMIES,
+                        damageType = DamageType.MAGIC
+                    )
+                )
+            )
+        )
+    )
+
     // =========================================================================
     // LEGENDARY EQUIPMENT
     // =========================================================================
@@ -1060,6 +1188,72 @@ object CardCatalog {
                     Effect.AddCoins(value = 1, scaleWithGangSynergy = false),
                     Effect.Random(profile = "MARKUS_GAMBLER")
                 )
+            )
+        )
+    )
+
+    private val stormBoots = CardDefinition(
+        id = "STORM_BOOTS",
+        name = "Botas da Tempestade",
+        description = "Botas imbuídas de eletricidade. Cada passo acumula voltagem — e a cada ataque, parte dessa energia é descarregada no inimigo.",
+        type = CardType.EQUIPMENT,
+        rarity = Rarity.LEGENDARY,
+        slot = EquipmentSlot.BOOTS,
+        baseStats = mapOf(
+            Stat.SPEED to 44.0,
+            Stat.CRIT_CHANCE to 0.10,
+            Stat.ATK to 14.0
+        ),
+        statsPerLevel = mapOf(
+            Stat.SPEED to 4.5,
+            Stat.CRIT_CHANCE to 0.01
+        ),
+        tags = setOf("speed", "lightning", "crit"),
+        abilities = listOf(
+            Ability(
+                name = "Carga Relâmpago",
+                description = "A cada ataque, libera uma descarga elétrica que causa 18% da SPEED atual como dano mágico.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnAttack,
+                effects = listOf(
+                    Effect.DamageBasedOnStat(
+                        stat = Stat.SPEED,
+                        scaling = 0.18,
+                        statSource = StatSource.SELF,
+                        target = AbilityTarget.ENEMY,
+                        damageType = DamageType.MAGIC
+                    )
+                )
+            )
+        )
+    )
+
+    private val soulPendant = CardDefinition(
+        id = "SOUL_PENDANT",
+        name = "Pingente da Alma",
+        description = "Um amuleto que contém um fragmento de alma. Cada crítico absorve vitalidade do inimigo, devolvendo força ao portador.",
+        type = CardType.EQUIPMENT,
+        rarity = Rarity.LEGENDARY,
+        slot = EquipmentSlot.TRINKET,
+        baseStats = mapOf(
+            Stat.ATK to 28.0,
+            Stat.LIFESTEAL to 0.20,
+            Stat.CRIT_CHANCE to 0.12,
+            Stat.CRIT_DAMAGE to 0.40
+        ),
+        statsPerLevel = mapOf(
+            Stat.ATK to 4.0,
+            Stat.CRIT_CHANCE to 0.01,
+            Stat.LIFESTEAL to 0.01
+        ),
+        tags = setOf("lifesteal", "crit", "sustain"),
+        abilities = listOf(
+            Ability(
+                name = "Absorção de Alma",
+                description = "Ao acertar um crítico, a alma absorvida recupera 80 HP.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnCrit,
+                effects = listOf(Effect.Heal(value = 80.0, target = AbilityTarget.SELF))
             )
         )
     )
@@ -1673,12 +1867,6 @@ object CardCatalog {
         )
     )
 
-    // =========================================================================
-    // NEW — MYTHIC EQUIPMENT
-    // =========================================================================
-
-    // AoE scaling orb. Huge ATK/HP gains, -35 DEF penalty. Grows indefinitely via Vortex.
-    // Max lv20: ATK +152, HP +228. Singularidade: +30% ATK/HP on start. Pulse: 50% ATK magic AoE every 2 turns.
     private val cosmicOrb = CardDefinition(
         id = "COSMIC_ORB",
         name = "Orbe Cósmico",
@@ -1687,9 +1875,9 @@ object CardCatalog {
         rarity = Rarity.MYTHIC,
         slot = EquipmentSlot.TRINKET,
         baseStats = mapOf(
-            Stat.ATK to 60.0,
-            Stat.HP to 100.0,
-            Stat.SPEED to 25.0,
+            Stat.ATK to 80.0,
+            Stat.HP to 80.0,
+            Stat.SPEED to 12.0,
             Stat.DEF to -35.0
         ),
         statsPerLevel = mapOf(
@@ -1725,12 +1913,12 @@ object CardCatalog {
             ),
             Ability(
                 name = "Vórtice de Poder",
-                description = "A cada 4 turnos, o vórtice se intensifica, concedendo +30 ATK e +8 SPEED permanentes.",
+                description = "A cada 4 turnos, o vórtice se intensifica, concedendo +32 ATK e +2 SPEED permanentes.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnTurnEvery(4),
                 effects = listOf(
-                    Effect.BuffStat(stat = Stat.ATK, value = 30.0),
-                    Effect.BuffStat(stat = Stat.SPEED, value = 8.0)
+                    Effect.BuffStat(stat = Stat.ATK, value = 32.0),
+                    Effect.BuffStat(stat = Stat.SPEED, value = 2.0)
                 )
             )
         )
@@ -1770,13 +1958,6 @@ object CardCatalog {
         )
     )
 
-    // =========================================================================
-// SOL — PERSONAGENS
-// =========================================================================
-
-    // RARE — Linha de frente padrão de Aurea.
-// Estatísticas comparadas com: THIEF (ofensivo), IRON_GUARDIAN (defensivo),
-// ROYAL_CROSSBOWMAN (equilibrado) — Soldado é o equilíbrio físico da facção.
     private val aureaSoldier = CardDefinition(
         id = "AUREA_SOLDIER",
         name = "Soldado de Aurea",
@@ -1821,9 +2002,6 @@ object CardCatalog {
         )
     )
 
-    // EPIC — Tank da facção. Cresce em DEF cada vez que é atingido
-// e protege os aliados solares. Comparado com JORGE (tank protetor)
-// e BERSERKER (escala com dano recebido) — combina os dois conceitos no estilo Sol.
     private val goldenKnight = CardDefinition(
         id = "GOLDEN_KNIGHT",
         name = "Cavaleiro Dourado",
@@ -1901,9 +2079,7 @@ object CardCatalog {
         )
     )
 
-    // EPIC — Suporte e cura de Aurea. Versão Sol de Lumina — mais agressiva
-// nos buffs ofensivos, menos passiva. Comparada com LUMINA e AURUM
-// (escalada de time) — aqui a escalada é via aliados solares vivos.
+
     private val sunPriestess = CardDefinition(
         id = "SUN_PRIESTESS",
         name = "Sacerdotisa do Sol",
@@ -1979,10 +2155,6 @@ object CardCatalog {
         )
     )
 
-    // LEGENDARY — Líder de Aurea. Ofensivo e escalável.
-// Comparado com MARKUS (rng/escalada de coins) e SOLAR_PALADIN (tanque de fé).
-// O Rei é o oposto: ATK puro, sem aleatório, sem defesa como mecânica central.
-// Ponto fraco intencional: DEF média para um Legendary — ele não é um tank.
     private val aureKing = CardDefinition(
         id = "AURE_KING",
         name = "Rei de Aurea",
@@ -2057,13 +2229,6 @@ object CardCatalog {
         )
     )
 
-// =========================================================================
-// SOL — EQUIPAMENTOS
-// =========================================================================
-
-    // EPIC ARMOR — Defesa com sustentação solar por aliados.
-// Comparada com THORNMAIL (counter tank) e HEAVY_IRON_ARMOR (DEF pura).
-// AURE_GOLDEN_ARMOR oferece DEF menor, mas com cura passiva escalada por time.
     private val aureGoldenArmor = CardDefinition(
         id = "AURE_GOLDEN_ARMOR",
         name = "Armadura Dourada de Aurea",
@@ -2105,10 +2270,7 @@ object CardCatalog {
         )
     )
 
-    // LEGENDARY WEAPON — Escala infinitamente com o tempo de batalha.
-// Comparada com SIEGEBREAKER (48 ATK, armor shred) e TWIN_FANG_KATANA (crit).
-// SOLARBRAND tem ATK similar mas troca o utility por escalada pura de ATK
-// e burst de dano verdadeiro a cada 3 ataques — ideal para combates longos.
+
     private val solarbrand = CardDefinition(
         id = "SOLARBRAND",
         name = "Lâmina da Aurora",
@@ -2130,11 +2292,11 @@ object CardCatalog {
         abilities = listOf(
             Ability(
                 name = "Chama do Amanhecer",
-                description = "A cada turno, a lâmina aquece e ganha +4 ATK permanente.",
+                description = "A cada turno, a lâmina aquece e ganha +6 ATK permanente.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnTurnStart,
                 effects = listOf(
-                    Effect.BuffStat(stat = Stat.ATK, value = 4.0, target = AbilityTarget.SELF)
+                    Effect.BuffStat(stat = Stat.ATK, value = 6.0, target = AbilityTarget.SELF)
                 )
             ),
             Ability(
@@ -2149,6 +2311,38 @@ object CardCatalog {
                         statSource = StatSource.SELF,
                         target = AbilityTarget.ENEMY,
                         damageType = DamageType.TRUE
+                    )
+                )
+            )
+        )
+    )
+
+    private val heavySteelBoots = CardDefinition(
+        id = "HAEVY_STEEL_BOOTS",
+        name = "Botas de Aço Pesadas",
+        description = "Botas maciças forjadas em aço puro. Reduzem drasticamente a mobilidade, mas transformam cada passo em uma ameaça.",
+        type = CardType.EQUIPMENT,
+        slot = EquipmentSlot.BOOTS,
+        rarity = Rarity.EPIC,
+        baseStats = mapOf(
+            Stat.DEF to 38.0,
+            Stat.SPEED to -15.0
+        ),
+        statsPerLevel = mapOf(Stat.DEF to 5.0),
+        tags = setOf("heavy", "boots", "defense"),
+        abilities = listOf(
+            Ability(
+                name = "Pisão de Aço",
+                description = "A cada 3 turnos, dá um pisão no chão que causa 30% da DEF atual como dano físico a todos os inimigos.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnTurnEvery(3),
+                effects = listOf(
+                    Effect.DamageBasedOnStat(
+                        stat = Stat.DEF,
+                        scaling = 0.30,
+                        statSource = StatSource.SELF,
+                        target = AbilityTarget.ALL_ENEMIES,
+                        damageType = DamageType.PHYSICAL
                     )
                 )
             )
@@ -2191,7 +2385,7 @@ object CardCatalog {
     val konoTwinbladeR = CardDefinition(
         id = "KONO_TWINBLADE_R",
         name = "Lamina Gemea do Alvorecer",
-        rarity = Rarity.KONO,
+        rarity = Rarity.MYTHIC,
         type = CardType.EQUIPMENT,
         slot = EquipmentSlot.WEAPON,
         description =
@@ -2236,7 +2430,7 @@ object CardCatalog {
     val konoTwinbladeL = CardDefinition(
         id = "KONO_TWINBLADE_L",
         name = "Lamina Gemea do Crepusculo",
-        rarity = Rarity.KONO,
+        rarity = Rarity.MYTHIC,
         type = CardType.EQUIPMENT,
         slot = EquipmentSlot.SECONDARY,
         description =  "A lâmina esquerda da Espada Gêmea de Kono. " +
@@ -2257,8 +2451,8 @@ object CardCatalog {
                 once = true,
                 trigger = AbilityTrigger.OnBattleStart,
                 effects = listOf(
-                    Effect.Custom("Double twin stats") { self, _, state ->
-                        val twin = self.equipments.find { it -> it.id == "KONO_TWINBLADE_R" }
+                    Effect.Custom("Double twin stats") { self, _, _ ->
+                        val twin = self.equipments.find { it.id == "KONO_TWINBLADE_R" }
 
                         if (twin != null) {
                             val atk = self.stats[Stat.ATK] ?: 0.0
@@ -2289,7 +2483,7 @@ object CardCatalog {
         thief,
         ironGuardian,
         royalCrossbowman,
-        aureaSoldier,        // NOVO
+        aureaSoldier,
         // Characters — Epic
         jorge,
         veyn,
@@ -2297,8 +2491,8 @@ object CardCatalog {
         lumina,
         shadow,
         berserker,
-        goldenKnight,        // NOVO
-        sunPriestess,        // NOVO
+        goldenKnight,
+        sunPriestess,
         // Characters — Legendary
         markus,
         solarPaladin,
@@ -2313,19 +2507,20 @@ object CardCatalog {
         dummy,
 
         // Equipment — Common
-        woodenSword, dagger, ironArmor,
+        woodenSword, dagger, ironArmor, ironTorc,
         // Equipment — Rare
         ironSword, ironShield, heavyIronArmor,
         katana, vampireRing, quickBoots, boneStaff,
+        magicCrystal, reinforcedPauldrons,
         // Equipment — Epic
         polishedKatana, vampireCore, greatsword,
         gamblerCharm, devotionStaff, thornmail,
-        elixirVial,
-        aureGoldenArmor,     // NOVO
+        elixirVial, heavySteelBoots, aureGoldenArmor,
+        bulwarkShield, arcaneFocus,
         // Equipment — Legendary
         critfish, demonHunterCrossbow, allInEmblem,
-        siegebreaker, twinFangKatana,
-        solarbrand,          // NOVO
+        siegebreaker, twinFangKatana, solarbrand,
+        stormBoots, soulPendant,
         // Equipment — Mythic
         undefined, sunGodGreatsword, cosmicOrb,
 

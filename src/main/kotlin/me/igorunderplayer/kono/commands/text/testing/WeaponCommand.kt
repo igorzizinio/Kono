@@ -1,6 +1,7 @@
 package me.igorunderplayer.kono.commands.text.testing
 
 import dev.kord.common.entity.ButtonStyle
+import dev.kord.core.behavior.edit
 import dev.kord.core.behavior.interaction.respondEphemeral
 import dev.kord.core.behavior.reply
 import dev.kord.core.event.message.MessageCreateEvent
@@ -51,7 +52,7 @@ class WeaponCommand(
                     is UpgradeEquipmentHandler.PreviewResult.Ready -> {
                         val buttonId = "weapon-upgrade-${event.message.id}-${System.currentTimeMillis()}"
 
-                        event.message.reply {
+                        val confirmMsg = event.message.reply {
                             content = buildString {
                                 appendLine("⚠️ **Confirmar upgrade** de **${preview.equipmentName}** (#${preview.instanceId})")
                                 appendLine("- Nivel: **${preview.cost.currentLevel} -> ${preview.cost.nextLevel}**")
@@ -74,8 +75,13 @@ class WeaponCommand(
                         )
 
                         if (click == null) {
-                            event.message.reply {
-                                content = "⌛ Upgrade cancelado por tempo esgotado."
+                            confirmMsg.edit {
+                                components = mutableListOf(ActionRowBuilder().apply {
+                                    interactionButton(ButtonStyle.Success, buttonId) {
+                                        label = "Confirmar upgrade"
+                                        disabled = true
+                                    }
+                                })
                             }
                             return
                         }
@@ -234,7 +240,7 @@ class WeaponCommand(
                         is DismantleEquipmentHandler.PreviewResult.Ready -> {
                             val buttonId = "weapon-dismantle-${event.message.id}-${System.currentTimeMillis()}"
 
-                            event.message.reply {
+                            val confirmMsg = event.message.reply {
                                 content = buildString {
                                     appendLine("♻️ **Confirmar desmontagem** de **${preview.equipmentName}** (#${preview.instanceId})")
                                     appendLine("- Recompensa: **${preview.reward.smithingStones} Smithing Stones** (${preview.reward.rarity.toDisplayName()})")
@@ -256,8 +262,13 @@ class WeaponCommand(
                             )
 
                             if (click == null) {
-                                event.message.reply {
-                                    content = "⌛ Desmontagem cancelada por tempo esgotado."
+                                confirmMsg.edit {
+                                    components = mutableListOf(ActionRowBuilder().apply {
+                                        interactionButton(ButtonStyle.Danger, buttonId) {
+                                            label = "Confirmar desmontagem"
+                                            disabled = true
+                                        }
+                                    })
                                 }
                                 return
                             }
@@ -348,7 +359,7 @@ class WeaponCommand(
             is DismantleEquipmentHandler.BulkPreviewResult.Ready -> {
                 val buttonId = "weapon-dismantle-bulk-${event.message.id}-${System.currentTimeMillis()}"
 
-                event.message.reply {
+                val confirmMsg = event.message.reply {
                     content = buildString {
                         appendLine("♻️ **Confirmar desmontagem em massa** (ate ${bulkPreview.maxRarity.toDisplayName()})")
                         appendLine("- Equipamentos afetados: **${bulkPreview.dismantleCount}**")
@@ -371,8 +382,13 @@ class WeaponCommand(
                 )
 
                 if (click == null) {
-                    event.message.reply {
-                        content = "⌛ Desmontagem em massa cancelada por tempo esgotado."
+                    confirmMsg.edit {
+                        components = mutableListOf(ActionRowBuilder().apply {
+                            interactionButton(ButtonStyle.Danger, buttonId) {
+                                label = "Confirmar desmontagem em massa"
+                                disabled = true
+                            }
+                        })
                     }
                     return
                 }

@@ -7,6 +7,7 @@ import dev.kord.common.entity.DiscordPartialEmoji
 import dev.kord.common.entity.optional.OptionalBoolean
 import dev.kord.core.behavior.interaction.respondEphemeral
 import dev.kord.core.behavior.interaction.response.createEphemeralFollowup
+import dev.kord.core.behavior.interaction.response.edit
 import dev.kord.core.behavior.interaction.response.respond
 import dev.kord.core.event.interaction.ChatInputCommandInteractionCreateEvent
 import dev.kord.rest.builder.component.ActionRowBuilder
@@ -86,7 +87,7 @@ class BatalhaJogador(
 
         val logButtonId = "batalha-pvp-log-${discordId}-${System.currentTimeMillis()}"
 
-        deferred.respond {
+        val battleResponse = deferred.respond {
             embed {
                 title = "⚔️ Team Fight PvP — $username vs ${opponent.username}"
                 description = buildString {
@@ -111,7 +112,18 @@ class BatalhaJogador(
             })
         }
 
-        val logClick = event.kord.awaitButtonInteraction(logButtonId, discordId) ?: return
+        val logClick = event.kord.awaitButtonInteraction(logButtonId, discordId) ?: run {
+            battleResponse.edit {
+                components = mutableListOf(ActionRowBuilder().apply {
+                    interactionButton(ButtonStyle.Primary, logButtonId) {
+                        label = "Ver diário de batalha"
+                        emoji = DiscordPartialEmoji(name = "📜")
+                        disabled = true
+                    }
+                })
+            }
+            return
+        }
         val logPages = buildCombatLogPages(state.combatLog)
 
         val logResponse = logClick.interaction.respondEphemeral {

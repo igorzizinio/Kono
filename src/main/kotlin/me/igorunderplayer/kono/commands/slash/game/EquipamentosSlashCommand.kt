@@ -66,7 +66,9 @@ class EquipamentosSlashCommand(
             }
 
             val clicked = event.kord.awaitFirstButtonInteraction(buttonIds, discordId) ?: run {
-                response.edit { content = "⏰ Tempo esgotado."; components = mutableListOf() }
+                response.edit {
+                    components = mutableListOf(overviewButtons(equipButtonId, removeButtonId, equipped.isNotEmpty(), disabled = true))
+                }
                 return
             }
 
@@ -227,7 +229,7 @@ class EquipamentosSlashCommand(
             if (item == null) {
                 appendLine("${slot.icon} **${slot.displayName}** — *vazio*")
             } else {
-                appendLine("${slot.icon} **${slot.displayName}** — **${item.name}** ${item.rarity.toDisplayEmoji()}")
+                appendLine("${slot.icon} **${slot.displayName}** — ${item.rarity.toDisplayEmoji()} **${item.name}** Lv.${item.level} `#${item.cardInstanceId}`")
             }
         }
     }
@@ -238,16 +240,18 @@ class EquipamentosSlashCommand(
         ?.colorDefinition()
         ?: Color(0x2b2d31)
 
-    private fun overviewButtons(equipButtonId: String, removeButtonId: String, hasEquipped: Boolean) =
+    private fun overviewButtons(equipButtonId: String, removeButtonId: String, hasEquipped: Boolean, disabled: Boolean = false) =
         ActionRowBuilder().apply {
             interactionButton(ButtonStyle.Success, equipButtonId) {
                 label = "Equipar"
                 emoji = DiscordPartialEmoji(name = "🎒")
+                this.disabled = disabled
             }
             if (hasEquipped) {
                 interactionButton(ButtonStyle.Danger, removeButtonId) {
                     label = "Remover"
                     emoji = DiscordPartialEmoji(name = "🗑️")
+                    this.disabled = disabled
                 }
             }
         }

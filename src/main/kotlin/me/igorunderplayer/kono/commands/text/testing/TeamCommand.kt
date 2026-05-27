@@ -9,6 +9,7 @@ import me.igorunderplayer.kono.data.repositories.BattleTeamRepository
 import me.igorunderplayer.kono.data.repositories.CardInstanceRepository
 import me.igorunderplayer.kono.data.repositories.UserRepository
 import me.igorunderplayer.kono.domain.card.CardType
+import me.igorunderplayer.kono.domain.card.toDisplayEmoji
 
 class TeamCommand(
     private val userRepository: UserRepository,
@@ -40,29 +41,26 @@ class TeamCommand(
         }
 
         val slots = battleTeamRepository.getTeamByUserId(user.id).sortedBy { it.slot }
-        val lines = (1..3).map { slot ->
-            val row = slots.firstOrNull { it.slot == slot }
-            if (row == null) {
-                "Slot $slot: vazio"
-            } else {
-                val character = cardInstanceRepository.getOwnedCharacterWithDefinition(user.id, row.characterInstanceId)
-                if (character == null) {
-                    "Slot $slot: personagem ausente (id ${row.characterInstanceId})"
-                } else {
-                    val (instance, definition) = character
-                    "Slot $slot: ${definition.name} (instância ${instance.id}, nível ${instance.level})"
-                }
-            }
-        }
-
         event.message.reply {
             embed {
                 title = "👥 Seu Time"
                 description = buildString {
-                    appendLine(lines.joinToString("\n"))
+                    for (slotNum in 1..3) {
+                        val row = slots.firstOrNull { it.slot == slotNum }
+                        if (row == null) {
+                            appendLine("**Slot $slotNum:** — *vazio*")
+                        } else {
+                            val character = cardInstanceRepository.getOwnedCharacterWithDefinition(user.id, row.characterInstanceId)
+                            if (character == null) {
+                                appendLine("**Slot $slotNum:** ⚠️ personagem ausente (id ${row.characterInstanceId})")
+                            } else {
+                                val (instance, def) = character
+                                appendLine("**Slot $slotNum:** ${def.rarity.toDisplayEmoji()} **${def.name}** — Lv.${instance.level} `#${instance.id}`")
+                            }
+                        }
+                    }
                     appendLine()
-                    appendLine("Use `team set <slot> <instance_id>` para alterar sua formação.")
-                    appendLine("Os slots vão de 1 a 3.")
+                    append("Use `team set <slot 1-3> <instance_id>` para alterar e `team clear <slot>` para remover.")
                 }
             }
         }

@@ -5,6 +5,9 @@ import dev.kord.core.behavior.interaction.response.respond
 import dev.kord.core.event.interaction.ChatInputCommandInteractionCreateEvent
 import dev.kord.rest.builder.message.embed
 import me.igorunderplayer.kono.commands.KonoSlashSubCommand
+import me.igorunderplayer.kono.domain.card.EquipmentSlot
+import me.igorunderplayer.kono.domain.card.Stat
+import me.igorunderplayer.kono.domain.card.colorDefinition
 import me.igorunderplayer.kono.domain.card.prettyName
 import me.igorunderplayer.kono.domain.card.prettyValue
 import me.igorunderplayer.kono.domain.card.toDisplayEmoji
@@ -19,6 +22,11 @@ class PersonagemInfo(
     override val description = "Exibe as informações e status do seu personagem ativo"
     override val options: List<ApplicationCommandOption> = listOf()
 
+    private val statOrder = listOf(
+        Stat.HP, Stat.ATK, Stat.INT, Stat.DEF,
+        Stat.SPEED, Stat.CRIT_CHANCE, Stat.CRIT_DAMAGE, Stat.LIFESTEAL
+    )
+
     override suspend fun run(event: ChatInputCommandInteractionCreateEvent) {
         val deferred = event.interaction.deferEphemeralResponse()
         val discordId = event.interaction.user.id.value.toLong()
@@ -31,27 +39,47 @@ class PersonagemInfo(
                 deferred.respond {
                     embed {
                         title = "${unit.card.rarity.toDisplayEmoji()} ${unit.card.name}"
-                        description = buildString {
-                            appendLine(unit.card.description)
-                            appendLine()
-                            if (upgradeHint != null) {
-                                appendLine(upgradeHint)
-                                appendLine()
-                            }
-                            appendLine("**Equipamentos:**")
-                            if (unit.equipments.isEmpty()) {
-                                appendLine("— Nenhum equipamento")
-                            } else {
-                                unit.equipments.forEach {
-                                    appendLine("${it.rarity.toDisplayEmoji()} ${it.name}")
+                        color = unit.card.rarity.colorDefinition()
+                        description = unit.card.description
+
+                        field {
+                            name = "📋 Info"
+                            value = buildString {
+                                appendLine("**Nível:** ${result.level}")
+                                append("**ID:** `#${result.characterInstanceId}`")
+                                if (upgradeHint != null) {
+                                    appendLine()
+                                    append(upgradeHint)
                                 }
                             }
-                            appendLine()
-                            appendLine("**Status:**")
-                            unit.stats.forEach { (stat, value) ->
-                                appendLine("• **${stat.prettyName()}**: ${prettyValue(stat, value)}")
-                            }
+                            inline = true
                         }
+
+                        field {
+                            name = "🎒 Equipamentos"
+                            value = if (result.equippedItems.isEmpty()) {
+                                "*Nenhum equipamento*"
+                            } else {
+                                result.equippedItems.joinToString("\n") { item ->
+                                    val slot = EquipmentSlot.fromIndex(item.slot)
+                                    "${slot?.icon ?: "?"} **${item.name}** Lv.${item.level} `#${item.cardInstanceId}`"
+                                }
+                            }
+                            inline = true
+                        }
+
+                        field {
+                            name = "📊 Status"
+                            value = buildString {
+                                statOrder.forEach { stat ->
+                                    val value = unit.stats[stat] ?: if (stat == Stat.INT) 0.0 else return@forEach
+                                    appendLine("${stat.prettyName()}: **${prettyValue(stat, value)}**")
+                                }
+                            }.trimEnd()
+                            inline = false
+                        }
+
+                        footer { text = unit.card.id }
                     }
                 }
             }
@@ -67,7 +95,7 @@ class PersonagemInfo(
     private suspend fun buildUpgradeHint(discordId: Long): String? {
         return when (val preview = upgradeCharacterHandler.previewActiveCharacter(discordId)) {
             is UpgradeCharacterHandler.PreviewResult.Ready ->
-                "🆙 **Upgrade disponível!** Use `/personagem upgrade` (custo: ${preview.cost.konosCost} ₭, ${preview.cost.copiesRequired} cópias)."
+                "🆙 Upgrade disponível! Lv.${preview.cost.currentLevel} → Lv.${preview.cost.nextLevel} (${preview.cost.konosCost} ₭, ${preview.cost.copiesRequired} cópia(s))"
             else -> null
         }
     }

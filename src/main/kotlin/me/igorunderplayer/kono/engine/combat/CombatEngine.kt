@@ -340,7 +340,7 @@ class CombatEngine(
             }
 
             is CombatEvent.BeforeDamage -> {
-                val incomingDamage = resolveMitigatedDamage(event.damage, event.target, event.damageType)
+                val incomingDamage = resolveMitigatedDamage(event.damage, event.source, event.target, event.damageType)
                 if (incomingDamage <= 0.0) return
 
                 val guardian = resolveGuardianFor(event.target)
@@ -967,16 +967,26 @@ class CombatEngine(
 
     private fun resolveMitigatedDamage(
         rawDamage: Double,
+        source: Unit,
         target: Unit,
         damageType: DamageType
     ): Double {
         val damage = rawDamage.coerceAtLeast(0.0)
         if (damage <= 0.0) return 0.0
-        if (damageType != DamageType.PHYSICAL) return damage
 
-        val defense = (target.stats[Stat.DEF] ?: 0.0).coerceAtLeast(-90.0)
-        val mitigationMultiplier = 100.0 / (100.0 + defense)
-        return damage * mitigationMultiplier
+        return when (damageType) {
+            DamageType.PHYSICAL -> {
+                val defense = (target.stats[Stat.DEF] ?: 0.0).coerceAtLeast(-90.0)
+                damage * (100.0 / (100.0 + defense))
+            }
+            DamageType.MAGIC -> {
+                val defContrib = (target.stats[Stat.DEF] ?: 0.0) * 0.25
+                val intDiff = (target.stats[Stat.INT] ?: 0.0) - (source.stats[Stat.INT] ?: 0.0)
+                val totalResist = (defContrib + intDiff).coerceAtLeast(-90.0)
+                damage * (100.0 / (100.0 + totalResist))
+            }
+            DamageType.TRUE -> damage
+        }
     }
 }
 

@@ -19,10 +19,10 @@ class CardCommand(
 
         val query = args.joinToString(" ").trim()
 
-        // 📜 LISTAGEM (sem argumento)
+        // 📜 LISTAGEM
         if (query.isBlank()) {
             val cards = cardService.getCardDefinitions()
-                .filter { it.rarity != Rarity.MYTHIC }
+                .filter { it.rarity != Rarity.KONO }
 
             val grouped = cards.groupBy { it.type }
 

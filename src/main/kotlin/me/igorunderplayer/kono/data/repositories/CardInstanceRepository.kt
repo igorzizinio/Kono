@@ -26,7 +26,8 @@ data class EquippedItemView(
     val definitionId: String,
     val name: String,
     val rarity: Rarity,
-    val type: CardType
+    val type: CardType,
+    val level: Int
 )
 
 class CardInstanceRepository(
@@ -86,7 +87,8 @@ class CardInstanceRepository(
                 .select(
                     EquippedCards.slot,
                     EquippedCards.cardInstanceId,
-                    CardInstances.definitionId
+                    CardInstances.definitionId,
+                    CardInstances.level
                 )
                 .where { EquippedCards.characterInstanceId eq characterId }
                 .mapNotNull { row ->
@@ -99,7 +101,8 @@ class CardInstanceRepository(
                         definitionId = definition.id,
                         name = definition.name,
                         rarity = definition.rarity,
-                        type = definition.type
+                        type = definition.type,
+                        level = row[CardInstances.level] ?: 1
                     )
                 }
                 .sortedBy { it.slot }

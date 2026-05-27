@@ -139,12 +139,12 @@ class StoryCommand(
                 allowedUserId = discordId
             ) ?: run {
                 pendingMessage.edit {
-                    embed {
-                        title = "📖 Prólogo — O Início da Jornada"
-                        description = "⌛ Tempo esgotado. Use `@Kono story` novamente quando estiver pronto."
-                        color = COLOR_PROLOGUE
-                    }
-                    components = null
+                    components = mutableListOf(ActionRowBuilder().apply {
+                        interactionButton(ButtonStyle.Success, startButtonId) {
+                            label = "🗡️ Começar a Jornada"
+                            disabled = true
+                        }
+                    })
                 }
                 return
             }
@@ -211,12 +211,12 @@ class StoryCommand(
             allowedUserId = discordId
         ) ?: run {
             chapterMessage.edit {
-                embed {
-                    title = "📖 Capítulo $chapterNumber — ${chapter.storyChapterTitle}"
-                    description = "⌛ Tempo esgotado. Use `@Kono story` novamente para continuar a jornada."
-                    color = COLOR_CHAPTER
-                }
-                components = null
+                components = mutableListOf(ActionRowBuilder().apply {
+                    interactionButton(ButtonStyle.Primary, fightButtonId) {
+                        label = "⚔️ Partir para batalha"
+                        disabled = true
+                    }
+                })
             }
             return
         }
@@ -304,7 +304,17 @@ class StoryCommand(
         val logClick = event.kord.awaitButtonInteraction(
             customId = logButtonId,
             allowedUserId = discordId
-        ) ?: return
+        ) ?: run {
+            chapterMessage.edit {
+                components = mutableListOf(ActionRowBuilder().apply {
+                    interactionButton(ButtonStyle.Secondary, logButtonId) {
+                        label = "Ver diário de batalha"
+                        disabled = true
+                    }
+                })
+            }
+            return
+        }
 
         val logPages = buildLogPages(state.combatLog)
 

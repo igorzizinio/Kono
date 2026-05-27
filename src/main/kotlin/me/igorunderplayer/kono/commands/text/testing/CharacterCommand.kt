@@ -1,6 +1,7 @@
 package me.igorunderplayer.kono.commands.text.testing
 
 import dev.kord.common.entity.ButtonStyle
+import dev.kord.core.behavior.edit
 import dev.kord.core.behavior.interaction.respondEphemeral
 import dev.kord.core.behavior.reply
 import dev.kord.core.event.message.MessageCreateEvent
@@ -8,6 +9,9 @@ import dev.kord.rest.builder.component.ActionRowBuilder
 import dev.kord.rest.builder.message.embed
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandCategory
+import me.igorunderplayer.kono.domain.card.EquipmentSlot
+import me.igorunderplayer.kono.domain.card.Stat
+import me.igorunderplayer.kono.domain.card.colorDefinition
 import me.igorunderplayer.kono.domain.card.prettyName
 import me.igorunderplayer.kono.domain.card.prettyValue
 import me.igorunderplayer.kono.domain.card.toDisplayEmoji
@@ -20,7 +24,7 @@ class CharacterCommand(
     private val setActiveCharacterHandler: SetActiveCharacterHandler,
     private val buildUnitHandler: BuildUnitHandler,
     private val upgradeCharacterHandler: UpgradeCharacterHandler
-): BaseCommand(
+) : BaseCommand(
     name = "character",
     description = "comandos relacionados ao personagem ativo em campo",
     aliases = listOf("char", "personagem", "perso"),
@@ -78,61 +82,72 @@ class CharacterCommand(
             }
 
             "info" -> {
+                val statOrder = listOf(
+                    Stat.HP, Stat.ATK, Stat.INT, Stat.DEF,
+                    Stat.SPEED, Stat.CRIT_CHANCE, Stat.CRIT_DAMAGE, Stat.LIFESTEAL
+                )
+
                 when (val result = buildUnitHandler.executeByDiscordId(userId.toLong())) {
                     is BuildUnitHandler.Result.Success -> {
+                        val unit = result.unit
                         val upgradeHint = buildUpgradeHint(userId.toLong())
 
-                        val descriptionBuilder = buildString {
-                            appendLine(result.unit.card.description)
-                            appendLine()
-
-                            if (upgradeHint != null) {
-                                appendLine(upgradeHint)
-                                appendLine()
-                            }
-
-                            appendLine("**Equipamentos**:")
-                            if (result.unit.equipments.isEmpty()) {
-                                appendLine("- Nenhum equipamento")
-                            } else {
-                                result.unit.equipments.forEach {
-                                    appendLine("${it.rarity.toDisplayEmoji()} ${it.name}")
-                                }
-                            }
-
-                            appendLine()
-                            appendLine("**Status:**")
-                            result.unit.stats.forEach { (stat, value) ->
-                                appendLine("- **${stat.prettyName()}**: ${prettyValue(stat, value)}")
-                            }
-                        }
-
                         event.message.reply {
-                            content = "informações sobre seu personagem ativo!!"
                             embed {
-                                title = "${result.unit.card.rarity.toDisplayEmoji()} ${result.unit.card.name}"
-                                description = descriptionBuilder
+                                title = "${unit.card.rarity.toDisplayEmoji()} ${unit.card.name}"
+                                color = unit.card.rarity.colorDefinition()
+                                description = unit.card.description
+
+                                field {
+                                    name = "📋 Info"
+                                    value = buildString {
+                                        appendLine("**Nível:** ${result.level}")
+                                        append("**ID:** `#${result.characterInstanceId}`")
+                                        if (upgradeHint != null) {
+                                            appendLine()
+                                            append(upgradeHint)
+                                        }
+                                    }
+                                    inline = true
+                                }
+
+                                field {
+                                    name = "🎒 Equipamentos"
+                                    value = if (result.equippedItems.isEmpty()) {
+                                        "*Nenhum equipamento*"
+                                    } else {
+                                        result.equippedItems.joinToString("\n") { item ->
+                                            val slot = EquipmentSlot.fromIndex(item.slot)
+                                            "${slot?.icon ?: "?"} **${item.name}** Lv.${item.level} `#${item.cardInstanceId}`"
+                                        }
+                                    }
+                                    inline = true
+                                }
+
+                                field {
+                                    name = "📊 Status"
+                                    value = buildString {
+                                        statOrder.forEach { stat ->
+                                            val value = unit.stats[stat] ?: if (stat == Stat.INT) 0.0 else return@forEach
+                                            appendLine("${stat.prettyName()}: **${prettyValue(stat, value)}**")
+                                        }
+                                    }.trimEnd()
+                                    inline = false
+                                }
+
+                                footer { text = unit.card.id }
                             }
                         }
                     }
 
-                    is BuildUnitHandler.Result.UserNotFound -> {
-                        event.message.reply {
-                            content = "Usuário não encontrado"
-                        }
-                    }
+                    is BuildUnitHandler.Result.UserNotFound ->
+                        event.message.reply { content = "❌ Você não está registrado. Use `register`." }
 
-                    is BuildUnitHandler.Result.NoActiveCard -> {
-                        event.message.reply {
-                            content = "Nenhum personagem ativo selecionado. Use: character set <instance_id>"
-                        }
-                    }
+                    is BuildUnitHandler.Result.NoActiveCard ->
+                        event.message.reply { content = "❌ Nenhum personagem ativo. Use `character set <id>`." }
 
-                    is BuildUnitHandler.Result.CharacterNotFound -> {
-                        event.message.reply{
-                            content = "Personagem ativo (#${result.activeCharacterId}) não encontrado no banco de dados"
-                        }
-                    }
+                    is BuildUnitHandler.Result.CharacterNotFound ->
+                        event.message.reply { content = "❌ Personagem ativo (#${result.activeCharacterId}) não encontrado." }
                 }
             }
 
@@ -143,7 +158,7 @@ class CharacterCommand(
                     is UpgradeCharacterHandler.PreviewResult.Ready -> {
                         val buttonId = "char-upgrade-${event.message.id}-${System.currentTimeMillis()}"
 
-                        event.message.reply {
+                        val confirmMsg = event.message.reply {
                             content = buildString {
                                 appendLine("⚠️ **Confirmar upgrade** de **${preview.characterName}** (#${preview.instanceId})")
                                 appendLine("- Nivel: **${preview.cost.currentLevel} -> ${preview.cost.nextLevel}**")
@@ -166,8 +181,13 @@ class CharacterCommand(
                         )
 
                         if (click == null) {
-                            event.message.reply {
-                                content = "⌛ Upgrade cancelado por tempo esgotado."
+                            confirmMsg.edit {
+                                components = mutableListOf(ActionRowBuilder().apply {
+                                    interactionButton(ButtonStyle.Success, buttonId) {
+                                        label = "Confirmar upgrade"
+                                        disabled = true
+                                    }
+                                })
                             }
                             return
                         }

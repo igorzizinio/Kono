@@ -69,10 +69,7 @@ class StartFightCommand(
 
             if (buttonInteraction == null) {
                 msg.edit {
-                    embed {
-                        title = "⌛ Combate encerrado"
-                        description = "Tempo esgotado. A batalha foi finalizada sem novas ações."
-                    }
+                    components = mutableListOf(createActionRow(customButtonId, disabled = true))
                 }
                 return
             }
@@ -117,12 +114,10 @@ class StartFightCommand(
         }
     }
 
-    private fun createActionRow(customButtonId: String) = ActionRowBuilder().apply {
-        interactionButton(
-            ButtonStyle.Primary,
-            customButtonId,
-        ) {
+    private fun createActionRow(customButtonId: String, disabled: Boolean = false) = ActionRowBuilder().apply {
+        interactionButton(ButtonStyle.Primary, customButtonId) {
             label = "Próxima rodada"
+            this.disabled = disabled
         }
     }
 

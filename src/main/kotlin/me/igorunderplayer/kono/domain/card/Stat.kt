@@ -24,7 +24,7 @@ fun Stat.prettyName(): String {
     return when (this) {
         Stat.HP -> "\uD83D\uDC9A HP"
         Stat.ATK -> "⚔️ ATK"
-        Stat.INT -> "INT"
+        Stat.INT -> "🔮 INT"
         Stat.DEF -> "🛡️ DEF"
         Stat.CRIT_CHANCE -> "🎯 Crit Chance"
         Stat.CRIT_DAMAGE -> "💥 Crit Damage"

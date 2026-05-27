@@ -43,7 +43,14 @@ class PersonagemUpgrade(
 
                 val click = event.kord.awaitButtonInteraction(buttonId, discordId)
                 if (click == null) {
-                    response.edit { content = "⌛ Upgrade cancelado (tempo esgotado)."; components = mutableListOf() }
+                    response.edit {
+                        components = mutableListOf(ActionRowBuilder().apply {
+                            interactionButton(ButtonStyle.Success, buttonId) {
+                                label = "✅ Confirmar upgrade"
+                                disabled = true
+                            }
+                        })
+                    }
                     return
                 }
 

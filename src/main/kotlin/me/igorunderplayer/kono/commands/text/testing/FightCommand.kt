@@ -1,6 +1,7 @@
 package me.igorunderplayer.kono.commands.text.testing
 
 import dev.kord.common.entity.ButtonStyle
+import dev.kord.core.behavior.edit
 import dev.kord.core.behavior.interaction.respondEphemeral
 import dev.kord.core.behavior.interaction.response.createEphemeralFollowup
 import dev.kord.core.behavior.reply
@@ -210,7 +211,7 @@ class FightCommand(
         val logPages = buildCombatLogEmbeds(result.combatLog)
         val logButtonId = "fight-log-${event.message.channelId}-${event.message.id}-${System.currentTimeMillis()}"
 
-        event.message.reply {
+        val resultMsg = event.message.reply {
             embed {
                 title = summary.title
                 description = summary.description
@@ -227,7 +228,12 @@ class FightCommand(
         val logClick = event.kord.awaitButtonInteraction(
             customId = logButtonId,
             allowedUserId = event.message.author?.id?.value?.toLong() ?: return
-        ) ?: return
+        ) ?: run {
+            resultMsg.edit {
+                components = mutableListOf(createLogButton(logButtonId, disabled = true))
+            }
+            return
+        }
 
         val firstPage = logPages.first()
 
@@ -313,12 +319,10 @@ class FightCommand(
         }
     }
 
-    private fun createLogButton(customButtonId: String) = ActionRowBuilder().apply {
-        interactionButton(
-            ButtonStyle.Primary,
-            customButtonId,
-        ) {
+    private fun createLogButton(customButtonId: String, disabled: Boolean = false) = ActionRowBuilder().apply {
+        interactionButton(ButtonStyle.Primary, customButtonId) {
             label = "Ver diário"
+            this.disabled = disabled
         }
     }
 
