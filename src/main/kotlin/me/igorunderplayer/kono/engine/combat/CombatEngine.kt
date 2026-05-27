@@ -147,7 +147,8 @@ class CombatEngine(
                             damage = damage,
                             damageType = effect.damageType,
                             canCrit = effect.damageType == DamageType.PHYSICAL || effect.damageType == DamageType.MAGIC,
-                            canBeDodged = effect.damageType == DamageType.PHYSICAL || effect.damageType == DamageType.MAGIC
+                            canBeDodged = effect.damageType == DamageType.PHYSICAL || effect.damageType == DamageType.MAGIC,
+                            isOnHitProc = true
                         )
                     )
                 }
@@ -172,7 +173,8 @@ class CombatEngine(
                             damage = damage,
                             damageType = effect.damageType,
                             canCrit = effect.damageType == DamageType.PHYSICAL || effect.damageType == DamageType.MAGIC,
-                            canBeDodged = effect.damageType == DamageType.PHYSICAL || effect.damageType == DamageType.MAGIC
+                            canBeDodged = effect.damageType == DamageType.PHYSICAL || effect.damageType == DamageType.MAGIC,
+                            isOnHitProc = true
                         )
                     )
                 }
@@ -190,7 +192,8 @@ class CombatEngine(
                         damageType = event.damageType,
                         canCrit = event.canCrit,
                         canBeDodged = event.canBeDodged,
-                        sourceAbilityType = event.sourceAbilityType
+                        sourceAbilityType = event.sourceAbilityType,
+                        isOnHitProc = true  // modifier, not a new hit
                     )
                 )
             }
@@ -453,6 +456,7 @@ class CombatEngine(
                 event is CombatEvent.TurnStart && event.unit == owner && state.turn % trigger.turns.coerceAtLeast(1) == 0
             }
             AbilityTrigger.OnAttack -> event is CombatEvent.Attack && event.attacker == owner
+            AbilityTrigger.OnHit -> event is CombatEvent.BeforeDamage && event.source == owner && !event.isOnHitProc
             is AbilityTrigger.OnAttackEvery -> {
                 if (event !is CombatEvent.Attack || event.attacker != owner) {
                     false

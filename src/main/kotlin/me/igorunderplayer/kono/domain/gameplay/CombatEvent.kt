@@ -22,7 +22,8 @@ sealed class CombatEvent {
         val canCrit: Boolean = true,
         val canBeDodged: Boolean = true,
         val sourceAbilityType: AbilityType? = null,
-        val wasCritical: Boolean = false
+        val wasCritical: Boolean = false,
+        val isOnHitProc: Boolean = false
     ) : CombatEvent()
 
     data class AfterDamage(

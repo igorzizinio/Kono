@@ -8,6 +8,7 @@ sealed class AbilityTrigger {
     data object OnTurnStart : AbilityTrigger()
     data class OnTurnEvery(val turns: Int) : AbilityTrigger()
     data object OnAttack : AbilityTrigger()
+    data object OnHit : AbilityTrigger()
     data class OnAttackEvery(val attacks: Int) : AbilityTrigger()
     data class OnAttackAgainstTag(val tag: String) : AbilityTrigger()
     data object OnDamageDealt : AbilityTrigger()

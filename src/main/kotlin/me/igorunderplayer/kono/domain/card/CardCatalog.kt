@@ -48,7 +48,7 @@ object CardCatalog {
                 name = "Gelatina Instável",
                 description = "Ao atacar, o Slime perde massa e sofre 12 de dano em si mesmo.",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnAttack,
+                trigger = AbilityTrigger.OnHit,
                 effects = listOf(Effect.Damage(value = 12.0, target = AbilityTarget.SELF))
             )
         )
@@ -786,7 +786,7 @@ object CardCatalog {
                 name = "Corte Rápido",
                 description = "Cada ataque com a katana causa 5 de dano adicional ao alvo.",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnAttack,
+                trigger = AbilityTrigger.OnHit,
                 effects = listOf(Effect.Damage(value = 5.0, target = AbilityTarget.ENEMY))
             )
         )
@@ -876,7 +876,7 @@ object CardCatalog {
                 name = "Corte Rápido",
                 description = "Cada ataque com a katana polida causa 10 de dano adicional ao alvo.",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnAttack,
+                trigger = AbilityTrigger.OnHit,
                 effects = listOf(Effect.Damage(value = 10.0, target = AbilityTarget.ENEMY))
             )
         )
@@ -1176,7 +1176,7 @@ object CardCatalog {
                 name = "Rajada All-In",
                 description = "Cada ataque causa 18 de dano extra pela ousadia do portador.",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnAttack,
+                trigger = AbilityTrigger.OnHit,
                 effects = listOf(Effect.Damage(value = 18.0, target = AbilityTarget.ENEMY))
             ),
             Ability(
@@ -1214,7 +1214,7 @@ object CardCatalog {
                 name = "Carga Relâmpago",
                 description = "A cada ataque, libera uma descarga elétrica que causa 18% da SPEED atual como dano mágico.",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnAttack,
+                trigger = AbilityTrigger.OnHit,
                 effects = listOf(
                     Effect.DamageBasedOnStat(
                         stat = Stat.SPEED,
@@ -1325,7 +1325,7 @@ object CardCatalog {
                 name = "Fé Ardente",
                 description = "Cada ataque fortalece a fé permanentemente: +3.5 ATK fixo.",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnAttack,
+                trigger = AbilityTrigger.OnHit,
                 effects = listOf(
                     Effect.BuffStat(stat = Stat.ATK, value = 3.5)
                 )
@@ -1334,7 +1334,7 @@ object CardCatalog {
                 name = "Chama Divina",
                 description = "Cada ataque aplica a chama divina ao alvo, causando 20% do ATK atual como dano verdadeiro adicional.",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnAttack,
+                trigger = AbilityTrigger.OnHit,
                 effects = listOf(
                     Effect.Custom("True damage 20% ATK") { self, unit, state ->
                         val damage = (self.stats[Stat.ATK] ?: 0.0) * 0.20
@@ -1803,7 +1803,7 @@ object CardCatalog {
                 name = "Golpe Corrosivo",
                 description = "Cada ataque corrói 5% da DEF atual do alvo. Máximo de 3 acumulações por inimigo (~14% adicional).",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnAttack,
+                trigger = AbilityTrigger.OnHit,
                 effects = listOf(
                     Effect.Custom("SIEGEBREAKER_CORROSIVE") { _, target, state ->
                         if (target == null) return@Custom
@@ -2201,7 +2201,7 @@ object CardCatalog {
                 name = "Chama do Trono",
                 description = "A cada ataque, o Rei acumula calor solar: +4 ATK permanente.",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnAttack,
+                trigger = AbilityTrigger.OnHit,
                 effects = listOf(
                     Effect.BuffStat(stat = Stat.ATK, value = 4.0, target = AbilityTarget.SELF)
                 )
@@ -2417,7 +2417,7 @@ object CardCatalog {
                 name = "Corte Gêmeo Espectral",
                 description = "Um espectro replica os ataques da lâmina esquerda causando dano mágico adicional.",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnAttack,
+                trigger = AbilityTrigger.OnHit,
                 effects = listOf(
                     Effect.DamageBasedOnStat(Stat.INT, 0.8, damageType = DamageType.MAGIC)
                 )
