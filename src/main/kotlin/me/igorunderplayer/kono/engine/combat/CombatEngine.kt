@@ -582,7 +582,7 @@ class CombatEngine(
         if (aliveEnemies.isEmpty()) return null
 
         val tauntingEnemies = aliveEnemies.filter { it.id in state.tauntByUnitId }
-        val candidates = if (tauntingEnemies.isNotEmpty()) tauntingEnemies else aliveEnemies
+        val candidates = tauntingEnemies.ifEmpty { aliveEnemies }
 
         val ownerTeam = findTeam(attacker)
         val revengeTargetId = ownerTeam?.let { state.lastDamageSourceByTeamId[it.id] }
@@ -953,7 +953,6 @@ class CombatEngine(
     }
 
     private fun resolveAttackCount(unit: Unit): Int {
-
         val speed = unit.stats[Stat.SPEED] ?: 0.0
         val extra = ((speed - 120.0) / 100.0).coerceAtLeast(0.0)
 
@@ -966,7 +965,7 @@ class CombatEngine(
             result++
         }
 
-        return result.coerceIn(1, 3)
+        return result.coerceIn(1, 4)
     }
 
     private fun calculateDamage(unit: Unit): Double {

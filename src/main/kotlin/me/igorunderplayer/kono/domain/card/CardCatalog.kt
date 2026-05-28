@@ -2425,6 +2425,185 @@ object CardCatalog {
         )
     )
 
+    private val glacialOrb = CardDefinition(
+        id = "GLACIAL_ORB",
+        name = "Orbe Glacial",
+        description = "Orbe de gelo ancestral sintonizado com a magia de Sami. Pulsa com frio vivo a cada toque — e quando um inimigo está congelado, libera uma onda glacial devastadora.",
+        type = CardType.EQUIPMENT,
+        rarity = Rarity.MYTHIC,
+        slot = EquipmentSlot.TRINKET,
+        baseStats = mapOf(
+            Stat.INT to 90.0,
+            Stat.SPEED to 10.0,
+            Stat.DEF to -15.0
+        ),
+        statsPerLevel = mapOf(
+            Stat.INT to 10.0,
+            Stat.SPEED to 1.0
+        ),
+        tags = setOf("magic", "int", "ice"),
+        abilities = listOf(
+            Ability(
+                name = "Despertar Glacial",
+                description = "No início da batalha, o orbe desperta e amplifica o poder arcano do portador em +25% de INT permanentemente.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnBattleStart,
+                once = true,
+                effects = listOf(
+                    Effect.StatIncreasePercent(stat = Stat.INT, percent = 0.25)
+                )
+            ),
+            Ability(
+                name = "Amplificação Glacial",
+                description = "Ao atacar um inimigo afetado pela Lua de Gelo, o orbe libera uma onda glacial adicional causando 60% do INT atual como dano mágico.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnHit,
+                effects = listOf(
+                    Effect.Custom("Glacial Amplification") { self, target, state ->
+                        if (target == null) return@Custom
+                        val hasIceDebuff = state.temporaryStatModifiers.any {
+                            it.unitId == target.id && (it.source == "ICE_MOON_VULN" || it.source == "ICE_MOON_SLOW")
+                        }
+                        if (!hasIceDebuff) return@Custom
+                        val intStat = self.stats[Stat.INT] ?: 0.0
+                        val damage = intStat * 0.60
+                        if (damage <= 0) return@Custom
+                        state.queue.add(
+                            CombatEvent.BeforeDamage(
+                                source = self,
+                                target = target,
+                                damage = damage,
+                                damageType = DamageType.MAGIC,
+                                canCrit = false
+                            )
+                        )
+                        state.combatLog += "❄️ Amplificação Glacial: ${target.card.name} está congelado! (+${damage.toInt()} dano mágico)"
+                    }
+                )
+            )
+        )
+    )
+
+    val sami = CardDefinition(
+        id = "SAMI",
+        name = "Sami, a Arquimaga",
+        rarity = Rarity.MYTHIC,
+        description = "Arquimaga de inteligência descomunal e poder arcano sem igual. Enquanto sua mente permanece clara, seu INT atinge patamares inalcançáveis — mas a dor a desequilibra. Sua Lua de Gelo é temida em três reinos.",
+        type = CardType.CHARACTER,
+        baseStats = mapOf(
+            Stat.HP to 780.0,
+            Stat.DEF to 38.0,
+            Stat.ATK to 32.0,
+            Stat.INT to 98.0,
+            Stat.CRIT_CHANCE to 0.15,
+            Stat.CRIT_DAMAGE to 1.5,
+            Stat.SPEED to 120.0
+        ),
+        statsPerLevel = mapOf(
+            Stat.HP to 18.0,
+            Stat.INT to 8.0,
+            Stat.SPEED to 2.0,
+            Stat.CRIT_CHANCE to 0.01
+        ),
+        abilities = listOf(
+            Ability(
+                name = "Foco Absoluto",
+                description = "Enquanto acima de 60% de vida, Sami concentra seu poder arcano e ganha +30% de INT. O bônus é removido automaticamente ao cair abaixo do limiar.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnTurnStart,
+                effects = listOf(
+                    Effect.Custom("Foco Absoluto condicional") { self, _, state ->
+                        val maxHp = self.stats[Stat.HP] ?: 0.0
+                        val focusKey = "SAMI_FOCUS_ACTIVE"
+                        val bonusKey = "SAMI_FOCUS_BONUS"
+                        val isActive = (state.globalFlags[focusKey] as? Boolean) ?: false
+                        val isAboveThreshold = self.hp >= maxHp * 0.60
+
+                        if (isAboveThreshold && !isActive) {
+                            val intStat = self.stats[Stat.INT] ?: 0.0
+                            val bonus = intStat * 0.30
+                            self.stats[Stat.INT] = intStat + bonus
+                            state.globalFlags[focusKey] = true
+                            state.globalFlags[bonusKey] = bonus
+                            state.combatLog += "🔮 ${self.card.name} entrou em foco absoluto! (+30% INT)"
+                        } else if (!isAboveThreshold && isActive) {
+                            val bonus = (state.globalFlags[bonusKey] as? Double) ?: 0.0
+                            self.stats[Stat.INT] = ((self.stats[Stat.INT] ?: 0.0) - bonus).coerceAtLeast(0.0)
+                            state.globalFlags[focusKey] = false
+                            state.globalFlags[bonusKey] = 0.0
+                            state.combatLog += "💔 ${self.card.name} perdeu o foco absoluto."
+                        }
+                    }
+                )
+            ),
+            Ability(
+                name = "Canalizador Arcano",
+                description = "Cada ataque desencadeia uma descarga mágica adicional que escala com INT, causando 25% do INT atual como dano mágico.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnHit,
+                effects = listOf(
+                    Effect.DamageBasedOnStat(Stat.INT, 0.25, damageType = DamageType.MAGIC)
+                )
+            ),
+            Ability(
+                name = "Escudo de Gelo",
+                description = "A cada 3 turnos, Sami envolve a si mesma em armadura de gelo, ganhando +DEF temporária equivalente a 40% do seu INT atual por 2 turnos. Quanto maior o INT, mais sólido o escudo.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnTurnEvery(3),
+                effects = listOf(
+                    Effect.Custom("Ice Shield") { self, _, state ->
+                        val intStat = self.stats[Stat.INT] ?: 0.0
+                        val shieldDef = intStat * 0.4
+                        if (shieldDef <= 0) return@Custom
+                        self.stats[Stat.DEF] = (self.stats[Stat.DEF] ?: 0.0) + shieldDef
+                        state.temporaryStatModifiers += TemporaryStatModifier(
+                            unitId = self.id,
+                            stat = Stat.DEF,
+                            delta = shieldDef,
+                            remainingRounds = 2,
+                            source = "ICE_SHIELD"
+                        )
+                        state.combatLog += "🧊 ${self.card.name} ergueu um Escudo de Gelo (+${shieldDef.toInt()} DEF por 2 turnos)."
+                    }
+                )
+            ),
+            Ability(
+                name = "Lua de Gelo",
+                description = "A cada 4 turnos, conjura uma Lua de Gelo que explode em área — causa 140% do INT como dano mágico, reduz a SPEED de todos os inimigos em 30 por 3 turnos e os deixa vulneráveis a dano mágico (−40 INT) por 2 turnos.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnTurnEvery(4),
+                effects = listOf(
+                    Effect.DamageBasedOnStat(Stat.INT, 1.4, target = AbilityTarget.ALL_ENEMIES, damageType = DamageType.MAGIC),
+                    Effect.Custom("Ice Moon debuffs") { self, _, state ->
+                        val ownerTeam = state.teams.firstOrNull { t -> t.units.any { u -> u.id == self.id } } ?: return@Custom
+                        val enemies = state.teams.filter { it != ownerTeam }.flatMap { it.units }.filter { it.hp > 0 }
+                        for (enemy in enemies) {
+                            val speedReduction = 30.0
+                            enemy.stats[Stat.SPEED] = (enemy.stats[Stat.SPEED] ?: 0.0) - speedReduction
+                            state.temporaryStatModifiers += TemporaryStatModifier(
+                                unitId = enemy.id,
+                                stat = Stat.SPEED,
+                                delta = -speedReduction,
+                                remainingRounds = 3,
+                                source = "ICE_MOON_SLOW"
+                            )
+                            val intReduction = 40.0
+                            enemy.stats[Stat.INT] = (enemy.stats[Stat.INT] ?: 0.0) - intReduction
+                            state.temporaryStatModifiers += TemporaryStatModifier(
+                                unitId = enemy.id,
+                                stat = Stat.INT,
+                                delta = -intReduction,
+                                remainingRounds = 2,
+                                source = "ICE_MOON_VULN"
+                            )
+                            state.combatLog += "🌙 ${enemy.card.name} foi atingido pela Lua de Gelo: −${speedReduction.toInt()} SPEED (3t) e vulnerável a magia (2t)."
+                        }
+                    }
+                )
+            )
+        )
+    )
+
     val konoSister = CardDefinition(
         id = "KONO_SISTER",
         name = "A Gemea de Kono",
@@ -2626,10 +2805,12 @@ object CardCatalog {
         aureKing,
         // Characters — Mythic
         unleashedJuniorKnight,
+        sami,
 
         // Characters — Kono
         kono,
         dummy,
+        konoSister,
 
         // Equipment — Common
         woodenSword, dagger, ironArmor, ironTorc,
@@ -2647,9 +2828,9 @@ object CardCatalog {
         siegebreaker, twinFangKatana, solarbrand,
         stormBoots, soulPendant, renouncedSwordCloth,
         // Equipment — Mythic
-        undefined, sunGodGreatsword, cosmicOrb,
+        undefined, sunGodGreatsword, cosmicOrb, glacialOrb,
 
-        konoSister, konoTwinbladeL, konoTwinbladeR
+        konoTwinbladeL, konoTwinbladeR
     )
 
     private val byId = all.associateBy { it.id }
