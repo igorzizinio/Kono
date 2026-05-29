@@ -11,8 +11,7 @@ suspend fun getMentionedUser(message: Message, args: Array<String>): User? {
     val countSelf = args.count { mentionRegExp.containsMatchIn(it) } > 0
 
     val user = if (args.isNotEmpty()) {
-        message.mentionedUsers.filter { it.id != message.kord.selfId || countSelf }
-            .firstOrNull() ?: message.kord.getUser(
+        message.mentionedUsers.firstOrNull { it.id != message.kord.selfId || countSelf } ?: message.kord.getUser(
             Snowflake(args[0].toULongOrNull() ?: ULong.MIN_VALUE)
         )?.asUserOrNull()
     } else {
