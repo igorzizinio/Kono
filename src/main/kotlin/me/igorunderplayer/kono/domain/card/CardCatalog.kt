@@ -1428,11 +1428,11 @@ object CardCatalog {
     private val goblin = CardDefinition(
         id = "GOBLIN",
         name = "Goblin",
-        description = "Rápido, fraco e agressivo. Ataca antes da maioria, mas cai com poucos golpes.",
+        description = "Rápido, fraco e agressivo. Ataca antes da maioria, mas fica mais perigoso a cada golpe desferido.",
         type = CardType.CHARACTER,
         rarity = Rarity.COMMON,
         baseStats = mapOf(
-            Stat.HP to 330.0,
+            Stat.HP to 380.0,
             Stat.ATK to 38.0,
             Stat.DEF to 4.0,
             Stat.SPEED to 98.0,
@@ -1440,11 +1440,19 @@ object CardCatalog {
             Stat.CRIT_DAMAGE to 1.15
         ),
         statsPerLevel = mapOf(
-            Stat.HP to 7.0,
+            Stat.HP to 8.0,
             Stat.ATK to 4.5
         ),
         tags = setOf("starter", "fast"),
-        abilities = emptyList()
+        abilities = listOf(
+            Ability(
+                name = "Garra Desesperada",
+                description = "A cada golpe desferido, o Goblin fica mais agressivo e ganha +3 de ATK permanente.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnHit,
+                effects = listOf(Effect.BuffStat(stat = Stat.ATK, value = 3.0, target = AbilityTarget.SELF))
+            )
+        )
     )
 
     // =========================================================================
@@ -1475,10 +1483,10 @@ object CardCatalog {
         abilities = listOf(
             Ability(
                 name = "Postura Defensiva",
-                description = "A cada 2 turnos, o Guardião endurece sua armadura, ganhando +3 DEF permanente.",
+                description = "A cada 2 turnos, o Guardião endurece sua armadura, ganhando +5 DEF permanente.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnTurnEvery(2),
-                effects = listOf(Effect.BuffStat(stat = Stat.DEF, value = 3.0, target = AbilityTarget.SELF))
+                effects = listOf(Effect.BuffStat(stat = Stat.DEF, value = 5.0, target = AbilityTarget.SELF))
             )
         )
     )
@@ -1496,7 +1504,7 @@ object CardCatalog {
         type = CardType.CHARACTER,
         rarity = Rarity.EPIC,
         baseStats = mapOf(
-            Stat.HP to 370.0,
+            Stat.HP to 430.0,
             Stat.ATK to 68.0,
             Stat.DEF to 8.0,
             Stat.SPEED to 138.0,
@@ -1513,17 +1521,17 @@ object CardCatalog {
         abilities = listOf(
             Ability(
                 name = "Abertura",
-                description = "No início da batalha, Sombra aproveita o elemento surpresa e ganha +20% de ATK permanente.",
+                description = "No início da batalha, Sombra aproveita o elemento surpresa e ganha +25% de ATK permanente.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnBattleStart,
-                effects = listOf(Effect.StatIncreasePercent(stat = Stat.ATK, percent = 0.20))
+                effects = listOf(Effect.StatIncreasePercent(stat = Stat.ATK, percent = 0.25))
             ),
             Ability(
                 name = "Lâmina Sombria",
-                description = "Ao causar dano, executa alvos com menos de 15% de vida.",
+                description = "Ao causar dano, executa alvos com menos de 20% de vida.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnDamageDealt,
-                effects = listOf(Effect.ExecuteBellowHealth(threshold = 0.15))
+                effects = listOf(Effect.ExecuteBellowHealth(threshold = 0.20))
             )
         )
     )
@@ -1553,10 +1561,10 @@ object CardCatalog {
         abilities = listOf(
             Ability(
                 name = "Fúria",
-                description = "A cada golpe recebido, o Berserker entra em fúria e ganha +5 de ATK permanente.",
+                description = "A cada golpe recebido, o Berserker entra em fúria e ganha +7 de ATK permanente.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnDamageTaken(),
-                effects = listOf(Effect.BuffStat(stat = Stat.ATK, value = 5.0, target = AbilityTarget.SELF))
+                effects = listOf(Effect.BuffStat(stat = Stat.ATK, value = 7.0, target = AbilityTarget.SELF))
             ),
             Ability(
                 name = "Última Resistência",
@@ -1585,7 +1593,7 @@ object CardCatalog {
         rarity = Rarity.LEGENDARY,
         baseStats = mapOf(
             Stat.HP to 840.0,
-            Stat.ATK to 46.0,
+            Stat.ATK to 58.0,
             Stat.DEF to 85.0,
             Stat.SPEED to 62.0,
             Stat.CRIT_CHANCE to 0.08,
@@ -1594,7 +1602,7 @@ object CardCatalog {
         statsPerLevel = mapOf(
             Stat.HP to 22.0,
             Stat.DEF to 7.0,
-            Stat.ATK to 2.5
+            Stat.ATK to 3.5
         ),
         tags = setOf("tank", "defense", "counter"),
         abilities = listOf(
@@ -1614,13 +1622,13 @@ object CardCatalog {
             ),
             Ability(
                 name = "Contra-Ataque de Pedra",
-                description = "Ao receber dano físico, emite uma onda de pedra que causa 15% da sua DEF atual como dano mágico a todos os inimigos.",
+                description = "Ao receber dano físico, emite uma onda de pedra que causa 22% da sua DEF atual como dano mágico a todos os inimigos.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnDamageTaken(DamageType.PHYSICAL),
                 effects = listOf(
                     Effect.DamageBasedOnStat(
                         stat = Stat.DEF,
-                        scaling = 0.15,
+                        scaling = 0.22,
                         statSource = StatSource.SELF,
                         target = AbilityTarget.ALL_ENEMIES,
                         damageType = DamageType.MAGIC
@@ -1639,7 +1647,7 @@ object CardCatalog {
         type = CardType.CHARACTER,
         rarity = Rarity.LEGENDARY,
         baseStats = mapOf(
-            Stat.HP to 520.0,
+            Stat.HP to 600.0,
             Stat.ATK to 68.0,
             Stat.DEF to 15.0,
             Stat.SPEED to 102.0,
@@ -1647,7 +1655,7 @@ object CardCatalog {
             Stat.CRIT_DAMAGE to 1.5
         ),
         statsPerLevel = mapOf(
-            Stat.HP to 10.0,
+            Stat.HP to 12.0,
             Stat.ATK to 8.0,
             Stat.SPEED to 2.5,
             Stat.CRIT_CHANCE to 0.01
@@ -1656,13 +1664,13 @@ object CardCatalog {
         abilities = listOf(
             Ability(
                 name = "Explosão de Vazio",
-                description = "A cada 2 turnos, o Mago libera uma explosão de energia do vazio causando 60% do ATK como dano mágico a todos os inimigos.",
+                description = "A cada 2 turnos, o Mago libera uma explosão de energia do vazio causando 70% do ATK como dano mágico a todos os inimigos.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnTurnEvery(2),
                 effects = listOf(
                     Effect.DamageBasedOnStat(
                         stat = Stat.ATK,
-                        scaling = 0.60,
+                        scaling = 0.70,
                         statSource = StatSource.SELF,
                         target = AbilityTarget.ALL_ENEMIES,
                         damageType = DamageType.MAGIC
@@ -1696,10 +1704,10 @@ object CardCatalog {
         rarity = Rarity.RARE,
         slot = EquipmentSlot.BOOTS,
         baseStats = mapOf(
-            Stat.SPEED to 25.0,
+            Stat.SPEED to 30.0,
             Stat.HP to -10.0
         ),
-        statsPerLevel = mapOf(Stat.SPEED to 3.5),
+        statsPerLevel = mapOf(Stat.SPEED to 4.0),
         tags = setOf("speed", "light"),
         abilities = emptyList()
     )
@@ -1717,16 +1725,16 @@ object CardCatalog {
             Stat.ATK to 20.0,
             Stat.DEF to -8.0
         ),
-        statsPerLevel = mapOf(Stat.ATK to 2.5),
+        statsPerLevel = mapOf(Stat.ATK to 3.5),
         tags = setOf("magic", "aoe"),
         abilities = listOf(
             Ability(
                 name = "Pulso Sombrio",
-                description = "A cada 3 turnos, o cajado emite um pulso de energia sombria causando 30 de dano mágico a todos os inimigos.",
+                description = "A cada 3 turnos, o cajado emite um pulso de energia sombria causando 50 de dano mágico a todos os inimigos.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnTurnEvery(3),
                 effects = listOf(
-                    Effect.Damage(value = 30.0, target = AbilityTarget.ALL_ENEMIES, damageType = DamageType.MAGIC)
+                    Effect.Damage(value = 50.0, target = AbilityTarget.ALL_ENEMIES, damageType = DamageType.MAGIC)
                 )
             )
         )
@@ -1796,11 +1804,11 @@ object CardCatalog {
         abilities = listOf(
             Ability(
                 name = "Poção Vital",
-                description = "A cada 3 turnos, cura 50 HP.",
+                description = "A cada 3 turnos, cura 80 HP.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnTurnEvery(3),
                 effects = listOf(
-                    Effect.Heal(value = 50.0, target = AbilityTarget.SELF)
+                    Effect.Heal(value = 80.0, target = AbilityTarget.SELF)
                 )
             )
         )
@@ -1893,13 +1901,13 @@ object CardCatalog {
         abilities = listOf(
             Ability(
                 name = "Corte Bipartido",
-                description = "Ao acertar um crítico, desfere imediatamente um segundo golpe que causa 65% do ATK como dano físico.",
+                description = "Ao acertar um crítico, desfere imediatamente um segundo golpe que causa 80% do ATK como dano físico.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnCrit,
                 effects = listOf(
-                    Effect.Custom("Double strike 65% ATK") { self, target, state ->
+                    Effect.Custom("Double strike 80% ATK") { self, target, state ->
                         if (target == null || target.hp <= 0) return@Custom
-                        val damage = (self.stats[Stat.ATK] ?: 0.0) * 0.65
+                        val damage = (self.stats[Stat.ATK] ?: 0.0) * 0.80
                         state.combatLog += "⚡ ${self.card.name} disparou um segundo corte!"
                         state.queue.add(
                             CombatEvent.BeforeDamage(

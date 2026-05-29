@@ -15,11 +15,11 @@ class UpgradeCharacterHandler(
 
     companion object {
         // Balance knobs (exponential growth)
-        const val BASE_KONOS_COST = 150
-        const val KONOS_EXP_GROWTH = 1.33
+        const val BASE_KONOS_COST = 120
+        const val KONOS_EXP_GROWTH = 1.20
 
-        const val BASE_COPIES_REQUIRED = 2
-        const val COPIES_EXP_GROWTH = 1.18
+        const val BASE_COPIES_REQUIRED = 1
+        const val COPIES_EXP_GROWTH = 1.05
 
         // Caps por raridade
         const val COMMON_LEVEL_CAP = 6

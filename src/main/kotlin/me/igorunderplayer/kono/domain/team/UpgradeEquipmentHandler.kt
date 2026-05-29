@@ -13,11 +13,11 @@ class UpgradeEquipmentHandler(
 ) {
 
     companion object {
-        const val BASE_KONOS_COST = 150
-        const val KONOS_EXP_GROWTH = 1.33
+        const val BASE_KONOS_COST = 120
+        const val KONOS_EXP_GROWTH = 1.20
 
-        const val BASE_SMITHING_STONES_REQUIRED = 2
-        const val SMITHING_STONES_EXP_GROWTH = 1.18
+        const val BASE_SMITHING_STONES_REQUIRED = 1
+        const val SMITHING_STONES_EXP_GROWTH = 1.05
 
         const val COMMON_LEVEL_CAP = 6
         const val RARE_LEVEL_CAP = 10
