@@ -23,11 +23,13 @@ class TimeRemover(
             description = "Posição no time a limpar (1, 2 ou 3)",
             type = ApplicationCommandOptionType.Integer,
             required = OptionalBoolean.Value(true),
-            choices = Optional(listOf(
-                Choice.IntegerChoice(name = "Slot 1", nameLocalizations = Optional(), value = 1L),
-                Choice.IntegerChoice(name = "Slot 2", nameLocalizations = Optional(), value = 2L),
-                Choice.IntegerChoice(name = "Slot 3", nameLocalizations = Optional(), value = 3L),
-            ))
+            choices = Optional(
+                listOf(
+                    Choice.IntegerChoice(name = "Slot 1", nameLocalizations = Optional(), value = 1L),
+                    Choice.IntegerChoice(name = "Slot 2", nameLocalizations = Optional(), value = 2L),
+                    Choice.IntegerChoice(name = "Slot 3", nameLocalizations = Optional(), value = 3L),
+                )
+            )
         )
     )
 

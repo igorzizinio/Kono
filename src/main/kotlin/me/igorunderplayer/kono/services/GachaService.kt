@@ -12,7 +12,7 @@ const val GACHA_COST = 40
 const val LEGENDARY_HARD_PITY = 40
 const val EPIC_HARD_PITY = 10
 
-data class PulledCard (
+data class PulledCard(
     val cardName: String,
     val rarity: Rarity,
     val type: CardType
@@ -95,10 +95,12 @@ class GachaService(
                     legendaryPity = 0
                     epicPity++
                 }
+
                 Rarity.EPIC -> {
                     epicPity = 0
                     legendaryPity++
                 }
+
                 else -> {
                     epicPity++
                     legendaryPity++

@@ -12,7 +12,7 @@ import me.igorunderplayer.kono.services.UserService
 
 class TopCommand(
     private val userService: UserService
-): BaseCommand(
+) : BaseCommand(
     name = "top",
     description = "exibe diversos rankings relacionados a Kono",
     category = CommandCategory.Util,
@@ -30,6 +30,7 @@ class TopCommand(
                     "**#${index + 1}** | ${discord?.globalName} - ₭${user.konos}"
                 }.joinToString("\n")
             }
+
             else -> {
                 null
             }

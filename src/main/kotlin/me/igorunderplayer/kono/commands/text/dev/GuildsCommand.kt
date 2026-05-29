@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.toList
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandCategory
 
-class GuildsCommand: BaseCommand(
+class GuildsCommand : BaseCommand(
     name = "guilds",
     description = "mostra guilds q estou",
     category = CommandCategory.Developer

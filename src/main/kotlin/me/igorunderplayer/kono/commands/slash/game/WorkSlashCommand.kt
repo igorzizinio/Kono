@@ -22,6 +22,7 @@ class WorkSlashCommand(
             is WorkResult.Success -> deferred.respond {
                 content = "💼 Você trabalhou e ganhou **₭${result.amount}**!\n💰 Saldo: **₭${result.balance}**"
             }
+
             is WorkResult.OnCooldown -> {
                 val minutes = result.remaining.toMinutes()
                 val seconds = result.remaining.seconds % 60
@@ -30,9 +31,11 @@ class WorkSlashCommand(
                     content = "⏳ Aguarde **$timeStr** para trabalhar novamente."
                 }
             }
+
             WorkResult.UserNotFound -> deferred.respond {
                 content = "❌ Você não está registrado. Use `/register` para começar."
             }
+
             else -> deferred.respond { content = "⚠️ Erro ao trabalhar. Tente novamente." }
         }
     }

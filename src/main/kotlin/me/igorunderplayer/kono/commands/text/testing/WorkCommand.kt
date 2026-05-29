@@ -9,7 +9,7 @@ import me.igorunderplayer.kono.services.WorkService
 
 class WorkCommand(
     private val workService: WorkService
-): BaseCommand(
+) : BaseCommand(
     name = "work",
     description = "trabalhe",
     category = CommandCategory.Game

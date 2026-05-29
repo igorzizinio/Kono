@@ -9,12 +9,7 @@ import dev.kord.rest.builder.component.ActionRowBuilder
 import dev.kord.rest.builder.message.embed
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandCategory
-import me.igorunderplayer.kono.domain.card.EquipmentSlot
-import me.igorunderplayer.kono.domain.card.Stat
-import me.igorunderplayer.kono.domain.card.colorDefinition
-import me.igorunderplayer.kono.domain.card.prettyName
-import me.igorunderplayer.kono.domain.card.prettyValue
-import me.igorunderplayer.kono.domain.card.toDisplayEmoji
+import me.igorunderplayer.kono.domain.card.*
 import me.igorunderplayer.kono.domain.team.BuildUnitHandler
 import me.igorunderplayer.kono.domain.team.SetActiveCharacterHandler
 import me.igorunderplayer.kono.domain.team.UpgradeCharacterHandler
@@ -46,7 +41,8 @@ class CharacterCommand(
             "set" -> {
                 if (args.isEmpty()) {
                     event.message.reply {
-                        content = "Use `character set <id>` para definir seu personagem ativo. Exemplo: `character set 42`."
+                        content =
+                            "Use `character set <id>` para definir seu personagem ativo. Exemplo: `character set 42`."
                     }
                     return
                 }
@@ -62,7 +58,8 @@ class CharacterCommand(
                 when (val result = setActiveCharacterHandler.execute(userId.toLong(), instanceId)) {
                     is SetActiveCharacterHandler.Result.Success -> {
                         event.message.reply {
-                            content = "Personagem '${result.characterName}' (#${result.instanceId}) definido como ativo com sucesso!"
+                            content =
+                                "Personagem '${result.characterName}' (#${result.instanceId}) definido como ativo com sucesso!"
                         }
                     }
 
@@ -128,7 +125,8 @@ class CharacterCommand(
                                     name = "📊 Status"
                                     value = buildString {
                                         statOrder.forEach { stat ->
-                                            val value = unit.stats[stat] ?: if (stat == Stat.INT) 0.0 else return@forEach
+                                            val value =
+                                                unit.stats[stat] ?: if (stat == Stat.INT) 0.0 else return@forEach
                                             appendLine("${stat.prettyName()}: **${prettyValue(stat, value)}**")
                                         }
                                     }.trimEnd()
@@ -147,7 +145,9 @@ class CharacterCommand(
                         event.message.reply { content = "❌ Nenhum personagem ativo. Use `character set <id>`." }
 
                     is BuildUnitHandler.Result.CharacterNotFound ->
-                        event.message.reply { content = "❌ Personagem ativo (#${result.activeCharacterId}) não encontrado." }
+                        event.message.reply {
+                            content = "❌ Personagem ativo (#${result.activeCharacterId}) não encontrado."
+                        }
                 }
             }
 
@@ -199,8 +199,9 @@ class CharacterCommand(
                         when (val upgradeResult = upgradeCharacterHandler.executeActiveCharacter(userId.toLong())) {
                             is UpgradeCharacterHandler.Result.Success -> {
                                 event.message.reply {
-                                    content = "✅ **${upgradeResult.characterName}** upou para **Lv.${upgradeResult.newLevel}**! " +
-                                        "(gasto: ${upgradeResult.konosSpent} konos, ${upgradeResult.copiesSpent} copias)"
+                                    content =
+                                        "✅ **${upgradeResult.characterName}** upou para **Lv.${upgradeResult.newLevel}**! " +
+                                                "(gasto: ${upgradeResult.konosSpent} konos, ${upgradeResult.copiesSpent} copias)"
                                 }
                             }
 
@@ -217,24 +218,29 @@ class CharacterCommand(
                             }
 
                             is UpgradeCharacterHandler.Result.InvalidCardType -> {
-                                event.message.reply { content = "A carta ativa nao e um personagem valido para upgrade." }
+                                event.message.reply {
+                                    content = "A carta ativa nao e um personagem valido para upgrade."
+                                }
                             }
 
                             is UpgradeCharacterHandler.Result.MaxLevelReached -> {
                                 event.message.reply {
-                                    content = "Seu personagem ja esta no nivel maximo (${upgradeResult.currentLevel}/${upgradeResult.levelCap})."
+                                    content =
+                                        "Seu personagem ja esta no nivel maximo (${upgradeResult.currentLevel}/${upgradeResult.levelCap})."
                                 }
                             }
 
                             is UpgradeCharacterHandler.Result.NotEnoughKonos -> {
                                 event.message.reply {
-                                    content = "Konos insuficientes: precisa de ${upgradeResult.required}, voce tem ${upgradeResult.current}."
+                                    content =
+                                        "Konos insuficientes: precisa de ${upgradeResult.required}, voce tem ${upgradeResult.current}."
                                 }
                             }
 
                             is UpgradeCharacterHandler.Result.NotEnoughCopies -> {
                                 event.message.reply {
-                                    content = "Copias insuficientes: precisa de ${upgradeResult.required}, voce tem ${upgradeResult.current}."
+                                    content =
+                                        "Copias insuficientes: precisa de ${upgradeResult.required}, voce tem ${upgradeResult.current}."
                                 }
                             }
 
@@ -251,7 +257,9 @@ class CharacterCommand(
                     }
 
                     is UpgradeCharacterHandler.PreviewResult.NoActiveCharacter -> {
-                        event.message.reply { content = "Nenhum personagem ativo selecionado. Use `character set <id>`." }
+                        event.message.reply {
+                            content = "Nenhum personagem ativo selecionado. Use `character set <id>`."
+                        }
                     }
 
                     is UpgradeCharacterHandler.PreviewResult.CharacterNotFound -> {
@@ -264,19 +272,22 @@ class CharacterCommand(
 
                     is UpgradeCharacterHandler.PreviewResult.MaxLevelReached -> {
                         event.message.reply {
-                            content = "Seu personagem ja esta no nivel maximo (${preview.currentLevel}/${preview.levelCap})."
+                            content =
+                                "Seu personagem ja esta no nivel maximo (${preview.currentLevel}/${preview.levelCap})."
                         }
                     }
 
                     is UpgradeCharacterHandler.PreviewResult.NotEnoughKonos -> {
                         event.message.reply {
-                            content = "Konos insuficientes: precisa de ${preview.required}, você tem ${preview.current}."
+                            content =
+                                "Konos insuficientes: precisa de ${preview.required}, você tem ${preview.current}."
                         }
                     }
 
                     is UpgradeCharacterHandler.PreviewResult.NotEnoughCopies -> {
                         event.message.reply {
-                            content = "Copias insuficientes: precisa de ${preview.required}, você tem ${preview.current}."
+                            content =
+                                "Copias insuficientes: precisa de ${preview.required}, você tem ${preview.current}."
                         }
                     }
                 }

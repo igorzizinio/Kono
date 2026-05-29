@@ -5,12 +5,7 @@ import dev.kord.core.behavior.interaction.response.respond
 import dev.kord.core.event.interaction.ChatInputCommandInteractionCreateEvent
 import dev.kord.rest.builder.message.embed
 import me.igorunderplayer.kono.commands.KonoSlashSubCommand
-import me.igorunderplayer.kono.domain.card.EquipmentSlot
-import me.igorunderplayer.kono.domain.card.Stat
-import me.igorunderplayer.kono.domain.card.colorDefinition
-import me.igorunderplayer.kono.domain.card.prettyName
-import me.igorunderplayer.kono.domain.card.prettyValue
-import me.igorunderplayer.kono.domain.card.toDisplayEmoji
+import me.igorunderplayer.kono.domain.card.*
 import me.igorunderplayer.kono.domain.team.BuildUnitHandler
 import me.igorunderplayer.kono.domain.team.UpgradeCharacterHandler
 
@@ -83,10 +78,15 @@ class PersonagemInfo(
                     }
                 }
             }
+
             is BuildUnitHandler.Result.UserNotFound ->
                 deferred.respond { content = "❌ Você não está registrado. Use `/register` para começar." }
+
             is BuildUnitHandler.Result.NoActiveCard ->
-                deferred.respond { content = "❌ Nenhum personagem ativo. Use `/personagem definir` para selecionar um." }
+                deferred.respond {
+                    content = "❌ Nenhum personagem ativo. Use `/personagem definir` para selecionar um."
+                }
+
             is BuildUnitHandler.Result.CharacterNotFound ->
                 deferred.respond { content = "❌ Personagem ativo (#${result.activeCharacterId}) não encontrado." }
         }
@@ -96,6 +96,7 @@ class PersonagemInfo(
         return when (val preview = upgradeCharacterHandler.previewActiveCharacter(discordId)) {
             is UpgradeCharacterHandler.PreviewResult.Ready ->
                 "🆙 Upgrade disponível! Lv.${preview.cost.currentLevel} → Lv.${preview.cost.nextLevel} (${preview.cost.konosCost} ₭, ${preview.cost.copiesRequired} cópia(s))"
+
             else -> null
         }
     }

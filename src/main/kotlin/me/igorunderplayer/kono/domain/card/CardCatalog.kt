@@ -320,8 +320,20 @@ object CardCatalog {
                         team.units.filter { it.hp > 0 }.forEach { ally ->
                             ally.stats[Stat.ATK] = (ally.stats[Stat.ATK] ?: 0.0) + atkBuff
                             ally.stats[Stat.DEF] = (ally.stats[Stat.DEF] ?: 0.0) + defBuff
-                            state.temporaryStatModifiers += TemporaryStatModifier(unitId = ally.id, stat = Stat.ATK, delta = atkBuff, remainingRounds = 2, source = "LUMINA_BUFF")
-                            state.temporaryStatModifiers += TemporaryStatModifier(unitId = ally.id, stat = Stat.DEF, delta = defBuff, remainingRounds = 2, source = "LUMINA_BUFF")
+                            state.temporaryStatModifiers += TemporaryStatModifier(
+                                unitId = ally.id,
+                                stat = Stat.ATK,
+                                delta = atkBuff,
+                                remainingRounds = 2,
+                                source = "LUMINA_BUFF"
+                            )
+                            state.temporaryStatModifiers += TemporaryStatModifier(
+                                unitId = ally.id,
+                                stat = Stat.DEF,
+                                delta = defBuff,
+                                remainingRounds = 2,
+                                source = "LUMINA_BUFF"
+                            )
                             state.combatLog += "🌅 ${ally.card.name} recebeu +${atkBuff.toInt()} ATK e +${defBuff.toInt()} DEF por 2 rodadas."
                         }
                     }
@@ -419,9 +431,19 @@ object CardCatalog {
                         val before = self.hp
                         self.hp = (self.hp + heal).coerceAtMost(maxHp)
                         self.stats[Stat.DEF] = (self.stats[Stat.DEF] ?: 0.0) + defBonus
-                        state.temporaryStatModifiers += TemporaryStatModifier(unitId = self.id, stat = Stat.DEF, delta = defBonus, remainingRounds = 1, source = "PALADIN_CORPO")
+                        state.temporaryStatModifiers += TemporaryStatModifier(
+                            unitId = self.id,
+                            stat = Stat.DEF,
+                            delta = defBonus,
+                            remainingRounds = 1,
+                            source = "PALADIN_CORPO"
+                        )
                         val healed = self.hp - before
-                        if (healed > 0) state.combatLog += "☀️ ${self.card.name} converteu força em ${"%.1f".format(healed)} de cura e +${defBonus.toInt()} DEF temporária."
+                        if (healed > 0) state.combatLog += "☀️ ${self.card.name} converteu força em ${
+                            "%.1f".format(
+                                healed
+                            )
+                        } de cura e +${defBonus.toInt()} DEF temporária."
                     }
                 )
             ),
@@ -453,9 +475,21 @@ object CardCatalog {
                         if (faithAllies <= 1) return@Custom
                         val bonusDef = 6.0 * faithAllies
                         self.stats[Stat.DEF] = (self.stats[Stat.DEF] ?: 0.0) + bonusDef
-                        state.temporaryStatModifiers += TemporaryStatModifier(unitId = self.id, stat = Stat.DEF, delta = bonusDef, remainingRounds = 1, source = "PALADIN_FAITH")
+                        state.temporaryStatModifiers += TemporaryStatModifier(
+                            unitId = self.id,
+                            stat = Stat.DEF,
+                            delta = bonusDef,
+                            remainingRounds = 1,
+                            source = "PALADIN_FAITH"
+                        )
                         team.units.filter { it.id != self.id && it.hp > 0 }.forEach { ally ->
-                            state.temporaryStatModifiers += TemporaryStatModifier(unitId = ally.id, stat = Stat.DEF, delta = bonusDef * 0.5, remainingRounds = 1, source = "PALADIN_FAITH")
+                            state.temporaryStatModifiers += TemporaryStatModifier(
+                                unitId = ally.id,
+                                stat = Stat.DEF,
+                                delta = bonusDef * 0.5,
+                                remainingRounds = 1,
+                                source = "PALADIN_FAITH"
+                            )
                         }
                         state.combatLog += "✝️ ${self.card.name} fortaleceu o time com fé ($faithAllies aliados)."
                     }
@@ -1010,7 +1044,13 @@ object CardCatalog {
                         team.units.filter { it.hp > 0 }.forEach { ally ->
                             val isFaith = ally.card.faction == "sol"
                             val shieldValue = atk * (if (isFaith) 0.16 else 0.08)
-                            state.temporaryStatModifiers += TemporaryStatModifier(unitId = ally.id, stat = Stat.HP, delta = shieldValue, remainingRounds = 1, source = "DEVOTION_SHIELD")
+                            state.temporaryStatModifiers += TemporaryStatModifier(
+                                unitId = ally.id,
+                                stat = Stat.HP,
+                                delta = shieldValue,
+                                remainingRounds = 1,
+                                source = "DEVOTION_SHIELD"
+                            )
                             state.combatLog += "🛡️ ${ally.card.name} recebeu ${shieldValue.toInt()} de escudo (${if (isFaith) "solar" else "normal"})."
                         }
                     }
@@ -1115,7 +1155,11 @@ object CardCatalog {
                         val currentCritDmg = self.stats[Stat.CRIT_DAMAGE] ?: 1.5
                         self.stats[Stat.CRIT_CHANCE] = 0.08
                         self.stats[Stat.CRIT_DAMAGE] = currentCritDmg * 3.0
-                        state.combatLog += "🐟 Critfish travou o crítico em 8% e triplicou o multiplicador (${currentCritDmg}x → ${"%.2f".format(currentCritDmg * 3.0)}x)."
+                        state.combatLog += "🐟 Critfish travou o crítico em 8% e triplicou o multiplicador (${currentCritDmg}x → ${
+                            "%.2f".format(
+                                currentCritDmg * 3.0
+                            )
+                        }x)."
                     }
                 )
             )
@@ -1339,7 +1383,11 @@ object CardCatalog {
                     Effect.Custom("True damage 20% ATK") { self, unit, state ->
                         val damage = (self.stats[Stat.ATK] ?: 0.0) * 0.20
                         if (damage <= 0 || unit == null) return@Custom
-                        state.combatLog += "🔥 A chama divina penetra em ${unit.card.name} causando ${"%.1f".format(damage)} de dano verdadeiro!"
+                        state.combatLog += "🔥 A chama divina penetra em ${unit.card.name} causando ${
+                            "%.1f".format(
+                                damage
+                            )
+                        } de dano verdadeiro!"
                         unit.hp -= damage
                     }
                 )
@@ -1787,7 +1835,8 @@ object CardCatalog {
                 trigger = AbilityTrigger.OnBattleStart,
                 effects = listOf(
                     Effect.Custom("SIEGEBREAKER_RUPTURA") { self, _, state ->
-                        val ownerTeam = state.teams.firstOrNull { t -> t.units.any { u -> u.id == self.id } } ?: return@Custom
+                        val ownerTeam =
+                            state.teams.firstOrNull { t -> t.units.any { u -> u.id == self.id } } ?: return@Custom
                         val enemies = state.teams.filter { it != ownerTeam }.flatMap { it.units }
                         for (enemy in enemies) {
                             val def = enemy.stats[Stat.DEF] ?: 0.0
@@ -2192,7 +2241,7 @@ object CardCatalog {
                             val defBonus = if (isSol) 8.0 else 0.0
                             ally.stats[Stat.ATK] = (ally.stats[Stat.ATK] ?: 0.0) + atkBonus
                             if (defBonus > 0) ally.stats[Stat.DEF] = (ally.stats[Stat.DEF] ?: 0.0) + defBonus
-                            state.combatLog += "👑 ${ally.card.name} recebeu Presença Real ${if (isSol) "(+${ atkBonus.toInt()} ATK, +${defBonus.toInt()} DEF)" else "(+${atkBonus.toInt()} ATK)"}."
+                            state.combatLog += "👑 ${ally.card.name} recebeu Presença Real ${if (isSol) "(+${atkBonus.toInt()} ATK, +${defBonus.toInt()} DEF)" else "(+${atkBonus.toInt()} ATK)"}."
                         }
                     }
                 )
@@ -2346,7 +2395,11 @@ object CardCatalog {
                         val speed = self.stats[Stat.SPEED] ?: 0.0
                         val bonus = speed * 0.08
                         self.stats[Stat.CRIT_DAMAGE] = (self.stats[Stat.CRIT_DAMAGE] ?: 0.0) + bonus
-                        state.combatLog += "💨 ${self.card.name} converteu velocidade em poder crítico (+${"%.2f".format(bonus)}x CRIT DMG)."
+                        state.combatLog += "💨 ${self.card.name} converteu velocidade em poder crítico (+${
+                            "%.2f".format(
+                                bonus
+                            )
+                        }x CRIT DMG)."
                     }
                 )
             ),
@@ -2573,9 +2626,15 @@ object CardCatalog {
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnTurnEvery(4),
                 effects = listOf(
-                    Effect.DamageBasedOnStat(Stat.INT, 1.4, target = AbilityTarget.ALL_ENEMIES, damageType = DamageType.MAGIC),
+                    Effect.DamageBasedOnStat(
+                        Stat.INT,
+                        1.4,
+                        target = AbilityTarget.ALL_ENEMIES,
+                        damageType = DamageType.MAGIC
+                    ),
                     Effect.Custom("Ice Moon debuffs") { self, _, state ->
-                        val ownerTeam = state.teams.firstOrNull { t -> t.units.any { u -> u.id == self.id } } ?: return@Custom
+                        val ownerTeam =
+                            state.teams.firstOrNull { t -> t.units.any { u -> u.id == self.id } } ?: return@Custom
                         val enemies = state.teams.filter { it != ownerTeam }.flatMap { it.units }.filter { it.hp > 0 }
                         for (enemy in enemies) {
                             val speedReduction = 30.0
@@ -2721,10 +2780,42 @@ object CardCatalog {
                         state.combatLog += "🌀 ${self.card.name} desencadeia o Redemoinho das Lâminas Gêmeas!"
 
                         // Physical (INT) → Magic (ATK) → Physical (INT) → Magic (ATK)
-                        state.queue.add(CombatEvent.BeforeDamage(source = self, target = target, damage = physDamage, damageType = DamageType.PHYSICAL, canCrit = false))
-                        state.queue.add(CombatEvent.BeforeDamage(source = self, target = target, damage = magicDamage, damageType = DamageType.MAGIC, canCrit = false))
-                        state.queue.add(CombatEvent.BeforeDamage(source = self, target = target, damage = physDamage, damageType = DamageType.PHYSICAL, canCrit = false))
-                        state.queue.add(CombatEvent.BeforeDamage(source = self, target = target, damage = magicDamage, damageType = DamageType.MAGIC, canCrit = false))
+                        state.queue.add(
+                            CombatEvent.BeforeDamage(
+                                source = self,
+                                target = target,
+                                damage = physDamage,
+                                damageType = DamageType.PHYSICAL,
+                                canCrit = false
+                            )
+                        )
+                        state.queue.add(
+                            CombatEvent.BeforeDamage(
+                                source = self,
+                                target = target,
+                                damage = magicDamage,
+                                damageType = DamageType.MAGIC,
+                                canCrit = false
+                            )
+                        )
+                        state.queue.add(
+                            CombatEvent.BeforeDamage(
+                                source = self,
+                                target = target,
+                                damage = physDamage,
+                                damageType = DamageType.PHYSICAL,
+                                canCrit = false
+                            )
+                        )
+                        state.queue.add(
+                            CombatEvent.BeforeDamage(
+                                source = self,
+                                target = target,
+                                damage = magicDamage,
+                                damageType = DamageType.MAGIC,
+                                canCrit = false
+                            )
+                        )
                     }
                 )
             )
@@ -2737,7 +2828,7 @@ object CardCatalog {
         rarity = Rarity.MYTHIC,
         type = CardType.EQUIPMENT,
         slot = EquipmentSlot.SECONDARY,
-        description =  "A lâmina esquerda da Espada Gêmea de Kono. " +
+        description = "A lâmina esquerda da Espada Gêmea de Kono. " +
                 "Silenciosa e mortal, seus golpes jamais desperdiçam movimento. " +
                 "Dizem que ela corta não apenas carne, mas intenção.\n\n" +
                 "Mesmo separada de sua contraparte, ainda carrega poder suficiente para destruir exércitos.\n\n" +

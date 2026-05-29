@@ -17,7 +17,7 @@ class LoLMatches(
     "lolmatches",
     "mostra partidas de tal user",
     category = CommandCategory.LoL
-){
+) {
 
     override suspend fun run(event: MessageCreateEvent, args: Array<String>) {
 
@@ -36,7 +36,7 @@ class LoLMatches(
             return
         }
 
-        val queryName =  riotId.split('#').first()
+        val queryName = riotId.split('#').first()
         var queryTag = riotId.split('#').getOrNull(1)
 
 
@@ -56,7 +56,8 @@ class LoLMatches(
         }
 
         val summonerIcon = riotService.getProfileIcons()[summoner.profileIconId.toLong()]!!
-        val matches = riotService.getMatchList(leagueShard.toRegionShard(), summoner.puuid, null, null, 0, 5, null, null)
+        val matches =
+            riotService.getMatchList(leagueShard.toRegionShard(), summoner.puuid, null, null, 0, 5, null, null)
 
         val embedFields: MutableList<EmbedBuilder.Field> = matches.map { matchId ->
             val field = EmbedBuilder.Field()
@@ -80,7 +81,8 @@ class LoLMatches(
             embed {
                 author {
                     name = "${summoner.name} - ${summoner.platform}"
-                    icon = "http://ddragon.leagueoflegends.com/cdn/${riotService.getLatestVersion()}/img/profileicon/${summonerIcon.image.full}"
+                    icon =
+                        "http://ddragon.leagueoflegends.com/cdn/${riotService.getLatestVersion()}/img/profileicon/${summonerIcon.image.full}"
                 }
                 fields = embedFields
             }

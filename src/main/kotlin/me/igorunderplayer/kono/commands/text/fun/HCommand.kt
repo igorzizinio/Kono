@@ -7,7 +7,7 @@ import io.ktor.utils.io.jvm.javaio.*
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandCategory
 
-class HCommand: BaseCommand(
+class HCommand : BaseCommand(
     name = "h",
     description = "h",
     category = CommandCategory.Misc

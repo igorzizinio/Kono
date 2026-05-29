@@ -199,7 +199,8 @@ class UpgradeCharacterHandler(
 
     private fun resolveKonosCost(currentLevel: Int): Long {
         val exponent = (currentLevel - 1).coerceAtLeast(0)
-        return (BASE_KONOS_COST * KONOS_EXP_GROWTH.pow(exponent)).roundToInt().toLong().coerceAtLeast(BASE_KONOS_COST.toLong())
+        return (BASE_KONOS_COST * KONOS_EXP_GROWTH.pow(exponent)).roundToInt().toLong()
+            .coerceAtLeast(BASE_KONOS_COST.toLong())
     }
 
     private fun resolveCopiesRequired(currentLevel: Int): Int {

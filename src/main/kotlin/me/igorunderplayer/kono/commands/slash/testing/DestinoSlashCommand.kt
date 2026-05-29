@@ -11,7 +11,7 @@ import dev.kord.core.event.interaction.ChatInputCommandInteractionCreateEvent
 import kotlinx.coroutines.flow.toList
 import me.igorunderplayer.kono.commands.KonoSlashCommand
 
-class DestinoSlashCommand: KonoSlashCommand {
+class DestinoSlashCommand : KonoSlashCommand {
     override val name = "destino"
     override val description = "descubra seu destino..."
 
@@ -108,7 +108,8 @@ class DestinoSlashCommand: KonoSlashCommand {
 
             val randomMember = event.kord.getGuild(guildId).members.toList().random()
             event.interaction.respondPublic {
-                content = "${user.mention} seu destino é... \n ... ${destino.replace("{randomMember}", randomMember.mention)}"
+                content =
+                    "${user.mention} seu destino é... \n ... ${destino.replace("{randomMember}", randomMember.mention)}"
                 flags = MessageFlags {
                     +MessageFlag.SuppressNotifications
                 }
@@ -119,7 +120,6 @@ class DestinoSlashCommand: KonoSlashCommand {
                 content = "${user.mention} seu destino é... \n ... $destino"
             }
         }
-
 
 
     }

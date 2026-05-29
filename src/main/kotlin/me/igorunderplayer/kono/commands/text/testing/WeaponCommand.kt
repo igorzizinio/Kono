@@ -94,7 +94,7 @@ class WeaponCommand(
                             is UpgradeEquipmentHandler.Result.Success -> {
                                 event.message.reply {
                                     content = "✅ **${result.equipmentName}** upou para **Lv.${result.newLevel}**! " +
-                                        "(gasto: ${result.konosSpent} konos, ${result.smithingStonesSpent} smithing stones)"
+                                            "(gasto: ${result.konosSpent} konos, ${result.smithingStonesSpent} smithing stones)"
                                 }
                             }
 
@@ -112,19 +112,22 @@ class WeaponCommand(
 
                             is UpgradeEquipmentHandler.Result.MaxLevelReached -> {
                                 event.message.reply {
-                                    content = "Seu equipamento ja esta no nivel maximo (${result.currentLevel}/${result.levelCap})."
+                                    content =
+                                        "Seu equipamento ja esta no nivel maximo (${result.currentLevel}/${result.levelCap})."
                                 }
                             }
 
                             is UpgradeEquipmentHandler.Result.NotEnoughKonos -> {
                                 event.message.reply {
-                                    content = "Konos insuficientes: precisa de ${result.required}, voce tem ${result.current}."
+                                    content =
+                                        "Konos insuficientes: precisa de ${result.required}, voce tem ${result.current}."
                                 }
                             }
 
                             is UpgradeEquipmentHandler.Result.NotEnoughSmithingStones -> {
                                 event.message.reply {
-                                    content = "Smithing Stones insuficientes: precisa de ${result.required}, voce tem ${result.current}."
+                                    content =
+                                        "Smithing Stones insuficientes: precisa de ${result.required}, voce tem ${result.current}."
                                 }
                             }
 
@@ -150,19 +153,22 @@ class WeaponCommand(
 
                     is UpgradeEquipmentHandler.PreviewResult.MaxLevelReached -> {
                         event.message.reply {
-                            content = "Seu equipamento ja esta no nivel maximo (${preview.currentLevel}/${preview.levelCap})."
+                            content =
+                                "Seu equipamento ja esta no nivel maximo (${preview.currentLevel}/${preview.levelCap})."
                         }
                     }
 
                     is UpgradeEquipmentHandler.PreviewResult.NotEnoughKonos -> {
                         event.message.reply {
-                            content = "Konos insuficientes: precisa de ${preview.required}, voce tem ${preview.current}."
+                            content =
+                                "Konos insuficientes: precisa de ${preview.required}, voce tem ${preview.current}."
                         }
                     }
 
                     is UpgradeEquipmentHandler.PreviewResult.NotEnoughSmithingStones -> {
                         event.message.reply {
-                            content = "Smithing Stones insuficientes: precisa de ${preview.required}, voce tem ${preview.current}."
+                            content =
+                                "Smithing Stones insuficientes: precisa de ${preview.required}, voce tem ${preview.current}."
                         }
                     }
                 }
@@ -174,7 +180,8 @@ class WeaponCommand(
                     val selectId = "weapon-dismantle-select-${event.message.id}-${System.currentTimeMillis()}"
 
                     event.message.reply {
-                        content = "Selecione ate qual raridade voce quer desmontar (inclui a raridade escolhida e abaixo)."
+                        content =
+                            "Selecione ate qual raridade voce quer desmontar (inclui a raridade escolhida e abaixo)."
 
                         addComponent(ActionRowBuilder().apply {
                             stringSelect(selectId) {
@@ -222,7 +229,8 @@ class WeaponCommand(
 
                 if (instanceId == null && maxRarity == null) {
                     event.message.reply {
-                        content = "Entrada invalida. Use um `instance_id` ou raridade (`common`, `rare`, `epic`, `legendary`, `mythic`)."
+                        content =
+                            "Entrada invalida. Use um `instance_id` ou raridade (`common`, `rare`, `epic`, `legendary`, `mythic`)."
                     }
                     return
                 }
@@ -281,7 +289,7 @@ class WeaponCommand(
                                 is DismantleEquipmentHandler.Result.Success -> {
                                     event.message.reply {
                                         content = "✅ **${result.equipmentName}** foi desmontado! " +
-                                            "(+${result.reward.smithingStones} smithing stones, saldo: ${result.newSmithingStonesBalance})"
+                                                "(+${result.reward.smithingStones} smithing stones, saldo: ${result.newSmithingStonesBalance})"
                                     }
                                 }
 
@@ -299,7 +307,8 @@ class WeaponCommand(
 
                                 is DismantleEquipmentHandler.Result.EquipmentEquipped -> {
                                     event.message.reply {
-                                        content = "Nao e possivel desmontar um equipamento equipado. Desequipe primeiro."
+                                        content =
+                                            "Nao e possivel desmontar um equipamento equipado. Desequipe primeiro."
                                     }
                                 }
 
@@ -324,7 +333,9 @@ class WeaponCommand(
                         }
 
                         is DismantleEquipmentHandler.PreviewResult.EquipmentEquipped -> {
-                            event.message.reply { content = "Nao e possivel desmontar um equipamento equipado. Desequipe primeiro." }
+                            event.message.reply {
+                                content = "Nao e possivel desmontar um equipamento equipado. Desequipe primeiro."
+                            }
                         }
                     }
                     return
@@ -401,8 +412,8 @@ class WeaponCommand(
                     is DismantleEquipmentHandler.BulkResult.Success -> {
                         event.message.reply {
                             content = "✅ Desmontagem concluida: **${result.dismantledCount}** equipamento(s) ate " +
-                                "**${result.maxRarity.toDisplayName()}**. " +
-                                "(+${result.totalSmithingStonesReward} smithing stones, saldo: ${result.newSmithingStonesBalance})"
+                                    "**${result.maxRarity.toDisplayName()}**. " +
+                                    "(+${result.totalSmithingStonesReward} smithing stones, saldo: ${result.newSmithingStonesBalance})"
                         }
                     }
 
@@ -412,7 +423,8 @@ class WeaponCommand(
 
                     is DismantleEquipmentHandler.BulkResult.NoEligibleEquipment -> {
                         event.message.reply {
-                            content = "Nenhum equipamento elegivel para desmontar ate ${result.maxRarity.toDisplayName()}."
+                            content =
+                                "Nenhum equipamento elegivel para desmontar ate ${result.maxRarity.toDisplayName()}."
                         }
                     }
 

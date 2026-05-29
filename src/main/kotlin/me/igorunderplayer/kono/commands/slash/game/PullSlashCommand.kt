@@ -25,10 +25,12 @@ class PullSlashCommand(
             description = "Quantas cartas puxar (padrão: 1)",
             type = ApplicationCommandOptionType.Integer,
             required = OptionalBoolean.Value(false),
-            choices = Optional(listOf(
-                Choice.IntegerChoice(name = "1 carta  (40 💎)", nameLocalizations = Optional(), value = 1L),
-                Choice.IntegerChoice(name = "10 cartas (400 💎)", nameLocalizations = Optional(), value = 10L),
-            ))
+            choices = Optional(
+                listOf(
+                    Choice.IntegerChoice(name = "1 carta  (40 💎)", nameLocalizations = Optional(), value = 1L),
+                    Choice.IntegerChoice(name = "10 cartas (400 💎)", nameLocalizations = Optional(), value = 10L),
+                )
+            )
         )
     )
 
@@ -41,10 +43,12 @@ class PullSlashCommand(
             is GachaResult.Success -> deferred.respond {
                 embed {
                     title = "🎰 Você puxou:"
-                    description = "${result.rarity.toDisplayEmoji()} **${result.cardName}** (${cardTypeLabel(result.type)})"
+                    description =
+                        "${result.rarity.toDisplayEmoji()} **${result.cardName}** (${cardTypeLabel(result.type)})"
                     footer { text = "💎 Essence restante: ${result.remainingEssence}" }
                 }
             }
+
             is GachaResult.MultipePullSuccess -> deferred.respond {
                 embed {
                     title = "🎰 Você puxou (10x):"
@@ -54,15 +58,19 @@ class PullSlashCommand(
                     footer { text = "💎 Essence restante: ${result.remainingEssence}" }
                 }
             }
+
             GachaResult.NotEnoughEssence -> deferred.respond {
                 content = "💎 Essence insuficiente. Use `/daily` ou `/work` para ganhar mais."
             }
+
             GachaResult.UserNotFound -> deferred.respond {
                 content = "❌ Você não está registrado. Use `/register` para começar."
             }
+
             GachaResult.NoCardsAvailable -> deferred.respond {
                 content = "❌ Nenhuma carta disponível no momento."
             }
+
             else -> deferred.respond { content = "⚠️ Erro ao realizar o pull. Tente novamente." }
         }
     }

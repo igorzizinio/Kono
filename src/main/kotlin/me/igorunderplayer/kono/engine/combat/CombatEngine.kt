@@ -2,12 +2,7 @@ package me.igorunderplayer.kono.engine.combat
 
 import me.igorunderplayer.kono.domain.card.Stat
 import me.igorunderplayer.kono.domain.card.StatSource
-import me.igorunderplayer.kono.domain.card.ability.AbilityTarget
-import me.igorunderplayer.kono.domain.card.ability.AbilityTrigger
-import me.igorunderplayer.kono.domain.card.ability.AbilityType
-import me.igorunderplayer.kono.domain.card.ability.DamageType
-import me.igorunderplayer.kono.domain.card.ability.Effect
-import me.igorunderplayer.kono.domain.card.ability.ScalingMode
+import me.igorunderplayer.kono.domain.card.ability.*
 import me.igorunderplayer.kono.domain.gameplay.CombatEvent
 import me.igorunderplayer.kono.domain.gameplay.CombatState
 import me.igorunderplayer.kono.domain.gameplay.Unit
@@ -52,7 +47,12 @@ class CombatEngine(
             val attackCount = resolveAttackCount(unit)
 
             if (attackCount > 1) {
-                state.combatLog += "⚡ ${unitLabel(unit, state)} vai atacar $attackCount vezes este turno! (SPEED: ${unit.stats[Stat.SPEED]?.toInt() ?: 0})"
+                state.combatLog += "⚡ ${
+                    unitLabel(
+                        unit,
+                        state
+                    )
+                } vai atacar $attackCount vezes este turno! (SPEED: ${unit.stats[Stat.SPEED]?.toInt() ?: 0})"
             }
 
             repeat(attackCount) {
@@ -179,6 +179,7 @@ class CombatEngine(
                     )
                 }
             }
+
             is Effect.DamageIncreasePercent -> {
                 if (event !is CombatEvent.BeforeDamage) return
 
@@ -213,7 +214,12 @@ class CombatEngine(
 
                     target.stats[effect.stat] = after
 
-                    state.combatLog += "📈 ${unitLabel(target, state)} ganhou +${effect.value} ${effect.stat} (${"%.1f".format(after)})"
+                    state.combatLog += "📈 ${
+                        unitLabel(
+                            target,
+                            state
+                        )
+                    } ganhou +${effect.value} ${effect.stat} (${"%.1f".format(after)})"
                 }
             }
 
@@ -226,7 +232,12 @@ class CombatEngine(
 
                     target.stats[effect.stat] = after
 
-                    state.combatLog += "📈 ${unitLabel(target, state)} ganhou +${effect.percent * 100}% ${effect.stat} (${"%.1f".format(after)})"
+                    state.combatLog += "📈 ${
+                        unitLabel(
+                            target,
+                            state
+                        )
+                    } ganhou +${effect.percent * 100}% ${effect.stat} (${"%.1f".format(after)})"
                 }
             }
 
@@ -240,7 +251,12 @@ class CombatEngine(
                 if (granted <= 0) return
 
                 team.addCoins(granted)
-                state.combatLog += "💰 ${unitLabel(owner, state)} gerou $granted moeda(s) (Time ${team.id}: ${team.coins()})"
+                state.combatLog += "💰 ${
+                    unitLabel(
+                        owner,
+                        state
+                    )
+                } gerou $granted moeda(s) (Time ${team.id}: ${team.coins()})"
             }
 
             is Effect.AddCoinsScaling -> {
@@ -333,7 +349,12 @@ class CombatEngine(
                 val isCrit = state.rng.nextDouble() < critChance
                 val finalDamage = if (isCrit) baseDamage * critDmgMult else baseDamage
 
-                if (isCrit) state.combatLog += "✨ Crítico! ${unitLabel(event.attacker, state)} acertou um golpe certeiro!"
+                if (isCrit) state.combatLog += "✨ Crítico! ${
+                    unitLabel(
+                        event.attacker,
+                        state
+                    )
+                } acertou um golpe certeiro!"
 
                 enqueue(
                     CombatEvent.BeforeDamage(
@@ -383,7 +404,12 @@ class CombatEngine(
                     event.source.stats[Stat.LIFESTEAL]?.let {
                         if (it > 0.0) {
                             val healAmount = damage * it
-                            state.combatLog += "🩸 ${unitLabel(event.source, state)} roubou ${"%.1f".format(healAmount)} HP com lifesteal."
+                            state.combatLog += "🩸 ${
+                                unitLabel(
+                                    event.source,
+                                    state
+                                )
+                            } roubou ${"%.1f".format(healAmount)} HP com lifesteal."
                             heal(event.source, healAmount)
                         }
                     }
@@ -418,7 +444,17 @@ class CombatEngine(
             DamageType.MAGIC -> "dano mágico"
             DamageType.TRUE -> "dano verdadeiro"
         }
-        state.combatLog += "💥 ${unitLabel(source, state)} causou ${"%.1f".format(finalDamage)} de $damageLabel em ${unitLabel(target, state)} (${"%.1f".format(target.hp.coerceAtLeast(0.0))} HP restante)"
+        state.combatLog += "💥 ${
+            unitLabel(
+                source,
+                state
+            )
+        } causou ${"%.1f".format(finalDamage)} de $damageLabel em ${
+            unitLabel(
+                target,
+                state
+            )
+        } (${"%.1f".format(target.hp.coerceAtLeast(0.0))} HP restante)"
 
         enqueue(
             CombatEvent.AfterDamage(
@@ -455,6 +491,7 @@ class CombatEngine(
             is AbilityTrigger.OnTurnEvery -> {
                 event is CombatEvent.TurnStart && event.unit == owner && state.turn % trigger.turns.coerceAtLeast(1) == 0
             }
+
             AbilityTrigger.OnAttack -> event is CombatEvent.Attack && event.attacker == owner
             AbilityTrigger.OnHit -> event is CombatEvent.BeforeDamage && event.source == owner && !event.isOnHitProc
             is AbilityTrigger.OnAttackEvery -> {
@@ -468,6 +505,7 @@ class CombatEngine(
                     currentCount % interval == 0
                 }
             }
+
             is AbilityTrigger.OnAttackAgainstTag -> {
                 if (event !is CombatEvent.Attack || event.attacker != owner) {
                     false
@@ -475,6 +513,7 @@ class CombatEngine(
                     event.target.tags.any { it.equals(trigger.tag, ignoreCase = true) }
                 }
             }
+
             is AbilityTrigger.OnDamageTaken -> event is CombatEvent.BeforeDamage && event.target == owner && (trigger.damageType == null || trigger.damageType == event.damageType)
             AbilityTrigger.OnDamageDealt -> event is CombatEvent.AfterDamage && event.source == owner
             is AbilityTrigger.OnBellowHealth -> {
@@ -497,6 +536,7 @@ class CombatEngine(
                     }
                 }
             }
+
             AbilityTrigger.OnDeath -> event is CombatEvent.Death && event.unit == owner
             AbilityTrigger.OnCrit -> event is CombatEvent.AfterDamage && event.source == owner && event.wasCritical
             AbilityTrigger.Manual -> false
@@ -546,7 +586,12 @@ class CombatEngine(
         val healed = unit.hp - before
 
         if (healed > 0) {
-            state.combatLog += "💚 ${unitLabel(unit, state)} curou ${"%.1f".format(healed)} HP (${"%.1f".format(unit.hp)} HP)"
+            state.combatLog += "💚 ${
+                unitLabel(
+                    unit,
+                    state
+                )
+            } curou ${"%.1f".format(healed)} HP (${"%.1f".format(unit.hp)} HP)"
         }
     }
 
@@ -623,9 +668,11 @@ class CombatEngine(
 
                 listOfNotNull(eventTarget?.takeIf { it.hp > 0 } ?: findTarget(owner))
             }
+
             AbilityTarget.ALLY -> {
                 ownerTeam.units.firstOrNull { it != owner && it.hp > 0 }?.let { listOf(it) } ?: listOf(owner)
             }
+
             AbilityTarget.ALL_ENEMIES -> enemyTeam?.units?.filter { it.hp > 0 } ?: emptyList()
             AbilityTarget.ALL_ALLIES -> ownerTeam.units.filter { it.hp > 0 }
         }
@@ -691,7 +738,12 @@ class CombatEngine(
                     source = "GAMBLER_CHARM_ATK"
                 )
 
-                state.combatLog += "🍀 ${owner.card.name} aumentou ATK de ${unitLabel(target, state)} em +${(percent * 100).toInt()}% por 1 rodada."
+                state.combatLog += "🍀 ${owner.card.name} aumentou ATK de ${
+                    unitLabel(
+                        target,
+                        state
+                    )
+                } em +${(percent * 100).toInt()}% por 1 rodada."
             }
 
             // 🛡️ Buff DEF
@@ -708,7 +760,12 @@ class CombatEngine(
                     source = "GAMBLER_CHARM_DEF"
                 )
 
-                state.combatLog += "🍀 ${owner.card.name} aumentou DEF de ${unitLabel(target, state)} em +${(percent * 100).toInt()}% por 1 rodada."
+                state.combatLog += "🍀 ${owner.card.name} aumentou DEF de ${
+                    unitLabel(
+                        target,
+                        state
+                    )
+                } em +${(percent * 100).toInt()}% por 1 rodada."
             }
 
             // ☠️ Debuff DEF
@@ -726,7 +783,12 @@ class CombatEngine(
                     source = "GAMBLER_CHARM_DEF_DEBUFF"
                 )
 
-                state.combatLog += "🍀 ${owner.card.name} reduziu DEF de ${unitLabel(target, state)} em -${(percent * 100).toInt()}% por 1 rodada!"
+                state.combatLog += "🍀 ${owner.card.name} reduziu DEF de ${
+                    unitLabel(
+                        target,
+                        state
+                    )
+                } em -${(percent * 100).toInt()}% por 1 rodada!"
             }
         }
     }
@@ -802,22 +864,26 @@ class CombatEngine(
                 owner.hp -= 70.0
                 state.combatLog += "🌀 ${owner.card.name} sofreu 70 de dano caotico."
             }
+
             1 -> {
                 heal(owner, 80.0)
                 state.combatLog += "🌀 ${owner.card.name} recuperou 80 HP do caos."
             }
+
             2 -> {
                 if (enemy != null) {
                     enqueue(CombatEvent.BeforeDamage(source = owner, target = enemy, damage = 90.0))
                     state.combatLog += "🌀 ${owner.card.name} disparou 90 de dano caotico."
                 }
             }
+
             3 -> {
                 if (enemy != null) {
                     heal(enemy, 60.0)
                     state.combatLog += "🌀 ${owner.card.name} curou o inimigo em 60 HP."
                 }
             }
+
             4 -> {
                 if (enemy != null) {
                     val temp = owner.hp
@@ -827,6 +893,7 @@ class CombatEngine(
                     state.combatLog += "🌀 ${owner.card.name} trocou sua vida com o inimigo."
                 }
             }
+
             5 -> {
                 val atk = owner.stats[Stat.ATK] ?: 0.0
                 val bonus = atk * 0.5
@@ -841,6 +908,7 @@ class CombatEngine(
 
                 state.combatLog += "🌀 ${owner.card.name} recebeu poder caótico (+50% ATK por 1 turno)."
             }
+
             6 -> {
                 val def = owner.stats[Stat.DEF] ?: 0.0
                 val reduction = def * 0.5
@@ -855,6 +923,7 @@ class CombatEngine(
 
                 state.combatLog += "🌀 ${owner.card.name} teve sua defesa corrompida (-50% DEF)."
             }
+
             7 -> {
                 val allUnits = state.teams.flatMap { it.units }.filter { it.hp > 0 }
 
@@ -870,6 +939,7 @@ class CombatEngine(
 
                 state.combatLog += "🌀 O caos se espalhou e atingiu todos no campo."
             }
+
             else -> {
                 state.combatLog += "Nada de caótico ocorreu nessa rodada.."
             }
@@ -887,11 +957,13 @@ class CombatEngine(
                 enqueue(CombatEvent.BeforeDamage(source = owner, target = enemy, damage = damage))
                 state.combatLog += "🎰 ${owner.card.name} converteu moedas em ${damage.toInt()} dano mágico."
             }
+
             state.rng.nextDouble() < 0.8 -> {
                 val speedBuff = 4.0 + (coins * 0.1)
                 owner.stats[Stat.SPEED] = (owner.stats[Stat.SPEED] ?: 0.0) + speedBuff
                 state.combatLog += "🎰 ${owner.card.name} ganhou +${speedBuff.toInt()} SPEED com a banca do time."
             }
+
             else -> {
                 owner.hp -= 10.0
                 state.combatLog += "🎰 ${owner.card.name} perdeu 10 HP numa aposta ruim."
@@ -923,8 +995,8 @@ class CombatEngine(
         } else {
             val allies = team.units.count {
                 it != owner &&
-                    it.hp > 0 &&
-                    it.card.faction?.equals(effect.allyFactionForBaseBonus, ignoreCase = true) == true
+                        it.hp > 0 &&
+                        it.card.faction?.equals(effect.allyFactionForBaseBonus, ignoreCase = true) == true
             }
             if (allies >= effect.requiredAlliesForBaseBonus) effect.baseBonus else 0
         }
@@ -944,7 +1016,7 @@ class CombatEngine(
 
         return unit.tags.any {
             it.equals("gambler", ignoreCase = true) ||
-                it.equals("markus", ignoreCase = true)
+                    it.equals("markus", ignoreCase = true)
         }
     }
 
@@ -986,12 +1058,14 @@ class CombatEngine(
                 val defense = (target.stats[Stat.DEF] ?: 0.0).coerceAtLeast(-90.0)
                 damage * (100.0 / (100.0 + defense))
             }
+
             DamageType.MAGIC -> {
                 val defContrib = (target.stats[Stat.DEF] ?: 0.0) * 0.25
                 val intDiff = (target.stats[Stat.INT] ?: 0.0) - (source.stats[Stat.INT] ?: 0.0)
                 val totalResist = (defContrib + intDiff).coerceAtLeast(-90.0)
                 damage * (100.0 / (100.0 + totalResist))
             }
+
             DamageType.TRUE -> damage
         }
     }

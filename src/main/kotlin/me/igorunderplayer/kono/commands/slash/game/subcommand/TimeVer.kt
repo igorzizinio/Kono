@@ -40,7 +40,8 @@ class TimeVer(
                         if (row == null) {
                             appendLine("**Slot $slotNum:** — *vazio*")
                         } else {
-                            val char = cardInstanceRepository.getOwnedCharacterWithDefinition(user.id, row.characterInstanceId)
+                            val char =
+                                cardInstanceRepository.getOwnedCharacterWithDefinition(user.id, row.characterInstanceId)
                             if (char == null) {
                                 appendLine("**Slot $slotNum:** ⚠️ personagem ausente (id ${row.characterInstanceId})")
                             } else {

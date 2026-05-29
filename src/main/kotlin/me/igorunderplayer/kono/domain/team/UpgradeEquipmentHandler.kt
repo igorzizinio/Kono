@@ -100,7 +100,10 @@ class UpgradeEquipmentHandler(
         val currentSmithingStones = user.smithingStones
 
         if (currentSmithingStones < cost.smithingStonesRequired) {
-            return PreviewResult.NotEnoughSmithingStones(required = cost.smithingStonesRequired, current = currentSmithingStones)
+            return PreviewResult.NotEnoughSmithingStones(
+                required = cost.smithingStonesRequired,
+                current = currentSmithingStones
+            )
         }
 
         return PreviewResult.Ready(
@@ -138,7 +141,10 @@ class UpgradeEquipmentHandler(
 
         val currentSmithingStones = user.smithingStones
         if (currentSmithingStones < cost.smithingStonesRequired) {
-            return Result.NotEnoughSmithingStones(required = cost.smithingStonesRequired, current = currentSmithingStones)
+            return Result.NotEnoughSmithingStones(
+                required = cost.smithingStonesRequired,
+                current = currentSmithingStones
+            )
         }
 
         val newKonos = user.konos - cost.konosCost

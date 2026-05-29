@@ -18,12 +18,14 @@ class LoLSlashCommands(
     private val userService: UserService,
     private val riotService: RiotService,
     private val emojiService: EmojiService,
-): KonoSlashCommand {
+) : KonoSlashCommand {
     override val name = "lol"
     override val description = "comandos relacionados a league of legends"
 
     private val subCommands = listOf<KonoSlashSubCommand>(
-        Profile(userService, riotService, emojiService), Points(userService, riotService, emojiService), Assign(userService, riotService)
+        Profile(userService, riotService, emojiService),
+        Points(userService, riotService, emojiService),
+        Assign(userService, riotService)
     )
 
     override val options: List<ApplicationCommandOption> = this.subCommands.map {
@@ -34,7 +36,6 @@ class LoLSlashCommands(
             type = ApplicationCommandOptionType.SubCommand
         )
     }
-
 
 
     override suspend fun run(event: ChatInputCommandInteractionCreateEvent) {

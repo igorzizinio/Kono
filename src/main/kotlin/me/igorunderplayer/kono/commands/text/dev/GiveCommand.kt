@@ -152,7 +152,10 @@ class GiveCommand(
 
         userRepository.updateSmithingStones(targetUser.id, targetUser.smithingStones + amount)
 
-        event.message.reply { content = "gave $amount smithing stones to <@${targetUser.discordId}>. new balance: ${targetUser.smithingStones + amount}" }
+        event.message.reply {
+            content =
+                "gave $amount smithing stones to <@${targetUser.discordId}>. new balance: ${targetUser.smithingStones + amount}"
+        }
 
     }
 

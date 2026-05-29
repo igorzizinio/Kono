@@ -33,10 +33,16 @@ class InventarioSlashCommand(
             description = "Tipo de carta a exibir",
             type = ApplicationCommandOptionType.String,
             required = OptionalBoolean.Value(true),
-            choices = Optional(listOf(
-                Choice.StringChoice(name = "👤 Personagens", nameLocalizations = Optional(), value = "personagens"),
-                Choice.StringChoice(name = "🎒 Equipamentos", nameLocalizations = Optional(), value = "equipamentos"),
-            ))
+            choices = Optional(
+                listOf(
+                    Choice.StringChoice(name = "👤 Personagens", nameLocalizations = Optional(), value = "personagens"),
+                    Choice.StringChoice(
+                        name = "🎒 Equipamentos",
+                        nameLocalizations = Optional(),
+                        value = "equipamentos"
+                    ),
+                )
+            )
         ),
         ApplicationCommandOption(
             name = "pagina",

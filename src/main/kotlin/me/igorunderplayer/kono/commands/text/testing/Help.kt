@@ -10,7 +10,7 @@ import me.igorunderplayer.kono.commands.CommandManager
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-class Help: KoinComponent, BaseCommand(
+class Help : KoinComponent, BaseCommand(
     "help",
     "ajuda um necessitado",
     category = CommandCategory.Util,
@@ -53,7 +53,7 @@ class Help: KoinComponent, BaseCommand(
         fun format(category: CommandCategory) =
             grouped[category]
                 ?.joinToString("\n")
-                    { "▸ ${it.name} - `${it.description}`" }
+                { "▸ ${it.name} - `${it.description}`" }
                 ?: "Nenhum comando"
 
         event.message.channel.createEmbed {

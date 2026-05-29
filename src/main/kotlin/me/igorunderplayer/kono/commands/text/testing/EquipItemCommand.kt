@@ -29,7 +29,8 @@ class EquipItemCommand(
             is EquipItemHandler.Result.Success -> {
                 val replaced = if (result.replaced) " (substituiu o item anterior)" else ""
                 event.message.reply {
-                    content = "✅ Item #$itemInstanceId equipado no slot ${result.slot.icon} **${result.slot.displayName}**$replaced."
+                    content =
+                        "✅ Item #$itemInstanceId equipado no slot ${result.slot.icon} **${result.slot.displayName}**$replaced."
                 }
             }
 

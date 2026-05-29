@@ -65,7 +65,7 @@ class DailyService(
         return DailyResult.Success(
             reward = reward,
             streak = newStreak,
-            balance = newEssence    ,
+            balance = newEssence,
             bonusApplied = bonusApplied,
             nextReset = currentReset.plusDays(1)
         )

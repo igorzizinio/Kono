@@ -18,7 +18,7 @@ import java.io.ByteArrayOutputStream
 import java.net.URI
 import javax.imageio.ImageIO
 
-class BorderGradient: BaseCommand(
+class BorderGradient : BaseCommand(
     name = "bordergradient",
     description = "sim"
 ) {

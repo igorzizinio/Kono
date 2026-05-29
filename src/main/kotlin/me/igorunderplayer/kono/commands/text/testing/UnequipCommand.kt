@@ -23,7 +23,8 @@ class UnequipCommand(
         if (slotInput == null) {
             val slotNames = EquipmentSlot.entries.joinToString(", ") { "${it.index + 1} (${it.displayName})" }
             event.message.reply {
-                content = "Por favor, informe o slot do item. Ex: `!unequip arma` ou `!unequip 1`\nSlots disponíveis: $slotNames"
+                content =
+                    "Por favor, informe o slot do item. Ex: `!unequip arma` ou `!unequip 1`\nSlots disponíveis: $slotNames"
             }
             return
         }
@@ -31,7 +32,8 @@ class UnequipCommand(
         when (val result = unequipItemHandler.execute(discordId, slotInput)) {
             is UnequipItemHandler.Result.Success -> {
                 event.message.reply {
-                    content = "✅ Item #${result.itemInstanceId} removido do slot ${result.slot.icon} **${result.slot.displayName}**."
+                    content =
+                        "✅ Item #${result.itemInstanceId} removido do slot ${result.slot.icon} **${result.slot.displayName}**."
                 }
             }
 
