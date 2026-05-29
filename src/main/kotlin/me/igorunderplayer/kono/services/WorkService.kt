@@ -5,8 +5,8 @@ import java.time.Duration
 import java.time.Instant
 import kotlin.random.Random
 
-const val WORK_MIN = 40
-const val WORK_MAX = 80
+const val WORK_MIN = 80
+const val WORK_MAX = 200
 const val WORK_COOLDOWN = 60L // minutos
 
 sealed class WorkResult {
