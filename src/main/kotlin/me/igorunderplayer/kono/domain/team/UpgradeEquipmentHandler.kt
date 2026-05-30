@@ -34,6 +34,55 @@ class UpgradeEquipmentHandler(
         val maxLevel: Int
     )
 
+    data class BulkUpgradeCost(
+        val fromLevel: Int,
+        val toLevel: Int,
+        val totalKonosCost: Long,
+        val totalSmithingStonesRequired: Int,
+        val maxLevel: Int,
+        val steps: Int
+    )
+
+    sealed class BulkPreviewResult {
+        data class Ready(
+            val instanceId: Int,
+            val equipmentName: String,
+            val cost: BulkUpgradeCost,
+            val currentKonos: Long,
+            val currentSmithingStones: Int
+        ) : BulkPreviewResult()
+
+        object UserNotFound : BulkPreviewResult()
+        data class EquipmentNotFound(val instanceId: Int) : BulkPreviewResult()
+        data class InvalidCardType(val definitionId: String) : BulkPreviewResult()
+        data class TargetExceedsCap(val targetLevel: Int, val levelCap: Int) : BulkPreviewResult()
+        data class AlreadyAtOrAboveLevel(val currentLevel: Int, val targetLevel: Int) : BulkPreviewResult()
+        data class NotEnoughKonos(val required: Long, val current: Long) : BulkPreviewResult()
+        data class NotEnoughSmithingStones(val required: Int, val current: Int) : BulkPreviewResult()
+    }
+
+    sealed class BulkResult {
+        data class Success(
+            val instanceId: Int,
+            val equipmentName: String,
+            val previousLevel: Int,
+            val newLevel: Int,
+            val konosSpent: Long,
+            val smithingStonesSpent: Int,
+            val remainingKonos: Long,
+            val remainingSmithingStones: Int
+        ) : BulkResult()
+
+        object UserNotFound : BulkResult()
+        data class EquipmentNotFound(val instanceId: Int) : BulkResult()
+        data class InvalidCardType(val definitionId: String) : BulkResult()
+        data class TargetExceedsCap(val targetLevel: Int, val levelCap: Int) : BulkResult()
+        data class AlreadyAtOrAboveLevel(val currentLevel: Int, val targetLevel: Int) : BulkResult()
+        data class NotEnoughKonos(val required: Long, val current: Long) : BulkResult()
+        data class NotEnoughSmithingStones(val required: Int, val current: Int) : BulkResult()
+        object PersistFailed : BulkResult()
+    }
+
     sealed class PreviewResult {
         data class Ready(
             val instanceId: Int,
@@ -174,6 +223,126 @@ class UpgradeEquipmentHandler(
             smithingStonesSpent = cost.smithingStonesRequired,
             remainingKonos = newKonos,
             remainingSmithingStones = newSmithingStones
+        )
+    }
+
+    suspend fun bulkPreview(discordId: Long, equipmentInstanceId: Int, targetLevel: Int): BulkPreviewResult {
+        val user = userRepository.getUserByDiscordId(discordId)
+            ?: return BulkPreviewResult.UserNotFound
+
+        val equipment = cardInstanceRepository.getOwnedEquipmentWithDefinition(user.id, equipmentInstanceId)
+            ?: return BulkPreviewResult.EquipmentNotFound(equipmentInstanceId)
+
+        val (instance, definition) = equipment
+
+        if (definition.type != CardType.EQUIPMENT) {
+            return BulkPreviewResult.InvalidCardType(definition.id)
+        }
+
+        val currentLevel = instance.level
+        val levelCap = resolveLevelCap(definition.rarity)
+
+        if (targetLevel > levelCap) {
+            return BulkPreviewResult.TargetExceedsCap(targetLevel, levelCap)
+        }
+
+        if (currentLevel >= targetLevel) {
+            return BulkPreviewResult.AlreadyAtOrAboveLevel(currentLevel, targetLevel)
+        }
+
+        val cost = calculateBulkCost(currentLevel, targetLevel, levelCap, definition.rarity)
+
+        if (user.konos < cost.totalKonosCost) {
+            return BulkPreviewResult.NotEnoughKonos(required = cost.totalKonosCost, current = user.konos)
+        }
+
+        if (user.smithingStones < cost.totalSmithingStonesRequired) {
+            return BulkPreviewResult.NotEnoughSmithingStones(
+                required = cost.totalSmithingStonesRequired,
+                current = user.smithingStones
+            )
+        }
+
+        return BulkPreviewResult.Ready(
+            instanceId = instance.id,
+            equipmentName = definition.name,
+            cost = cost,
+            currentKonos = user.konos,
+            currentSmithingStones = user.smithingStones
+        )
+    }
+
+    suspend fun bulkExecute(discordId: Long, equipmentInstanceId: Int, targetLevel: Int): BulkResult {
+        val user = userRepository.getUserByDiscordId(discordId)
+            ?: return BulkResult.UserNotFound
+
+        val equipment = cardInstanceRepository.getOwnedEquipmentWithDefinition(user.id, equipmentInstanceId)
+            ?: return BulkResult.EquipmentNotFound(equipmentInstanceId)
+
+        val (instance, definition) = equipment
+
+        if (definition.type != CardType.EQUIPMENT) {
+            return BulkResult.InvalidCardType(definition.id)
+        }
+
+        val currentLevel = instance.level
+        val levelCap = resolveLevelCap(definition.rarity)
+
+        if (targetLevel > levelCap) {
+            return BulkResult.TargetExceedsCap(targetLevel, levelCap)
+        }
+
+        if (currentLevel >= targetLevel) {
+            return BulkResult.AlreadyAtOrAboveLevel(currentLevel, targetLevel)
+        }
+
+        val cost = calculateBulkCost(currentLevel, targetLevel, levelCap, definition.rarity)
+
+        if (user.konos < cost.totalKonosCost) {
+            return BulkResult.NotEnoughKonos(required = cost.totalKonosCost, current = user.konos)
+        }
+
+        if (user.smithingStones < cost.totalSmithingStonesRequired) {
+            return BulkResult.NotEnoughSmithingStones(
+                required = cost.totalSmithingStonesRequired,
+                current = user.smithingStones
+            )
+        }
+
+        val newKonos = user.konos - cost.totalKonosCost
+        if (!userRepository.updateKonos(user.id, newKonos)) return BulkResult.PersistFailed
+
+        val newSmithingStones = user.smithingStones - cost.totalSmithingStonesRequired
+        if (!userRepository.updateSmithingStones(user.id, newSmithingStones)) return BulkResult.PersistFailed
+
+        if (!cardInstanceRepository.updateEquipmentLevel(instance.id, targetLevel)) return BulkResult.PersistFailed
+
+        return BulkResult.Success(
+            instanceId = instance.id,
+            equipmentName = definition.name,
+            previousLevel = currentLevel,
+            newLevel = targetLevel,
+            konosSpent = cost.totalKonosCost,
+            smithingStonesSpent = cost.totalSmithingStonesRequired,
+            remainingKonos = newKonos,
+            remainingSmithingStones = newSmithingStones
+        )
+    }
+
+    private fun calculateBulkCost(fromLevel: Int, toLevel: Int, levelCap: Int, rarity: Rarity): BulkUpgradeCost {
+        var totalKonos = 0L
+        var totalSmithing = 0
+        for (level in fromLevel until toLevel) {
+            totalKonos += resolveKonosCost(level, rarity)
+            totalSmithing += resolveSmithingStonesRequired(level, rarity)
+        }
+        return BulkUpgradeCost(
+            fromLevel = fromLevel,
+            toLevel = toLevel,
+            totalKonosCost = totalKonos,
+            totalSmithingStonesRequired = totalSmithing,
+            maxLevel = levelCap,
+            steps = toLevel - fromLevel
         )
     }
 
