@@ -9,8 +9,8 @@ import kotlin.random.Random
 
 const val GACHA_COST = 40
 
-const val LEGENDARY_HARD_PITY = 40
-const val EPIC_HARD_PITY = 10
+const val LEGENDARY_HARD_PITY = 35
+const val EPIC_HARD_PITY = 7
 
 data class PulledCard (
     val cardName: String,
@@ -141,11 +141,11 @@ class GachaService(
         val roll = Random.nextDouble() * 100 // 0.0 até 100.0
 
         return when {
-            roll < 60.0 -> Rarity.COMMON        // 50%
-            roll < 85.0 -> Rarity.RARE          // 25%
-            roll < 98.4 -> Rarity.EPIC          // 13.4%
-            roll < 99.8 -> Rarity.LEGENDARY     // 1.4%
-            else -> Rarity.MYTHIC               // 0.2%
+            roll < 40.0 -> Rarity.COMMON        // 50%
+            roll < 80.0 -> Rarity.RARE          // 30%
+            roll < 98.0 -> Rarity.EPIC          // 18%
+            roll < 99.7 -> Rarity.LEGENDARY     // 1.8%
+            else -> Rarity.MYTHIC               // 0.3%
         }
     }
 }
