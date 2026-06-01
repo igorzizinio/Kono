@@ -2761,13 +2761,21 @@ object CardCatalog {
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnDamageTaken(),
                 effects = listOf(
-                    Effect.DamageBasedOnStat(
-                        stat = Stat.INT,
-                        scaling = 0.55,
-                        statSource = StatSource.SELF,
-                        target = AbilityTarget.ENEMY,
-                        damageType = DamageType.MAGIC
-                    )
+                    Effect.Custom("Ice Thorns counter") { self, target, state ->
+                        if (target == null || target.hp <= 0 || target.id == self.id) return@Custom
+                        val damage = (self.stats[Stat.INT] ?: 0.0) * 0.55
+                        if (damage <= 0) return@Custom
+                        state.queue.add(
+                            CombatEvent.BeforeDamage(
+                                source = self,
+                                target = target,
+                                damage = damage,
+                                damageType = DamageType.MAGIC,
+                                canCrit = false
+                            )
+                        )
+                        state.combatLog += "🌹 Espinhos de Gelo: ${target.card.name} sofre ${damage.toInt()} de dano mágico."
+                    }
                 )
             ),
             Ability(
