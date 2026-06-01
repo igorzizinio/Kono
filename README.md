@@ -13,10 +13,8 @@ Atualmente, ofereço suporte para diversas funcionalidades, incluindo **integra�
 
 Você pode me adicionar através dos links abaixo:
 
--
-🔗 [Convite com permissão de administrador](https://discord.com/oauth2/authorize?client_id=1050488635381788714&scope=bot+applications.commands&permissions=8)
--
-🔗 [Convite com nenhuma permissão](https://discord.com/oauth2/authorize?client_id=1050488635381788714&scope=bot+applications.commands)
+- 🔗 [Convite com permissão de administrador](https://discord.com/oauth2/authorize?client_id=1050488635381788714&scope=bot+applications.commands&permissions=8)
+- 🔗 [Convite com nenhuma permissão](https://discord.com/oauth2/authorize?client_id=1050488635381788714&scope=bot+applications.commands)
 
 ## ⚙️ Tecnologias
 
