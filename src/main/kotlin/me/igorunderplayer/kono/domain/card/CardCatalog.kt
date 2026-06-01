@@ -2736,6 +2736,75 @@ object CardCatalog {
         )
     )
 
+    private val frozenRose = CardDefinition(
+        id = "FROZEN_ROSE",
+        name = "Rosa Congelada",
+        description = "Uma rosa petrificada em gelo eterno. Beleza imóvel que esconde perigo vivo — cada toque libera espinhos de gelo, e quando floresce, o inverno corrói a resistência mágica de tudo ao redor.",
+        type = CardType.EQUIPMENT,
+        rarity = Rarity.MYTHIC,
+        slot = EquipmentSlot.SECONDARY,
+        baseStats = mapOf(
+            Stat.INT to 85.0,
+            Stat.HP to 100.0,
+            Stat.DEF to 20.0
+        ),
+        statsPerLevel = mapOf(
+            Stat.INT to 9.0,
+            Stat.HP to 12.0,
+            Stat.DEF to 2.0
+        ),
+        tags = setOf("magic", "int", "ice", "sami", "signature", "counter"),
+        abilities = listOf(
+            Ability(
+                name = "Espinhos de Gelo",
+                description = "Ao receber dano, a rosa libera espinhos glaciais que causam 55% do INT atual como dano mágico ao atacante.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnDamageTaken(),
+                effects = listOf(
+                    Effect.DamageBasedOnStat(
+                        stat = Stat.INT,
+                        scaling = 0.55,
+                        statSource = StatSource.SELF,
+                        target = AbilityTarget.ENEMY,
+                        damageType = DamageType.MAGIC
+                    )
+                )
+            ),
+            Ability(
+                name = "Florescência Glacial",
+                description = "A cada 4 turnos, a rosa desabrocha em pleno inverno: causa 90% do INT atual como dano mágico a todos os inimigos e reduz o INT deles em 25 por 2 turnos.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnTurnEvery(4),
+                effects = listOf(
+                    Effect.DamageBasedOnStat(
+                        stat = Stat.INT,
+                        scaling = 0.90,
+                        statSource = StatSource.SELF,
+                        target = AbilityTarget.ALL_ENEMIES,
+                        damageType = DamageType.MAGIC
+                    ),
+                    Effect.Custom("Bloom INT shred") { self, _, state ->
+                        val ownerTeam =
+                            state.teams.firstOrNull { t -> t.units.any { u -> u.id == self.id } } ?: return@Custom
+                        val enemies = state.teams.filter { it != ownerTeam }.flatMap { it.units }.filter { it.hp > 0 }
+                        for (enemy in enemies) {
+                            val reduction = 25.0
+                            enemy.stats[Stat.INT] = (enemy.stats[Stat.INT] ?: 0.0) - reduction
+                            state.temporaryStatModifiers += TemporaryStatModifier(
+                                unitId = enemy.id,
+                                stat = Stat.INT,
+                                delta = -reduction,
+                                remainingRounds = 2,
+                                source = "FROZEN_ROSE_BLOOM"
+                            )
+                            state.combatLog += "🌹 ${enemy.card.name} foi tocado pela Florescência Glacial: −${reduction.toInt()} INT (2t)."
+                        }
+                    }
+                )
+            )
+        )
+    )
+
     val sami = CardDefinition(
         id = "SAMI",
         name = "Sami, a Arquimaga",
@@ -3119,7 +3188,7 @@ object CardCatalog {
         stormBoots, soulPendant, renouncedSwordCloth,
         // Equipment — Mythic
         undefined, sunGodGreatsword, cosmicOrb, glacialOrb,
-        samiStaff, samiCloth, samiBoots,
+        samiStaff, samiCloth, samiBoots, frozenRose,
 
         konoTwinbladeL, konoTwinbladeR
     )
