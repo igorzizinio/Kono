@@ -2545,6 +2545,197 @@ object CardCatalog {
         )
     )
 
+    private val samiStaff = CardDefinition(
+        id = "SAMI_STAFF",
+        name = "Cetro do Solstício Glacial",
+        description = "Forjado do gelo vivo do mundo antigo, este cetro responde apenas ao toque de Sami. Em suas mãos, cada feitiço pulsa com frio eterno — quanto maior a inteligência, mais devastador o inverno que ela convoca.",
+        type = CardType.EQUIPMENT,
+        rarity = Rarity.MYTHIC,
+        slot = EquipmentSlot.WEAPON,
+        baseStats = mapOf(
+            Stat.INT to 130.0,
+            Stat.ATK to 10.0,
+            Stat.DEF to -20.0,
+            Stat.SPEED to 5.0
+        ),
+        statsPerLevel = mapOf(
+            Stat.INT to 15.0,
+            Stat.ATK to 1.0
+        ),
+        tags = setOf("magic", "int", "ice", "sami", "signature"),
+        abilities = listOf(
+            Ability(
+                name = "Feitiço Glacial",
+                description = "Cada ataque conjura um feitiço de gelo adicional que causa 45% do INT atual como dano mágico.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnHit,
+                effects = listOf(
+                    Effect.DamageBasedOnStat(
+                        stat = Stat.INT,
+                        scaling = 0.45,
+                        statSource = StatSource.SELF,
+                        target = AbilityTarget.ENEMY,
+                        damageType = DamageType.MAGIC
+                    )
+                )
+            ),
+            Ability(
+                name = "Amplificação Polar",
+                description = "No início da batalha, o cetro amplifica o poder arcano do portador em +35% INT permanente.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnBattleStart,
+                once = true,
+                effects = listOf(
+                    Effect.StatIncreasePercent(stat = Stat.INT, percent = 0.35)
+                )
+            ),
+            Ability(
+                name = "Vórtice Glacial",
+                description = "A cada 3 turnos, canaliza um vórtice de gelo que causa 120% do INT atual como dano mágico a todos os inimigos.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnTurnEvery(3),
+                effects = listOf(
+                    Effect.DamageBasedOnStat(
+                        stat = Stat.INT,
+                        scaling = 1.20,
+                        statSource = StatSource.SELF,
+                        target = AbilityTarget.ALL_ENEMIES,
+                        damageType = DamageType.MAGIC
+                    )
+                )
+            )
+        )
+    )
+
+    private val samiCloth = CardDefinition(
+        id = "SAMI_CLOTH",
+        name = "Manto do Coração de Gelo",
+        description = "Tecido de névoa cristalizada, costurado por Sami na noite em que dominou sua primeira Lua de Gelo. O manto responde ao INT de quem o veste — quanto maior a inteligência, mais sólido o escudo de gelo que o envolve.",
+        type = CardType.EQUIPMENT,
+        rarity = Rarity.MYTHIC,
+        slot = EquipmentSlot.ARMOR,
+        baseStats = mapOf(
+            Stat.INT to 75.0,
+            Stat.DEF to 35.0,
+            Stat.HP to 150.0
+        ),
+        statsPerLevel = mapOf(
+            Stat.INT to 8.0,
+            Stat.DEF to 4.0,
+            Stat.HP to 18.0
+        ),
+        tags = setOf("magic", "int", "ice", "sami", "signature", "shield"),
+        abilities = listOf(
+            Ability(
+                name = "Casulo de Gelo",
+                description = "No início da batalha, cristaliza o ar ao redor do portador criando um escudo equivalente a 65% do INT atual como HP adicional.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnBattleStart,
+                once = true,
+                effects = listOf(
+                    Effect.Custom("Ice Shell Shield") { self, _, state ->
+                        val intStat = self.stats[Stat.INT] ?: 0.0
+                        val shieldHp = intStat * 0.65
+                        if (shieldHp <= 0) return@Custom
+                        self.stats[Stat.HP] = (self.stats[Stat.HP] ?: 0.0) + shieldHp
+                        self.hp += shieldHp
+                        state.temporaryStatModifiers += TemporaryStatModifier(
+                            unitId = self.id,
+                            stat = Stat.HP,
+                            delta = shieldHp,
+                            remainingRounds = 99,
+                            source = "ICE_SHELL"
+                        )
+                        state.combatLog += "🧊 ${self.card.name} ergueu um Casulo de Gelo (+${shieldHp.toInt()} HP de escudo glacial)."
+                    }
+                )
+            ),
+            Ability(
+                name = "Armadura Glacial",
+                description = "A cada 2 turnos, a armadura de gelo se renova: ganha DEF temporária equivalente a 50% do INT atual por 2 turnos.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnTurnEvery(2),
+                effects = listOf(
+                    Effect.Custom("Glacial Armor DEF") { self, _, state ->
+                        val intStat = self.stats[Stat.INT] ?: 0.0
+                        val defBonus = intStat * 0.50
+                        if (defBonus <= 0) return@Custom
+                        self.stats[Stat.DEF] = (self.stats[Stat.DEF] ?: 0.0) + defBonus
+                        state.temporaryStatModifiers += TemporaryStatModifier(
+                            unitId = self.id,
+                            stat = Stat.DEF,
+                            delta = defBonus,
+                            remainingRounds = 2,
+                            source = "GLACIAL_ARMOR"
+                        )
+                        state.combatLog += "❄️ ${self.card.name} renova sua Armadura Glacial (+${defBonus.toInt()} DEF por 2 turnos)."
+                    }
+                )
+            ),
+            Ability(
+                name = "Mente Afiada pelo Frio",
+                description = "Ao receber dano, os cristais de gelo se compactam e aguçam a mente: ganha +3 INT permanente. A dor afina o intelecto.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnDamageTaken(),
+                effects = listOf(
+                    Effect.BuffStat(stat = Stat.INT, value = 3.0, target = AbilityTarget.SELF)
+                )
+            )
+        )
+    )
+
+    private val samiBoots = CardDefinition(
+        id = "SAMI_BOOTS",
+        name = "Sandálias do Eterno Inverno",
+        description = "Calçados tecidos do gelo mais puro do mundo antigo. Cada passo refresca a mente de Sami e converte sua velocidade em energia destrutiva. Quem ousa segui-la pisa em terreno gelado.",
+        type = CardType.EQUIPMENT,
+        rarity = Rarity.MYTHIC,
+        slot = EquipmentSlot.BOOTS,
+        baseStats = mapOf(
+            Stat.SPEED to 42.0,
+            Stat.INT to 55.0,
+            Stat.DEF to -8.0
+        ),
+        statsPerLevel = mapOf(
+            Stat.SPEED to 5.0,
+            Stat.INT to 5.0
+        ),
+        tags = setOf("speed", "ice", "magic", "int", "sami", "signature"),
+        abilities = listOf(
+            Ability(
+                name = "Deslize Glacial",
+                description = "No início da batalha, a velocidade é amplificada pelo gelo: ganha +SPEED equivalente a 25% do INT atual permanentemente.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnBattleStart,
+                once = true,
+                effects = listOf(
+                    Effect.Custom("INT to SPEED") { self, _, state ->
+                        val intStat = self.stats[Stat.INT] ?: 0.0
+                        val speedBonus = intStat * 0.25
+                        if (speedBonus <= 0) return@Custom
+                        self.stats[Stat.SPEED] = (self.stats[Stat.SPEED] ?: 0.0) + speedBonus
+                        state.combatLog += "❄️ ${self.card.name} desliza sobre o gelo eterno (+${speedBonus.toInt()} SPEED)."
+                    }
+                )
+            ),
+            Ability(
+                name = "Rastro Glacial",
+                description = "Cada ataque converte velocidade em energia glacial: causa 15% da SPEED atual como dano mágico adicional ao alvo.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnHit,
+                effects = listOf(
+                    Effect.DamageBasedOnStat(
+                        stat = Stat.SPEED,
+                        scaling = 0.15,
+                        statSource = StatSource.SELF,
+                        target = AbilityTarget.ENEMY,
+                        damageType = DamageType.MAGIC
+                    )
+                )
+            )
+        )
+    )
+
     val sami = CardDefinition(
         id = "SAMI",
         name = "Sami, a Arquimaga",
@@ -2928,6 +3119,7 @@ object CardCatalog {
         stormBoots, soulPendant, renouncedSwordCloth,
         // Equipment — Mythic
         undefined, sunGodGreatsword, cosmicOrb, glacialOrb,
+        samiStaff, samiCloth, samiBoots,
 
         konoTwinbladeL, konoTwinbladeR
     )
