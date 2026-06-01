@@ -15,7 +15,7 @@ import no.stelar7.api.r4j.basic.constants.api.regions.LeagueShard
 class Assign(
     private val userService: UserService,
     private val riotService: RiotService
-): KonoSlashSubCommand {
+) : KonoSlashSubCommand {
 
     override val name = "assign"
     override val description = "fa"
@@ -79,7 +79,7 @@ class Assign(
             return
         }
 
-        val user =  userService.getUserByDiscordId(event.interaction.user.id.value.toLong())
+        val user = userService.getUserByDiscordId(event.interaction.user.id.value.toLong())
 
         if (user == null) {
             response.respond {

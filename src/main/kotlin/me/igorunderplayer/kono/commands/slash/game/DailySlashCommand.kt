@@ -34,6 +34,7 @@ class DailySlashCommand(
                     }
                 }
             }
+
             is DailyResult.AlreadyClaimed -> {
                 val now = ZonedDateTime.now(ZoneId.of("UTC"))
                 val remaining = Duration.between(now, result.nextReset)
@@ -43,9 +44,11 @@ class DailySlashCommand(
                     content = "⏳ Você já resgatou seu daily hoje.\nPróximo reset em **${hours}h ${minutes}m**."
                 }
             }
+
             DailyResult.UserNotFound -> deferred.respond {
                 content = "❌ Você não está registrado. Use `/register` para começar."
             }
+
             else -> deferred.respond { content = "⚠️ Erro ao resgatar o daily. Tente novamente." }
         }
     }

@@ -1,7 +1,7 @@
 package me.igorunderplayer.kono.domain.gameplay
 
-import me.igorunderplayer.kono.domain.team.TeamState
 import me.igorunderplayer.kono.domain.card.Stat
+import me.igorunderplayer.kono.domain.team.TeamState
 import kotlin.random.Random
 
 data class TemporaryStatModifier(

@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandCategory
 
-class DeleteApplicationCommand: BaseCommand(
+class DeleteApplicationCommand : BaseCommand(
     name = "deletecommand",
     description = "deleta um slash command",
     category = CommandCategory.Developer

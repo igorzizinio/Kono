@@ -7,7 +7,7 @@ import me.igorunderplayer.kono.commands.BaseCommand
 
 class RegisterCommand(
     private val userService: me.igorunderplayer.kono.services.UserService,
-): BaseCommand(
+) : BaseCommand(
     name = "register",
     description = "se registre"
 ) {
@@ -22,7 +22,8 @@ class RegisterCommand(
         } else {
             user = userService.createUser(discordId)
             event.message.reply {
-                content = if (user == null) "não foi possivel criar sua conta :(" else "sua conta foi criada com sucesso!!"
+                content =
+                    if (user == null) "não foi possivel criar sua conta :(" else "sua conta foi criada com sucesso!!"
             }
         }
     }

@@ -8,9 +8,9 @@ import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandCategory
 import java.lang.management.ManagementFactory
 
-class Info: BaseCommand(
-   "info",
-   "mostra info",
+class Info : BaseCommand(
+    "info",
+    "mostra info",
     category = CommandCategory.Util,
     aliases = listOf("botinfo", "stats")
 ) {

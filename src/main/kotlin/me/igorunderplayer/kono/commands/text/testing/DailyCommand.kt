@@ -12,7 +12,7 @@ import java.time.ZonedDateTime
 class DailyCommand(
     private val dailyService: DailyService
 
-): BaseCommand(
+) : BaseCommand(
     name = "daily",
     description = "Get your daily reward!",
     category = CommandCategory.Game

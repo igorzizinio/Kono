@@ -8,7 +8,7 @@ import me.igorunderplayer.kono.commands.KonoSlashCommand
 import me.igorunderplayer.kono.commands.slash.image.subcommand.Border
 import me.igorunderplayer.kono.commands.slash.image.subcommand.Pixelate
 
-class ImageSlashCommands: KonoSlashCommand {
+class ImageSlashCommands : KonoSlashCommand {
     override val name = "image"
     override val description = "comandos relacionados a manipulação de imagem"
 
@@ -18,11 +18,11 @@ class ImageSlashCommands: KonoSlashCommand {
     )
 
     override val options = this.subCommands.map {
-            ApplicationCommandOption(
-                name = it.name,
-                description = it.description,
-                type = ApplicationCommandOptionType.SubCommand
-            )
+        ApplicationCommandOption(
+            name = it.name,
+            description = it.description,
+            type = ApplicationCommandOptionType.SubCommand
+        )
     }
 
     override suspend fun run(event: ChatInputCommandInteractionCreateEvent) {

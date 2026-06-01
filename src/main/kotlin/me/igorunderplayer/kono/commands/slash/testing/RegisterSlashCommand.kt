@@ -28,7 +28,8 @@ class RegisterSlashCommand() : KonoSlashCommand, KoinComponent {
             user = userService.createUser(discordId)
 
             response.respond {
-                content = if (user == null) "não foi possivel criar sua conta :(" else "sua conta foi criada com sucesso!!"
+                content =
+                    if (user == null) "não foi possivel criar sua conta :(" else "sua conta foi criada com sucesso!!"
             }
         }
     }

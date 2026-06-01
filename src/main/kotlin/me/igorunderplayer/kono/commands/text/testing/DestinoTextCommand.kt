@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.toList
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.utils.getMentionedUser
 
-class DestinoTextCommand: BaseCommand(
+class DestinoTextCommand : BaseCommand(
     name = "destino",
     description = "descubra o seu destino, ou de outra pessoa..."
 ) {
@@ -29,7 +29,7 @@ class DestinoTextCommand: BaseCommand(
             event.message.reply {
                 content = "vc so pode usar isso num servidor"
             }
-           return
+            return
         }
 
         val destinos = arrayOf(
@@ -102,7 +102,8 @@ class DestinoTextCommand: BaseCommand(
         if (destino.contains("{randomMember}")) {
             val randomMember = guild.members.toList().random()
             event.message.reply {
-                content = "${user.mention} seu destino é... \n ... ${destino.replace("{randomMember}", randomMember.mention)}"
+                content =
+                    "${user.mention} seu destino é... \n ... ${destino.replace("{randomMember}", randomMember.mention)}"
                 flags = MessageFlags {
                     +MessageFlag.SuppressNotifications
                 }

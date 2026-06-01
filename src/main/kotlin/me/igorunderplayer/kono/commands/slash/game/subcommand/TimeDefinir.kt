@@ -26,11 +26,13 @@ class TimeDefinir(
             description = "Posição no time (1, 2 ou 3)",
             type = ApplicationCommandOptionType.Integer,
             required = OptionalBoolean.Value(true),
-            choices = Optional(listOf(
-                Choice.IntegerChoice(name = "Slot 1", nameLocalizations = Optional(), value = 1L),
-                Choice.IntegerChoice(name = "Slot 2", nameLocalizations = Optional(), value = 2L),
-                Choice.IntegerChoice(name = "Slot 3", nameLocalizations = Optional(), value = 3L),
-            ))
+            choices = Optional(
+                listOf(
+                    Choice.IntegerChoice(name = "Slot 1", nameLocalizations = Optional(), value = 1L),
+                    Choice.IntegerChoice(name = "Slot 2", nameLocalizations = Optional(), value = 2L),
+                    Choice.IntegerChoice(name = "Slot 3", nameLocalizations = Optional(), value = 3L),
+                )
+            )
         ),
         ApplicationCommandOption(
             name = "instancia",
@@ -60,7 +62,8 @@ class TimeDefinir(
         val character = cardInstanceRepository.getOwnedCharacterWithDefinition(user.id, instanceId)
         if (character == null) {
             deferred.respond {
-                content = "❌ Personagem #$instanceId não encontrado ou não pertence a você.\nUse `/inventario tipo:Personagens` para ver seus IDs."
+                content =
+                    "❌ Personagem #$instanceId não encontrado ou não pertence a você.\nUse `/inventario tipo:Personagens` para ver seus IDs."
             }
             return
         }
@@ -72,7 +75,8 @@ class TimeDefinir(
 
         battleTeamRepository.setSlot(user.id, slot, instanceId)
         deferred.respond {
-            content = "✅ **${character.second.name}** (Lv.${character.first.level}) colocado no **Slot $slot** do seu time."
+            content =
+                "✅ **${character.second.name}** (Lv.${character.first.level}) colocado no **Slot $slot** do seu time."
         }
     }
 }

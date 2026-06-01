@@ -21,26 +21,26 @@ class Points(
     private val userService: UserService,
     private val riotService: RiotService,
     private val emojiService: EmojiService,
-): KonoSlashSubCommand {
+) : KonoSlashSubCommand {
     override val name = "points"
     override val description = "exibe total de maestria de um jogador"
 
     override val options: List<ApplicationCommandOption> = listOf(
         ApplicationCommandOption(
-            name ="champion",
+            name = "champion",
             description = "o campeao",
             required = OptionalBoolean.Value(true),
             type = ApplicationCommandOptionType.String
         ),
 
         ApplicationCommandOption(
-            name ="riotid",
+            name = "riotid",
             description = "o riot id",
             required = OptionalBoolean.Value(false),
             type = ApplicationCommandOptionType.String
         ),
         ApplicationCommandOption(
-            name ="region",
+            name = "region",
             description = "a regiao",
             required = OptionalBoolean.Value(false),
             type = ApplicationCommandOptionType.String,
@@ -67,7 +67,8 @@ class Points(
 
         if (account == null || summoner == null) {
             response.respond {
-                content = "conta não encontrada! \n_não esqueça que para utilizar esse comando vc precisa passar seu riot-id e região, ou utilizar `/riot assign` para linkar uma conta riot ao seu discord_"
+                content =
+                    "conta não encontrada! \n_não esqueça que para utilizar esse comando vc precisa passar seu riot-id e região, ou utilizar `/riot assign` para linkar uma conta riot ao seu discord_"
             }
             return
         }
@@ -100,7 +101,8 @@ class Points(
             embed {
                 author {
                     name = "${account.name} ${account.tag}"
-                    icon = "http://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/profileicon/${summonerIcon.image.full}"
+                    icon =
+                        "http://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/profileicon/${summonerIcon.image.full}"
                 }
 
                 thumbnail {

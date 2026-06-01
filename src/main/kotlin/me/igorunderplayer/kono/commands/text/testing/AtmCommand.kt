@@ -9,7 +9,7 @@ import me.igorunderplayer.kono.services.UserService
 
 class AtmCommand(
     private val userService: UserService
-): BaseCommand(
+) : BaseCommand(
     name = "atm",
     description = "Exibe seu saldo de Konos e Essence",
     aliases = listOf("saldo", "money", "essences", "konos")

@@ -38,10 +38,10 @@ class StoryCommand(
         private val TOTAL_CHAPTERS = EnemyTeamCatalog.storyTeamsInOrder().size
 
         private val COLOR_PROLOGUE = Color(0x4B0082)
-        private val COLOR_CHAPTER  = Color(0x8B6914)
-        private val COLOR_WIN      = Color(0x2ECC71)
-        private val COLOR_LOSS     = Color(0xE74C3C)
-        private val COLOR_DONE     = Color(0xF5C518)
+        private val COLOR_CHAPTER = Color(0x8B6914)
+        private val COLOR_WIN = Color(0x2ECC71)
+        private val COLOR_LOSS = Color(0xE74C3C)
+        private val COLOR_DONE = Color(0xF5C518)
     }
 
     override suspend fun run(event: MessageCreateEvent, args: Array<String>) {
@@ -75,7 +75,7 @@ class StoryCommand(
         val baseId = "${event.message.channelId}-${event.message.id}"
         val startButtonId = "story-start-$baseId"
         val fightButtonId = "story-fight-$baseId"
-        val logButtonId   = "story-log-$baseId"
+        val logButtonId = "story-log-$baseId"
 
         // ── Prologue ─────────────────────────────────────────────────────────
         var currentProgress = user.storyProgress
@@ -245,7 +245,7 @@ class StoryCommand(
         CombatEngine(state).run()
 
         val playerWon = state.teams.first { it.id == "player" }.units.any { it.hp > 0 } &&
-                        !state.teams.first { it.id == "enemy" }.units.any { it.hp > 0 }
+                !state.teams.first { it.id == "enemy" }.units.any { it.hp > 0 }
 
         // ── Rewards & progress ────────────────────────────────────────────────
         val essenceText = if (playerWon) {
@@ -288,7 +288,8 @@ class StoryCommand(
 
         chapterMessage.edit {
             embed {
-                title = "📖 Capítulo $chapterNumber — ${chapter.storyChapterTitle} | ${if (playerWon) "🏆 Vitória!" else "💀 Derrota..."}"
+                title =
+                    "📖 Capítulo $chapterNumber — ${chapter.storyChapterTitle} | ${if (playerWon) "🏆 Vitória!" else "💀 Derrota..."}"
                 description = outcomeText.take(EMBED_DESCRIPTION_LIMIT)
                 footer { text = "Capítulo $chapterNumber de $TOTAL_CHAPTERS" }
                 color = if (playerWon) COLOR_WIN else COLOR_LOSS

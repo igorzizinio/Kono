@@ -10,7 +10,7 @@ class UserService(
     private val userRepository: UserRepository,
 ) {
     suspend fun getUserById(userId: Int): User? {
-       return userRepository.getUserById(userId)
+        return userRepository.getUserById(userId)
     }
 
     suspend fun getUserByDiscordId(discordId: Long): User? {

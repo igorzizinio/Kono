@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.toList
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.utils.getMentionedUser
 
-class TinderCommand: BaseCommand(
+class TinderCommand : BaseCommand(
     name = "tinder",
     description = "dê match com alguem rs"
 ) {

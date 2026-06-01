@@ -10,8 +10,8 @@ import me.igorunderplayer.kono.data.entities.EquippedCard
 import me.igorunderplayer.kono.data.repositories.CardInstanceRepository
 import me.igorunderplayer.kono.data.repositories.CardRepository
 import me.igorunderplayer.kono.data.repositories.EquippedCardsRepository
-import me.igorunderplayer.kono.domain.card.CardType
 import me.igorunderplayer.kono.domain.card.CardDefinition
+import me.igorunderplayer.kono.domain.card.CardType
 import me.igorunderplayer.kono.domain.card.toDisplayEmoji
 import me.igorunderplayer.kono.domain.card.toDisplayName
 import me.igorunderplayer.kono.services.UserService

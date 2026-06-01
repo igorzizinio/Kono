@@ -23,25 +23,25 @@ import java.io.ByteArrayOutputStream
 import java.net.URI
 import javax.imageio.ImageIO
 
-class Border: KonoSlashSubCommand {
+class Border : KonoSlashSubCommand {
     override val name = "border"
     override val description = "cria uma bordinha para sua foto de perfil"
     override val options: List<ApplicationCommandOption> = listOf(
         ApplicationCommandOption(
             name = "user",
-            description =  "usuario",
+            description = "usuario",
             required = OptionalBoolean.Value(true),
             type = ApplicationCommandOptionType.User
         ),
 
         ApplicationCommandOption(
             name = "color1",
-            description =  "cor hexadecimal (padrão: #FFFFFF)",
+            description = "cor hexadecimal (padrão: #FFFFFF)",
             type = ApplicationCommandOptionType.String
         ),
         ApplicationCommandOption(
             name = "color2",
-            description =  "cor hexadecimal (padrão: #FFFFFF)",
+            description = "cor hexadecimal (padrão: #FFFFFF)",
             type = ApplicationCommandOptionType.String
         ),
         ApplicationCommandOption(

@@ -23,7 +23,7 @@ class Profile(
     private val userService: UserService,
     private val riotService: RiotService,
     private val emojiService: EmojiService,
-): KonoSlashSubCommand {
+) : KonoSlashSubCommand {
     override val name = "profile"
     override val description = "mostra perfil de alguem"
 
@@ -81,7 +81,8 @@ class Profile(
                 color = Color(Colors.RED)
                 author {
                     name = "${account.name}#${account.tag} - ${summoner.platform}"
-                    icon = "http://ddragon.leagueoflegends.com/cdn/${riotService.getLatestVersion()}/img/profileicon/${summonerIcon.image.full}"
+                    icon =
+                        "http://ddragon.leagueoflegends.com/cdn/${riotService.getLatestVersion()}/img/profileicon/${summonerIcon.image.full}"
                 }
 
                 field {

@@ -194,7 +194,10 @@ class DismantleEquipmentHandler(
         )
     }
 
-    private suspend fun getEligibleEquipments(userId: Int, maxRarity: Rarity): List<Pair<me.igorunderplayer.kono.data.entities.CardInstance, me.igorunderplayer.kono.domain.card.CardDefinition>> {
+    private suspend fun getEligibleEquipments(
+        userId: Int,
+        maxRarity: Rarity
+    ): List<Pair<me.igorunderplayer.kono.data.entities.CardInstance, me.igorunderplayer.kono.domain.card.CardDefinition>> {
         val equippedIds = equippedCardsRepository.getEquippedCardsForUser(userId)
             .map { it.cardInstanceId }
             .toSet()

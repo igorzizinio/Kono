@@ -28,7 +28,8 @@ class PullCommand(
                 event.message.reply {
                     embed {
                         title = "🎰 Você puxou:"
-                        description = "${result.rarity.toDisplayEmoji()} **${result.cardName}** (${resolveCardType(result.type)})"
+                        description =
+                            "${result.rarity.toDisplayEmoji()} **${result.cardName}** (${resolveCardType(result.type)})"
                         footer {
                             text = "💎 Essence restante: ${result.remainingEssence}"
                         }

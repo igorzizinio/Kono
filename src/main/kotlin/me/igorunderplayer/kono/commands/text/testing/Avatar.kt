@@ -8,7 +8,7 @@ import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandCategory
 import me.igorunderplayer.kono.utils.getMentionedUser
 
-class Avatar: BaseCommand(
+class Avatar : BaseCommand(
     "avatar",
     "mostra o avatar de alguem",
     aliases = listOf("icon"),

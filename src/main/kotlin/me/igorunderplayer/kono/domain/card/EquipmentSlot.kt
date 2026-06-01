@@ -9,7 +9,12 @@ enum class EquipmentSlot(
     WEAPON(0, "Arma", "⚔️", listOf("arma", "weapon", "espada", "sword")),
     BOOTS(1, "Botas", "👢", listOf("botas", "bota", "boots", "boot")),
     ARMOR(2, "Armadura", "🛡️", listOf("armadura", "armor", "armour", "roupa", "cloth")),
-    SECONDARY(3, "Secundário", "🔮", listOf("secundario", "secundário", "secondary", "escudo", "shield", "talisman", "talismã")),
+    SECONDARY(
+        3,
+        "Secundário",
+        "🔮",
+        listOf("secundario", "secundário", "secondary", "escudo", "shield", "talisman", "talismã")
+    ),
     TRINKET(4, "Acessório", "💍", listOf("acessorio", "acessório", "trinket", "anel", "ring", "accessory"));
 
     companion object {
@@ -20,7 +25,7 @@ enum class EquipmentSlot(
             if (n != null) return fromIndex(n - 1)
             return entries.firstOrNull { slot ->
                 slot.name.equals(input, ignoreCase = true) ||
-                    slot.aliases.any { it.equals(input, ignoreCase = true) }
+                        slot.aliases.any { it.equals(input, ignoreCase = true) }
             }
         }
     }

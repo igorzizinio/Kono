@@ -28,7 +28,9 @@ class PersonagemDefinir(
         val instanceId = event.interaction.command.integers["instancia"]?.toInt()
 
         if (instanceId == null || instanceId <= 0) {
-            deferred.respond { content = "❌ ID de instância inválido. Use `/inventario tipo:Personagens` para ver seus IDs." }
+            deferred.respond {
+                content = "❌ ID de instância inválido. Use `/inventario tipo:Personagens` para ver seus IDs."
+            }
             return
         }
 
@@ -37,10 +39,13 @@ class PersonagemDefinir(
                 deferred.respond {
                     content = "✅ **${result.characterName}** (#${result.instanceId}) definido como personagem ativo!"
                 }
+
             is SetActiveCharacterHandler.Result.CharacterNotFound ->
                 deferred.respond {
-                    content = "❌ Nenhum personagem com instância #${result.instanceId} na sua conta.\nUse `/inventario tipo:Personagens` para ver seus IDs."
+                    content =
+                        "❌ Nenhum personagem com instância #${result.instanceId} na sua conta.\nUse `/inventario tipo:Personagens` para ver seus IDs."
                 }
+
             is SetActiveCharacterHandler.Result.UserNotFound ->
                 deferred.respond { content = "❌ Você não está registrado. Use `/register` para começar." }
         }

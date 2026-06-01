@@ -5,7 +5,10 @@ import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.rest.builder.message.embed
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.domain.card.*
-import me.igorunderplayer.kono.domain.card.ability.*
+import me.igorunderplayer.kono.domain.card.ability.DamageType
+import me.igorunderplayer.kono.domain.card.ability.Effect
+import me.igorunderplayer.kono.domain.card.ability.ScalingMode
+import me.igorunderplayer.kono.domain.card.ability.prettyName
 import me.igorunderplayer.kono.services.CardService
 
 class CardCommand(
@@ -131,16 +134,22 @@ class CardCommand(
             is Effect.Damage -> "• 💥 Causa ${effect.value} de dano (${damageTypeLabel(effect.damageType)})"
             is Effect.DamageBasedOnStat ->
                 "• 💥 Causa ${effect.scaling}x ${effect.stat.prettyName()} (${damageTypeLabel(effect.damageType)})"
+
             is Effect.DamageIncreasePercent ->
                 "• 💥 +${effect.value * 100}% de dano"
+
             is Effect.Heal ->
                 "• 💚 Cura ${effect.value}"
+
             is Effect.BuffStat ->
                 "• 📈 +${effect.value} ${effect.stat.prettyName()}"
+
             is Effect.StatIncreasePercent ->
                 "• 📈 +${effect.percent * 100}% ${effect.stat.prettyName()}"
+
             is Effect.AddCoins ->
                 "• 💰 Gera ${effect.value} moedas"
+
             is Effect.AddCoinsScaling -> {
                 val factionBonusText = if (effect.allyFactionForBaseBonus.isNullOrBlank() || effect.baseBonus <= 0) {
                     ""
@@ -150,6 +159,7 @@ class CardCommand(
 
                 "• 💰 Gera ${effect.base} moeda(s) base +${effect.bonusPerStack} a cada ${effect.coinsPerStack} moedas do time$factionBonusText"
             }
+
             is Effect.BuffStatByTeamCoins -> {
                 val modeText = when (effect.mode) {
                     ScalingMode.STACK -> "acumulativo"
@@ -159,14 +169,19 @@ class CardCommand(
 
                 "• 🎰 +${effect.valuePerStack} ${effect.stat.prettyName()} a cada ${effect.coinsPerStack} moedas do time [$modeText]$capText"
             }
+
             is Effect.ProtectAlliesDamageShare ->
                 "• 🛡️ Intercepta ${(effect.sharePercent * 100).toInt()}% do dano recebido pelos aliados"
+
             Effect.Taunt ->
                 "• 🎯 Provoca inimigos e vira alvo prioritario"
+
             is Effect.Random ->
                 "• 🎲 Efeito aleatório (${effect.profile})"
+
             is Effect.StatIncreaseWhileBelowHealth ->
                 "• ⚠️ +${effect.value} ${effect.stat.prettyName()} abaixo de ${(effect.threshold * 100).toInt()}% HP"
+
             else -> "• ❓ Efeito desconhecido"
         }
     }

@@ -17,12 +17,7 @@ import me.igorunderplayer.kono.data.repositories.CardInstanceRepository
 import me.igorunderplayer.kono.data.repositories.EquippedCardsRepository
 import me.igorunderplayer.kono.data.repositories.EquippedItemView
 import me.igorunderplayer.kono.data.repositories.UserRepository
-import me.igorunderplayer.kono.domain.card.CardDefinition
-import me.igorunderplayer.kono.domain.card.EquipmentSlot
-import me.igorunderplayer.kono.domain.card.Rarity
-import me.igorunderplayer.kono.domain.card.colorDefinition
-import me.igorunderplayer.kono.domain.card.toDisplayEmoji
-import me.igorunderplayer.kono.domain.card.toDisplayName
+import me.igorunderplayer.kono.domain.card.*
 import me.igorunderplayer.kono.domain.team.EquipItemHandler
 import me.igorunderplayer.kono.domain.team.UnequipItemHandler
 import me.igorunderplayer.kono.utils.interaction.awaitFirstButtonInteraction
@@ -67,7 +62,14 @@ class EquipamentosSlashCommand(
 
             val clicked = event.kord.awaitFirstButtonInteraction(buttonIds, discordId) ?: run {
                 response.edit {
-                    components = mutableListOf(overviewButtons(equipButtonId, removeButtonId, equipped.isNotEmpty(), disabled = true))
+                    components = mutableListOf(
+                        overviewButtons(
+                            equipButtonId,
+                            removeButtonId,
+                            equipped.isNotEmpty(),
+                            disabled = true
+                        )
+                    )
                 }
                 return
             }
@@ -143,7 +145,8 @@ class EquipamentosSlashCommand(
                             label = "${def.rarity.toDisplayEmoji()} ${def.name}",
                             value = instance.id.toString()
                         ) {
-                            description = "${def.slot?.icon ?: "?"} ${def.slot?.displayName ?: "Sem slot"} • Nv.${instance.level} • ${def.rarity.toDisplayName()}"
+                            description =
+                                "${def.slot?.icon ?: "?"} ${def.slot?.displayName ?: "Sem slot"} • Nv.${instance.level} • ${def.rarity.toDisplayName()}"
                         }
                     }
                 }
@@ -164,6 +167,7 @@ class EquipamentosSlashCommand(
                 val replaced = if (result.replaced) " (substituiu o item anterior)" else ""
                 "✅ Item equipado em ${result.slot.icon} **${result.slot.displayName}**$replaced."
             }
+
             is EquipItemHandler.Result.InvalidSlot -> "❌ Esse item não possui slot de equipamento."
             is EquipItemHandler.Result.NoActiveCharacter -> "❌ Defina um personagem ativo antes de equipar itens."
             is EquipItemHandler.Result.InvalidItem -> "❌ Item inválido ou não pertence a você."
@@ -214,9 +218,11 @@ class EquipamentosSlashCommand(
 
         return when (val result = unequipItemHandler.execute(discordId, slotInput)) {
             is UnequipItemHandler.Result.Success -> {
-                val itemName = equipped.firstOrNull { EquipmentSlot.fromIndex(it.slot)?.name == slotInput }?.name ?: "Item"
+                val itemName =
+                    equipped.firstOrNull { EquipmentSlot.fromIndex(it.slot)?.name == slotInput }?.name ?: "Item"
                 "✅ **$itemName** removido do slot ${result.slot.icon} **${result.slot.displayName}**."
             }
+
             is UnequipItemHandler.Result.InvalidSlot -> "❌ Slot inválido: `${result.input}`."
             is UnequipItemHandler.Result.NoActiveCharacter -> "❌ Defina um personagem ativo antes de remover itens."
             is UnequipItemHandler.Result.EmptySlot -> "❌ Esse slot não possui item equipado."
@@ -240,7 +246,12 @@ class EquipamentosSlashCommand(
         ?.colorDefinition()
         ?: Color(0x2b2d31)
 
-    private fun overviewButtons(equipButtonId: String, removeButtonId: String, hasEquipped: Boolean, disabled: Boolean = false) =
+    private fun overviewButtons(
+        equipButtonId: String,
+        removeButtonId: String,
+        hasEquipped: Boolean,
+        disabled: Boolean = false
+    ) =
         ActionRowBuilder().apply {
             interactionButton(ButtonStyle.Success, equipButtonId) {
                 label = "Equipar"

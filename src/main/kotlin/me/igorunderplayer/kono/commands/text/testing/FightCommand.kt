@@ -12,14 +12,14 @@ import kotlinx.coroutines.time.delay
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandCategory
 import me.igorunderplayer.kono.data.repositories.CardRepository
-import me.igorunderplayer.kono.domain.card.CardType
 import me.igorunderplayer.kono.domain.card.CardDefinition
+import me.igorunderplayer.kono.domain.card.CardType
 import me.igorunderplayer.kono.domain.card.Stat
 import me.igorunderplayer.kono.domain.gameplay.CombatState
 import me.igorunderplayer.kono.domain.gameplay.Team
+import me.igorunderplayer.kono.domain.gameplay.Unit
 import me.igorunderplayer.kono.domain.team.BuildUnitHandler
 import me.igorunderplayer.kono.engine.combat.CombatEngine
-import me.igorunderplayer.kono.domain.gameplay.Unit
 import me.igorunderplayer.kono.utils.getMentionedUser
 import me.igorunderplayer.kono.utils.interaction.awaitButtonInteraction
 import java.time.Duration
@@ -89,7 +89,6 @@ class FightCommand(
         ) ?: return
 
 
-
         // 🧠 buscar inimigo no DB
         val enemyDef = cardRepository.getDefinition(enemyName)
 
@@ -142,6 +141,7 @@ class FightCommand(
                 )
                 null
             }
+
             BuildUnitHandler.Result.NoActiveCard -> {
                 event.message.channel.createMessage(
                     if (isEnemy) {
@@ -152,6 +152,7 @@ class FightCommand(
                 )
                 null
             }
+
             is BuildUnitHandler.Result.CharacterNotFound -> {
                 event.message.channel.createMessage(
                     if (isEnemy) {
@@ -251,17 +252,17 @@ class FightCommand(
         }
 
         logPages.subList(1, logPages.size).forEach { page ->
-               response.createEphemeralFollowup {
-                   embed {
-                       title = page.title
-                       description = page.description
-                       page.footer?.let { footerText ->
-                           footer {
-                               text = footerText
-                           }
-                       }
-                   }
-               }
+            response.createEphemeralFollowup {
+                embed {
+                    title = page.title
+                    description = page.description
+                    page.footer?.let { footerText ->
+                        footer {
+                            text = footerText
+                        }
+                    }
+                }
+            }
 
             delay(Duration.ofMillis(250)) // delay para não enviar tudo de uma vez
         }

@@ -16,7 +16,7 @@ import me.igorunderplayer.kono.data.dto.WaifuPicsMediaDTO
 import me.igorunderplayer.kono.utils.getMentionedUser
 
 
-class KissCommand: BaseCommand(
+class KissCommand : BaseCommand(
     name = "kiss",
     description = "beija alguém",
     category = CommandCategory.Misc
@@ -29,6 +29,7 @@ class KissCommand: BaseCommand(
         }
 
     }
+
     override suspend fun run(event: MessageCreateEvent, args: Array<String>) {
         val user = getMentionedUser(event.message, args) ?: event.kord.getSelf()
 

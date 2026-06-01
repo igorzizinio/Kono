@@ -50,7 +50,8 @@ class TeamCommand(
                         if (row == null) {
                             appendLine("**Slot $slotNum:** — *vazio*")
                         } else {
-                            val character = cardInstanceRepository.getOwnedCharacterWithDefinition(user.id, row.characterInstanceId)
+                            val character =
+                                cardInstanceRepository.getOwnedCharacterWithDefinition(user.id, row.characterInstanceId)
                             if (character == null) {
                                 appendLine("**Slot $slotNum:** ⚠️ personagem ausente (id ${row.characterInstanceId})")
                             } else {

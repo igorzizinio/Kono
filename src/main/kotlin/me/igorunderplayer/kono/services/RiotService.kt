@@ -24,20 +24,31 @@ class RiotService() {
         riot.accountAPI.getAccountByPUUID(region, puuid)
     }
 
-    suspend fun getAccountByRiotId(regionShard: RegionShard, name: String, tag: String): RiotAccount? = withContext(Dispatchers.IO) {
-        riot.accountAPI.getAccountByTag(regionShard, name, tag)
-    }
+    suspend fun getAccountByRiotId(regionShard: RegionShard, name: String, tag: String): RiotAccount? =
+        withContext(Dispatchers.IO) {
+            riot.accountAPI.getAccountByTag(regionShard, name, tag)
+        }
 
     suspend fun getSummonerByPUUID(leagueShard: LeagueShard, puuid: String): Summoner? = withContext(Dispatchers.IO) {
         riot.loLAPI.summonerAPI.getSummonerByPUUID(leagueShard, puuid)
     }
 
-    suspend fun getChampionMastery(leagueShard: LeagueShard, puuid: String, championId: Int): ChampionMastery = withContext(Dispatchers.IO) {
-        riot.loLAPI.masteryAPI.getChampionMastery(leagueShard, puuid, championId)
-    }
+    suspend fun getChampionMastery(leagueShard: LeagueShard, puuid: String, championId: Int): ChampionMastery =
+        withContext(Dispatchers.IO) {
+            riot.loLAPI.masteryAPI.getChampionMastery(leagueShard, puuid, championId)
+        }
 
 
-    suspend fun getMatchList(region: RegionShard, puuid: String, queue: GameQueueType?,type: MatchlistMatchType?, beginIndex: Int, count: Int, startTime: Long?, endTime: Long?): List<String> = withContext(Dispatchers.IO) {
+    suspend fun getMatchList(
+        region: RegionShard,
+        puuid: String,
+        queue: GameQueueType?,
+        type: MatchlistMatchType?,
+        beginIndex: Int,
+        count: Int,
+        startTime: Long?,
+        endTime: Long?
+    ): List<String> = withContext(Dispatchers.IO) {
         riot.loLAPI.matchAPI.getMatchList(region, puuid, queue, type, beginIndex, count, startTime, endTime)
     }
 

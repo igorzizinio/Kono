@@ -9,17 +9,17 @@ import dev.kord.rest.builder.component.ActionRowBuilder
 import dev.kord.rest.builder.message.embed
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandCategory
-import me.igorunderplayer.kono.engine.combat.CombatEngine
 import me.igorunderplayer.kono.domain.gameplay.CombatState
 import me.igorunderplayer.kono.domain.gameplay.Team
-import me.igorunderplayer.kono.domain.gameplay.Unit as CombatUnit
 import me.igorunderplayer.kono.domain.team.BuildUnitHandler
+import me.igorunderplayer.kono.engine.combat.CombatEngine
 import me.igorunderplayer.kono.utils.getMentionedUser
 import me.igorunderplayer.kono.utils.interaction.awaitButtonInteraction
+import me.igorunderplayer.kono.domain.gameplay.Unit as CombatUnit
 
 class StartFightCommand(
     private val buildUnitHandler: BuildUnitHandler,
-): BaseCommand(
+) : BaseCommand(
     "startfight",
     description = "inicia uma batalha contra um oponente",
     category = CommandCategory.Game
@@ -55,7 +55,8 @@ class StartFightCommand(
         var msg = event.message.reply {
             embed {
                 title = "⚔️ Combate iniciado"
-                description = "${playerUser.username} vs ${enemyUser.username}\n\nClique em **Próxima rodada** para avançar o combate."
+                description =
+                    "${playerUser.username} vs ${enemyUser.username}\n\nClique em **Próxima rodada** para avançar o combate."
             }
 
             addComponent(createActionRow(customButtonId))
@@ -138,6 +139,7 @@ class StartFightCommand(
                 }
                 null
             }
+
             BuildUnitHandler.Result.NoActiveCard -> {
                 event.message.reply {
                     content = if (isEnemy) {
@@ -148,6 +150,7 @@ class StartFightCommand(
                 }
                 null
             }
+
             is BuildUnitHandler.Result.CharacterNotFound -> {
                 event.message.reply {
                     content = if (isEnemy) {

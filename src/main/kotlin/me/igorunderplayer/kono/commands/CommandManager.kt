@@ -104,7 +104,7 @@ class CommandManager(
 
             val id = event.kord.selfId.toString()
             val mention = args.removeAt(0)
-            if (mention == "<@$id>" || mention == "<@!$id>")  {
+            if (mention == "<@$id>" || mention == "<@!$id>") {
 
                 val command = searchCommand(args.removeAt(0)) ?: return
 

@@ -19,7 +19,7 @@ import java.net.URL
 import javax.imageio.ImageIO
 
 
-class Pixelate: KonoSlashSubCommand {
+class Pixelate : KonoSlashSubCommand {
     override val name = "pixelate"
     override val description = "deixa uma imagem pixelizada"
 

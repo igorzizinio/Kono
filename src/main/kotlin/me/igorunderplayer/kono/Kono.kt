@@ -1,4 +1,3 @@
-
 package me.igorunderplayer.kono
 
 import dev.kord.core.Kord

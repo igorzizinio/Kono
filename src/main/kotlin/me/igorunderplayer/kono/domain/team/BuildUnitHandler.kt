@@ -19,6 +19,7 @@ class BuildUnitHandler(
             val characterInstanceId: Int,
             val equippedItems: List<EquippedItemView>
         ) : Result()
+
         object UserNotFound : Result()
         object NoActiveCard : Result()
         data class CharacterNotFound(val activeCharacterId: Int) : Result()

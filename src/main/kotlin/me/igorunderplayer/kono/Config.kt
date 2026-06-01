@@ -8,14 +8,17 @@ class Config {
     companion object {
         private val properties = Properties()
 
-        val token: String get() = properties.getProperty("TOKEN")
-            ?: error("TOKEN not defined")
+        val token: String
+            get() = properties.getProperty("TOKEN")
+                ?: error("TOKEN not defined")
 
-        val riotApiKey: String get() = properties.getProperty("RIOT_API_KEY")
-            ?: error("RIOT_API_KEY not defined")
+        val riotApiKey: String
+            get() = properties.getProperty("RIOT_API_KEY")
+                ?: error("RIOT_API_KEY not defined")
 
-        val databaseUrl: String get() = properties.getProperty("DATABASE_URL")
-            ?: error("DATABASE_URL not defined")
+        val databaseUrl: String
+            get() = properties.getProperty("DATABASE_URL")
+                ?: error("DATABASE_URL not defined")
     }
 
     fun load(path: String = "config.properties"): Config {
