@@ -12,10 +12,8 @@ I provide various features, including **integration with the Riot Games API, use
 
 You can add me using the links below:
 
--
-🔗 [Invite with Administrator Permissions](https://discord.com/oauth2/authorize?client_id=1050488635381788714&scope=bot+applications.commands&permissions=8)
--
-🔗 [Invite with No Permissions](https://discord.com/oauth2/authorize?client_id=1050488635381788714&scope=bot+applications.commands)
+- 🔗 [Invite with Administrator Permissions](https://discord.com/oauth2/authorize?client_id=1050488635381788714&scope=bot+applications.commands&permissions=8)
+- 🔗 [Invite with No Permissions](https://discord.com/oauth2/authorize?client_id=1050488635381788714&scope=bot+applications.commands)
 
 ## ⚙️ Technologies
 
