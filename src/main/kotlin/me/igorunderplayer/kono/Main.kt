@@ -9,7 +9,7 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
-import me.igorunderplayer.kono.ai.OpenRouterAIService
+import me.igorunderplayer.kono.services.ai.OpenRouterAIService
 import me.igorunderplayer.kono.di.appModule
 import me.igorunderplayer.kono.services.ai.AIService
 import org.koin.core.context.startKoin

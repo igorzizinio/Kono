@@ -1,7 +1,7 @@
 package me.igorunderplayer.kono.di
 
 import me.igorunderplayer.kono.Kono
-import me.igorunderplayer.kono.ai.OpenRouterAIService
+import me.igorunderplayer.kono.services.ai.OpenRouterAIService
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandManager
 import me.igorunderplayer.kono.commands.KonoSlashCommand
