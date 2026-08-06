@@ -120,10 +120,10 @@ object ConversationBuilder {
 
     suspend fun build(message: Message): List<ChatMessage> {
 
-        val history = message.channel.messages
+        val history = message.channel
+            .getMessagesBefore(message.id, 20)
             .take(20)
             .toList()
-            .reversed()
 
         val messages = mutableListOf<ChatMessage>()
 
