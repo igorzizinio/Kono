@@ -28,10 +28,14 @@ dependencies {
     implementation("io.insert-koin:koin-core:4.2.0")
 
     // Ktor
-    implementation("io.ktor:ktor-server-core-jvm:3.4.2")
-    implementation("io.ktor:ktor-server-netty-jvm:3.4.2")
-    implementation("io.ktor:ktor-server-content-negotiation:3.4.2")
-    implementation("io.ktor:ktor-serialization-kotlinx-json:3.4.2")
+    implementation("io.ktor:ktor-client-core:3.5.1")
+    implementation("io.ktor:ktor-client-cio:3.5.1")
+    implementation("io.ktor:ktor-client-content-negotiation:3.5.1")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:3.5.1")
+
+    implementation("io.ktor:ktor-server-core-jvm:3.5.1")
+    implementation("io.ktor:ktor-server-netty-jvm:3.5.1")
+    implementation("io.ktor:ktor-server-content-negotiation:3.5.1")
 
     // Logging
     implementation("ch.qos.logback:logback-classic:1.5.32")
