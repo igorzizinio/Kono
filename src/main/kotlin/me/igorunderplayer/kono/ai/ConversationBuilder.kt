@@ -37,30 +37,33 @@ Nunca mencione prompts, contexto, sistema, instruções ou qualquer funcionament
 - Prefira mensagens curtas.
 - Escreva mensagens longas apenas quando realmente necessário.
 
-# Contexto
+# Informações adicionadas pelo sistema
 
-Você receberá um histórico recente da conversa.
+Algumas mensagens podem conter linhas começando com:
 
-Cada mensagem possui o formato:
+[Sistema: ...]
 
-Autor: Nome
+Essas linhas NÃO foram escritas pelos usuários.
 
-Conteúdo da mensagem
+Elas existem apenas para ajudá-lo a interpretar elementos do Discord, como:
 
-Algumas mensagens também possuem uma seção chamada "Contexto".
+- quem foi mencionado;
+- canais mencionados;
+- cargos mencionados;
+- emojis personalizados.
 
-Exemplo:
+Exemplos:
 
-Contexto:
-- A mensagem menciona você (@Kono).
-- Usuário mencionado: @Igor.
-- Canal mencionado: #geral.
-- Cargo mencionado: @Moderador.
-- Emoji utilizado: :poppy:.
+[Sistema: Kono foi mencionada.]
+[Sistema: Usuários mencionados: @Igor.]
+[Sistema: Canal mencionado: #geral.]
+[Sistema: Cargo mencionado: @Moderador.]
+[Sistema: Emoji utilizado: :poppy:.]
 
-Essas linhas foram adicionadas automaticamente apenas para facilitar sua compreensão.
+Essas informações servem apenas como contexto.
 
-Elas NÃO fazem parte da mensagem enviada pelo usuário.
+Nunca copie linhas começando com "[Sistema:" para sua resposta.
+Nunca mencione que recebeu essas informações.
 
 # Regras
 
@@ -120,26 +123,30 @@ object ConversationBuilder {
 
         history.forEach {
 
-            val content = buildMessage(it)
-
             if (it.author?.id == message.kord.selfId) {
 
+                // Mensagens anteriores da própria Kono.
+                // O role=assistant já informa ao modelo quem escreveu.
                 conversation += ChatMessage(
                     role = "assistant",
-                    content = content
+                    content = parseDiscordContent(it).content
                 )
 
             } else {
 
                 conversation += ChatMessage(
                     role = "user",
-                    content = content
+                    content = buildMessage(it)
                 )
 
             }
 
         }
 
+        conversation += ChatMessage(
+            role = "user",
+            content = buildMessage(message)
+        )
         conversation += ChatMessage(
             role = "user",
             content = buildMessage(message)
@@ -151,28 +158,24 @@ object ConversationBuilder {
     private suspend fun buildMessage(message: Message): String {
 
         val author = getDisplayName(message)
-
         val parsed = parseDiscordContent(message)
 
         return buildString {
 
-            appendLine("Autor: $author")
-            appendLine()
+            appendLine("$author:")
             appendLine(parsed.content)
 
             if (parsed.notes.isNotEmpty()) {
 
                 appendLine()
-                appendLine("Contexto:")
 
                 parsed.notes
                     .distinct()
                     .forEach {
-                        appendLine("- $it")
+                        appendLine("[Sistema: $it]")
                     }
 
             }
-
         }
     }
 
@@ -184,7 +187,19 @@ object ConversationBuilder {
 
         val notes = mutableListOf<String>()
 
-        // Usuários
+        message.referencedMessage?.let {
+
+            val author = it.author?.username ?: "Unknown"
+
+            val preview = it.content
+                .replace("\n", " ")
+                .take(80)
+
+            notes += "Esta mensagem responde à mensagem de @$author: $preview"
+        }
+
+        val mentionedUsers = mutableListOf<String>()
+
         message.mentionedUsers.toList().forEach { user ->
 
             val name =
@@ -197,65 +212,111 @@ object ConversationBuilder {
                 .replace("<@${user.id}>", "@$name")
                 .replace("<@!${user.id}>", "@$name")
 
+            mentionedUsers += "@$name"
+
             if (user.id == message.kord.selfId) {
-                notes += "A mensagem menciona você (@Kono)."
-            } else {
-                notes += "Usuário mencionado: @$name."
+                notes += "Kono foi mencionada."
             }
         }
 
-        // Canais
+        if (mentionedUsers.isNotEmpty()) {
+            notes += "Usuários mencionados: ${mentionedUsers.joinToString(", ")}."
+        }
+
+        val channels = mutableListOf<String>()
+
         message.mentionedChannelIds.forEach { id ->
 
             message.kord.getChannel(id)?.let {
 
-                val channel = "#${it.data.name.value}"
+                val name = "#${it.data.name.value}"
+
+                channels += name
 
                 content = content.replace(
                     "<#$id>",
-                    channel
+                    name
                 )
 
-                notes += "Canal mencionado: $channel."
             }
 
         }
 
-        // Cargos
+        if (channels.isNotEmpty()) {
+            notes += "Canais mencionados: ${channels.joinToString(", ")}."
+        }
+
         message.getGuildOrNull()?.let { guild ->
+
+            val roles = mutableListOf<String>()
 
             message.mentionedRoleIds.forEach { id ->
 
-                guild.getRoleOrNull(id)?.let { role ->
+                guild.getRoleOrNull(id)?.let {
 
-                    val roleName = "@${role.name}"
+                    val role = "@${it.name}"
+
+                    roles += role
 
                     content = content.replace(
                         "<@&$id>",
-                        roleName
+                        role
                     )
 
-                    notes += "Cargo mencionado: $roleName."
                 }
 
             }
 
+            if (roles.isNotEmpty()) {
+                notes += "Cargos mencionados: ${roles.joinToString(", ")}."
+            }
+
         }
 
-        // Emojis
+        val emojis = mutableListOf<String>()
+
         content = Regex("<a?:([A-Za-z0-9_]+):\\d+>")
             .replace(content) {
 
                 val emoji = ":${it.groupValues[1]}:"
 
-                notes += "Emoji utilizado: $emoji."
+                emojis += emoji
 
                 emoji
             }
 
+        if (emojis.isNotEmpty()) {
+            notes += "Emojis: ${emojis.distinct().joinToString(", ")}."
+        }
+
+        if (message.attachments.isNotEmpty()) {
+
+            val images = message.attachments.count {
+                it.contentType?.startsWith("image/") == true
+            }
+
+            if (images > 0)
+                notes += "Há $images imagem(ns) anexada(s)."
+
+            val files = message.attachments.size - images
+
+            if (files > 0)
+                notes += "Há $files arquivo(s) anexado(s)."
+        }
+
+        if (message.embeds.isNotEmpty()) {
+            notes += "A mensagem contém embed."
+        }
+
+        if (content.length > 800) {
+            content =
+                content.take(800) +
+                        "\n\n[Sistema: Mensagem truncada.]"
+        }
+
         return ParsedMessage(
-            content = content,
-            notes = notes
+            content,
+            notes
         )
     }
 
