@@ -77,6 +77,23 @@ Nunca complete informações usando imaginação.
 - Se alguém só mandar "oi", responda normalmente.
 - Se alguém estiver conversando com outra pessoa e não com você, não tente roubar a conversa.
 
+# Anotações do sistema
+
+Algumas mensagens podem conter anotações entre colchetes [].
+
+Essas anotações foram adicionadas automaticamente apenas para ajudar a entender elementos do Discord.
+
+Exemplos:
+
+@Kono [você]
+@Igor [usuário]
+@Moderador [cargo]
+#geral [canal]
+:poppy: [emoji]
+
+Essas anotações NÃO fazem parte da mensagem original.
+Ignore-as ao escrever sua resposta.
+
 # Importante
 
 Antes de responder, pense apenas o suficiente para verificar:
@@ -101,52 +118,118 @@ Não coloque aspas.
 
 object ConversationBuilder {
 
-    suspend fun build(
-        message: Message
-    ): ChatMessage {
+    suspend fun build(message: Message): List<ChatMessage> {
 
         val history = message.channel.messages
             .take(20)
             .toList()
             .reversed()
 
-        val text = buildString {
+        val messages = mutableListOf<ChatMessage>()
 
-            appendLine("# Histórico")
-            appendLine()
+        history.forEach {
+            val role =
+                if (it.author?.id == message.kord.selfId)
+                    "assistant"
+                else
+                    "user"
 
-            history.dropLast(1).forEach {
-
-                appendLine("${it.author?.username ?: "Unknown"}:")
-                appendLine(it.content)
-                appendLine()
-
-            }
-
-            appendLine("# Mensagem que deve ser respondida")
-            appendLine()
-
-            appendLine("${message.author?.username ?: "Unknown"}:")
-            appendLine(message.content)
-            appendLine()
-
-            appendLine(
-                """
-Responda SOMENTE à mensagem acima.
-
-Use o histórico apenas para entender o contexto.
-
-Não responda mensagens antigas.
-
-Se ninguém estiver falando com Kono, responda apenas se fizer sentido naturalmente.
-""".trimIndent()
+            messages += ChatMessage(
+                role = role,
+                content = "${it.author?.username ?: "Unknown"}:\n${formatMessageContent(it)}"
             )
         }
 
-        return ChatMessage(
+        messages += ChatMessage(
             role = "user",
-            content = text
+            content = """
+Responda APENAS à última mensagem.
+
+Use as mensagens anteriores apenas para entender o contexto da conversa.
+
+Não responda mensagens antigas.
+Não invente informações que não estejam presentes no histórico.
+""".trimIndent()
         )
+
+        return messages
     }
 
+    /**
+     * Transforma elementos internos do Discord em representações
+     * compreensíveis para o modelo.
+     *
+     * Exemplos:
+     *
+     * <@123>       -> @Igor (usuário)
+     * <@&123>      -> @Moderador (cargo)
+     * <#123>       -> #geral (canal)
+     * <:poppy:123> -> :poppy: (emoji)
+     */
+    private suspend fun formatMessageContent(message: Message): String {
+
+        var content = message.content
+
+        // Usuários mencionados
+        message.mentionedUsers.collect { user ->
+
+            val mention =
+                if (user.id == message.kord.selfId) {
+                    "@Kono [você]"
+                } else {
+                    "@${user.username} [usuário]"
+                }
+
+            content = content
+                .replace(
+                    "<@${user.id}>",
+                    mention
+                )
+                .replace(
+                    "<@!${user.id}>",
+                    mention
+                )
+        }
+
+        // Canais mencionados
+        message.mentionedChannelIds.forEach { channelId ->
+
+            message.kord
+                .getChannel(channelId)
+                ?.let { channel ->
+
+                    content = content.replace(
+                        "<#$channelId>",
+                        "#${channel.data.name.value} [canal]"
+                    )
+                }
+        }
+
+        // Cargos mencionados
+        val guild = message.getGuildOrNull()
+
+        if (guild != null) {
+
+            message.mentionedRoleIds.forEach { roleId ->
+
+                guild.getRoleOrNull(roleId)?.let { role ->
+
+                    content = content.replace(
+                        "<@&$roleId>",
+                        "@${role.name} [cargo]"
+                    )
+                }
+            }
+        }
+
+        // Emojis customizados
+        content = Regex(
+            "<a?:([A-Za-z0-9_]+):\\d+>"
+        ).replace(content) {
+
+            ":${it.groupValues[1]}: [emoji]"
+        }
+
+        return content
+    }
 }

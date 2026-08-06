@@ -92,7 +92,7 @@ class CommandManager(
         cmd?.run(event)
     }
 
-    suspend fun handleCommand(event: MessageCreateEvent) {
+    suspend fun handleCommand(event: MessageCreateEvent): Boolean {
         try {
 
             val args = event.message.content
@@ -100,23 +100,23 @@ class CommandManager(
                 .split(Regex("\\s+"))
                 .toMutableList()
 
-            if (args.isEmpty()) return
+            if (args.isEmpty()) return false
 
             val id = event.kord.selfId.toString()
             val mention = args.removeAt(0)
             if (mention == "<@$id>" || mention == "<@!$id>") {
 
-                val command = searchCommand(args.removeAt(0)) ?: return
+                val command = searchCommand(args.removeAt(0)) ?: return false
 
                 // DEV check
                 if (
                     command.category == CommandCategory.Developer &&
                     event.message.author?.id?.value != 477534823011844120u
-                ) return
+                ) return false
 
                 // PERMISSION check
                 if (command.category == CommandCategory.Management) {
-                    val member = event.message.getAuthorAsMemberOrNull() ?: return
+                    val member = event.message.getAuthorAsMemberOrNull() ?: return false
                     val permissions = member.getPermissions()
 
                     if (
@@ -126,10 +126,11 @@ class CommandManager(
                         event.message.reply {
                             content = "Você não tem permissão"
                         }
-                        return
+                        return false
                     }
                 }
                 command.run(event, args.toTypedArray())
+                return true
             }
 
         } catch (exception: Exception) {
@@ -137,6 +138,10 @@ class CommandManager(
             event.message.reply {
                 content = "\uD83D\uDE2D algo de errado aconteceu ao executar o comando"
             }
+
+            return false
         }
+
+        return false
     }
 }
