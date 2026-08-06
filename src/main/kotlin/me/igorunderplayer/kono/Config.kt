@@ -41,8 +41,8 @@ class Config {
             properties["TOKEN"] = env("TOKEN")
             properties["RIOT_API_KEY"] = env("RIOT_API_KEY")
             properties["DATABASE_URL"] = env("DATABASE_URL")
-            properties["OPENROUTER_API_KEY"] = env("OPEN_ROUTER_API_KEY")
-            properties["OPEN_ROUTER_MODEL"] = "konos"
+            properties["OPEN_ROUTER_API_KEY"] = env("OPEN_ROUTER_API_KEY")
+            properties["OPEN_ROUTER_MODEL"] = env("OPEN_ROUTER_MODEL")
         }
 
         return this
