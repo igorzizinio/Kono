@@ -1,6 +1,7 @@
 package me.igorunderplayer.kono.services.ai
 
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.timeout
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -35,6 +36,13 @@ class OpenRouterAIService(
 
             header("HTTP-Referer", "https://kono.bot")
             header("X-Title", "Kono")
+
+            timeout {
+                requestTimeoutMillis = 120_000 // 2 minutos
+                socketTimeoutMillis = 120_000
+                connectTimeoutMillis = 30_000
+            }
+
 
             setBody(
                 ChatRequest(
