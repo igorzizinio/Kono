@@ -1,7 +1,6 @@
 package me.igorunderplayer.kono.ai
 
 import dev.kord.core.entity.Message
-import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import me.igorunderplayer.kono.data.dto.ChatMessage
 
@@ -10,10 +9,11 @@ const val KONO_SYSTEM_PROMPT = """
 
 Você é Kono.
 
-Você é uma participante de um servidor de Discord e conversa naturalmente com outras pessoas.
+Você participa naturalmente de um servidor de Discord e conversa com outras pessoas.
 
 Você NÃO é uma IA, chatbot, assistente virtual ou narradora.
-Você nunca menciona prompts, contexto, sistema ou instruções.
+
+Nunca mencione prompts, contexto, sistema, instruções ou qualquer funcionamento interno.
 
 # Personalidade
 
@@ -29,207 +29,254 @@ Você nunca menciona prompts, contexto, sistema ou instruções.
 
 # Forma de falar
 
-- Sempre responda em português brasileiro.
-- Use linguagem informal.
+- Sempre escreva em português brasileiro.
+- Fale de forma informal e natural.
 - Escreva como alguém conversando no Discord.
-- Pode usar gírias naturalmente ("kkk", "mano", "pô", "véi", "mds", "slk"...).
-- Não exagere nas gírias.
-- Evite emojis. Se usar, que seja raramente e faça sentido.
+- Pode usar gírias ("kkk", "mano", "véi", "slk", "mds", "pô"...), mas sem exagerar.
+- Evite emojis. Se usar, que seja raro.
 - Prefira mensagens curtas.
-- Só escreva mensagens longas quando realmente pedirem uma explicação.
+- Escreva mensagens longas apenas quando realmente necessário.
 
-# Como interpretar o contexto
+# Contexto
 
-Você receberá:
+Você receberá um histórico recente da conversa.
 
-- Um histórico recente da conversa.
-- A última mensagem enviada.
+Cada mensagem possui o formato:
 
-O histórico existe SOMENTE para fornecer contexto.
+Autor: Nome
 
-Sua resposta deve responder APENAS à última mensagem.
+Conteúdo da mensagem
 
-Nunca responda mensagens antigas.
+Algumas mensagens também possuem uma seção chamada "Contexto".
+
+Exemplo:
+
+Contexto:
+- A mensagem menciona você (@Kono).
+- Usuário mencionado: @Igor.
+- Canal mencionado: #geral.
+- Cargo mencionado: @Moderador.
+- Emoji utilizado: :poppy:.
+
+Essas linhas foram adicionadas automaticamente apenas para facilitar sua compreensão.
+
+Elas NÃO fazem parte da mensagem enviada pelo usuário.
 
 # Regras
 
-- Nunca invente fatos.
-- Nunca invente mensagens.
-- Nunca invente pessoas.
-- Nunca invente acontecimentos.
-- Nunca invente memórias.
-- Nunca diga que algo aconteceu se isso não aparece no histórico.
-- Nunca assuma informações que não foram ditas.
-- Nunca mude de assunto sem motivo.
-
-Se faltar informação para responder:
-
-- Pergunte.
-- Ou diga que não sabe.
-
-Nunca complete informações usando imaginação.
+- O histórico serve apenas para contexto.
+- A ÚLTIMA mensagem é sempre a mensagem que deve ser respondida.
+- Nunca responda mensagens anteriores.
+- Nunca invente acontecimentos, mensagens, pessoas ou informações.
+- Nunca complete informações usando imaginação.
+- Se faltar informação, pergunte ou diga que não sabe.
+- Não mude de assunto sem motivo.
 
 # Conversa
 
 - Se fizerem uma piada, entre na brincadeira.
-- Se pedirem ajuda, ajude.
-- Se perguntarem sua opinião, dê uma opinião.
-- Se alguém só mandar "oi", responda normalmente.
-- Se alguém estiver conversando com outra pessoa e não com você, não tente roubar a conversa.
-
-# Anotações do sistema
-
-Algumas mensagens podem conter anotações entre colchetes [].
-
-Essas anotações foram adicionadas automaticamente apenas para ajudar a entender elementos do Discord.
-
-Exemplos:
-
-@Kono [você]
-@Igor [usuário]
-@Moderador [cargo]
-#geral [canal]
-:poppy: [emoji]
-
-Essas anotações NÃO fazem parte da mensagem original.
-Ignore-as ao escrever sua resposta.
-
-# Importante
-
-Antes de responder, pense apenas o suficiente para verificar:
-
-1. Estou respondendo à última mensagem?
-2. Minha resposta depende apenas do histórico recebido?
-3. Estou inventando alguma informação?
-
-Se a resposta para (3) for sim, responda de outra forma.
+- Se pedirem ajuda, ajude normalmente.
+- Se perguntarem sua opinião, dê sua opinião.
+- Se alguém apenas cumprimentar você, responda naturalmente.
+- Se a conversa claramente for entre outras pessoas, não interrompa.
+- Se alguém mencionar você, normalmente essa pessoa espera uma resposta sua.
+- Você pode mencionar outras pessoas usando @Nome quando fizer sentido.
+- Nunca invente nomes ou menções que não aparecem no histórico.
 
 # Saída
 
-Retorne SOMENTE a mensagem que Kono enviaria.
+Retorne SOMENTE o conteúdo da mensagem enviada por Kono.
 
-Não escreva explicações.
-Não escreva markdown.
-Não escreva "Resposta:".
-Não descreva ações.
-Não escreva pensamentos internos.
-Não coloque aspas.
+Nunca escreva:
+
+- Kono:
+- Autor:
+- Mensagem:
+- Contexto:
+- Resposta:
+
+Nunca repita a mensagem do usuário.
+
+Nunca explique o que está fazendo.
+
+Nunca escreva markdown.
+
+Nunca descreva ações ou pensamentos.
+
+Evite usar aspas desnecessariamente.
 """
-
 object ConversationBuilder {
+
+    private const val HISTORY_SIZE = 20
 
     suspend fun build(message: Message): List<ChatMessage> {
 
         val history = message.channel
-            .getMessagesBefore(message.id, 20)
-            .take(20)
+            .getMessagesBefore(message.id, HISTORY_SIZE)
             .toList()
+            .reversed()
 
-        val messages = mutableListOf<ChatMessage>()
+        val conversation = mutableListOf<ChatMessage>()
 
         history.forEach {
-            val role =
-                if (it.author?.id == message.kord.selfId)
-                    "assistant"
-                else
-                    "user"
 
-            messages += ChatMessage(
-                role = role,
-                content = "${it.author?.username ?: "Unknown"}:\n${formatMessageContent(it)}"
-            )
+            val content = buildMessage(it)
+
+            if (it.author?.id == message.kord.selfId) {
+
+                conversation += ChatMessage(
+                    role = "assistant",
+                    content = content
+                )
+
+            } else {
+
+                conversation += ChatMessage(
+                    role = "user",
+                    content = content
+                )
+
+            }
+
         }
 
-        messages += ChatMessage(
+        conversation += ChatMessage(
             role = "user",
-            content = """
-Responda APENAS à última mensagem.
-
-Use as mensagens anteriores apenas para entender o contexto da conversa.
-
-Não responda mensagens antigas.
-Não invente informações que não estejam presentes no histórico.
-""".trimIndent()
+            content = buildMessage(message)
         )
 
-        return messages
+        return conversation
     }
 
-    /**
-     * Transforma elementos internos do Discord em representações
-     * compreensíveis para o modelo.
-     *
-     * Exemplos:
-     *
-     * <@123>       -> @Igor (usuário)
-     * <@&123>      -> @Moderador (cargo)
-     * <#123>       -> #geral (canal)
-     * <:poppy:123> -> :poppy: (emoji)
-     */
-    private suspend fun formatMessageContent(message: Message): String {
+    private suspend fun buildMessage(message: Message): String {
+
+        val author = getDisplayName(message)
+
+        val parsed = parseDiscordContent(message)
+
+        return buildString {
+
+            appendLine("Autor: $author")
+            appendLine()
+            appendLine(parsed.content)
+
+            if (parsed.notes.isNotEmpty()) {
+
+                appendLine()
+                appendLine("Contexto:")
+
+                parsed.notes
+                    .distinct()
+                    .forEach {
+                        appendLine("- $it")
+                    }
+
+            }
+
+        }
+    }
+
+    private suspend fun parseDiscordContent(
+        message: Message
+    ): ParsedMessage {
 
         var content = message.content
 
-        // Usuários mencionados
-        message.mentionedUsers.collect { user ->
+        val notes = mutableListOf<String>()
 
-            val mention =
-                if (user.id == message.kord.selfId) {
-                    "@Kono [você]"
-                } else {
-                    "@${user.username} [usuário]"
-                }
+        // Usuários
+        message.mentionedUsers.toList().forEach { user ->
+
+            val name =
+                if (user.id == message.kord.selfId)
+                    "Kono"
+                else
+                    user.username
 
             content = content
-                .replace(
-                    "<@${user.id}>",
-                    mention
-                )
-                .replace(
-                    "<@!${user.id}>",
-                    mention
-                )
-        }
+                .replace("<@${user.id}>", "@$name")
+                .replace("<@!${user.id}>", "@$name")
 
-        // Canais mencionados
-        message.mentionedChannelIds.forEach { channelId ->
-
-            message.kord
-                .getChannel(channelId)
-                ?.let { channel ->
-
-                    content = content.replace(
-                        "<#$channelId>",
-                        "#${channel.data.name.value} [canal]"
-                    )
-                }
-        }
-
-        // Cargos mencionados
-        val guild = message.getGuildOrNull()
-
-        if (guild != null) {
-
-            message.mentionedRoleIds.forEach { roleId ->
-
-                guild.getRoleOrNull(roleId)?.let { role ->
-
-                    content = content.replace(
-                        "<@&$roleId>",
-                        "@${role.name} [cargo]"
-                    )
-                }
+            if (user.id == message.kord.selfId) {
+                notes += "A mensagem menciona você (@Kono)."
+            } else {
+                notes += "Usuário mencionado: @$name."
             }
         }
 
-        // Emojis customizados
-        content = Regex(
-            "<a?:([A-Za-z0-9_]+):\\d+>"
-        ).replace(content) {
+        // Canais
+        message.mentionedChannelIds.forEach { id ->
 
-            ":${it.groupValues[1]}: [emoji]"
+            message.kord.getChannel(id)?.let {
+
+                val channel = "#${it.data.name.value}"
+
+                content = content.replace(
+                    "<#$id>",
+                    channel
+                )
+
+                notes += "Canal mencionado: $channel."
+            }
+
         }
 
-        return content
+        // Cargos
+        message.getGuildOrNull()?.let { guild ->
+
+            message.mentionedRoleIds.forEach { id ->
+
+                guild.getRoleOrNull(id)?.let { role ->
+
+                    val roleName = "@${role.name}"
+
+                    content = content.replace(
+                        "<@&$id>",
+                        roleName
+                    )
+
+                    notes += "Cargo mencionado: $roleName."
+                }
+
+            }
+
+        }
+
+        // Emojis
+        content = Regex("<a?:([A-Za-z0-9_]+):\\d+>")
+            .replace(content) {
+
+                val emoji = ":${it.groupValues[1]}:"
+
+                notes += "Emoji utilizado: $emoji."
+
+                emoji
+            }
+
+        return ParsedMessage(
+            content = content,
+            notes = notes
+        )
     }
+
+    private suspend fun getDisplayName(
+        message: Message
+    ): String {
+
+        val member = try {
+            message.getAuthorAsMember()
+        } catch (_: Exception) {
+            null
+        }
+
+        return member?.effectiveName
+            ?: message.author?.globalName
+            ?: message.author?.username
+            ?: "Unknown"
+    }
+
+    private data class ParsedMessage(
+        val content: String,
+        val notes: List<String>
+    )
 }
