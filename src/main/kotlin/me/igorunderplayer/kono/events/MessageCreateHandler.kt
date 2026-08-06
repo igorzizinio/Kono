@@ -50,6 +50,7 @@ class MessageCreateHandler(
         event: MessageCreateEvent
     ) {
 
+        event.message.channel.type()
         val messages = mutableListOf<ChatMessage>()
 
         messages += ChatMessage(
