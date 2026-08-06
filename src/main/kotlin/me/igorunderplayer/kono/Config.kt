@@ -19,6 +19,14 @@ class Config {
         val databaseUrl: String
             get() = properties.getProperty("DATABASE_URL")
                 ?: error("DATABASE_URL not defined")
+
+        val openRouterApiKey: String
+            get() = properties.getProperty("OPEN_ROUTER_API_KEY")
+                ?: error("OPEN_ROUTER_API_KEY not defined")
+
+        val openRouterModel: String
+            get() = properties.getProperty("OPEN_ROUTER_MODEL")
+                ?: error("OPEN_ROUTER_MODEL not defined")
     }
 
     fun load(path: String = "config.properties"): Config {
@@ -33,6 +41,8 @@ class Config {
             properties["TOKEN"] = env("TOKEN")
             properties["RIOT_API_KEY"] = env("RIOT_API_KEY")
             properties["DATABASE_URL"] = env("DATABASE_URL")
+            properties["OPENROUTER_API_KEY"] = env("OPEN_ROUTER_API_KEY")
+            properties["OPEN_ROUTER_MODEL"] = "konos"
         }
 
         return this

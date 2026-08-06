@@ -442,7 +442,7 @@ class CombatEngine(
         val damageLabel = when (damageType) {
             DamageType.PHYSICAL -> "dano físico"
             DamageType.MAGIC -> "dano mágico"
-            DamageType.TRUE -> "dano verdadeiro"
+            DamageType.TRUE -> "dano real"
         }
         state.combatLog += "💥 ${
             unitLabel(

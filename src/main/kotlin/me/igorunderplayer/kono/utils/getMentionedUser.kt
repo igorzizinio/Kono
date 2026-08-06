@@ -3,7 +3,6 @@ package me.igorunderplayer.kono.utils
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.entity.Message
 import dev.kord.core.entity.User
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.firstOrNull
 
 suspend fun getMentionedUser(message: Message, args: Array<String>): User? {

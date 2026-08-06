@@ -15,7 +15,6 @@ data class Unit(
     val abilities: List<Ability>,
     val tags: Set<String>,
 
-    // Formation slot groundwork for 3x3 (0..2 for a single lane row).
     var slot: Int = 0,
 
     val equipments: List<CardDefinition> = emptyList(),

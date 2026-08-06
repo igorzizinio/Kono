@@ -24,15 +24,6 @@ class CombatState(
 
     val unitDisplayNamesById: MutableMap<String, String> = mutableMapOf()
 
-    // 💥 DAMAGE / SHIELDS
-    val damageShieldStacksByUnitId: MutableMap<String, Int> = mutableMapOf()
-
-    val incomingDamageModifiersByUnitId: MutableMap<String, MutableList<(Double) -> Double>> =
-        mutableMapOf()
-
-    val outgoingDamageModifiersByUnitId: MutableMap<String, MutableList<(Double) -> Double>> =
-        mutableMapOf()
-
     // 🎯 ABILITIES STATE
     val hitCounterByAbilityKey: MutableMap<String, Int> = mutableMapOf()
     val attackCountByUnitId: MutableMap<String, Int> = mutableMapOf()
@@ -45,8 +36,6 @@ class CombatState(
     val onceTriggeredAbilityKeys: MutableSet<String> = mutableSetOf()
     val temporaryStatModifiers: MutableList<TemporaryStatModifier> = mutableListOf()
 
-    // 💰 ECONOMY (team-based, 3x3 ready)
-    val coinsByTeamId: MutableMap<String, Int> = mutableMapOf()
 
     // 🎲 GLOBAL FLAGS
     val globalFlags: MutableMap<String, Any> = mutableMapOf()
@@ -59,27 +48,5 @@ class CombatState(
             team.units.any { it.hp > 0 }
         }
         return aliveTeams <= 1
-    }
-
-    fun addCoins(team: TeamState, amount: Int) {
-        coinsByTeamId[team.id] =
-            (coinsByTeamId[team.id] ?: 0) + amount
-    }
-
-    fun getCoins(team: TeamState): Int {
-        return coinsByTeamId[team.id] ?: 0
-    }
-
-    fun addShield(unitId: String, stacks: Int) {
-        damageShieldStacksByUnitId[unitId] =
-            (damageShieldStacksByUnitId[unitId] ?: 0) + stacks
-    }
-
-    fun consumeShield(unitId: String): Boolean {
-        val stacks = damageShieldStacksByUnitId[unitId] ?: 0
-        if (stacks <= 0) return false
-
-        damageShieldStacksByUnitId[unitId] = stacks - 1
-        return true
     }
 }

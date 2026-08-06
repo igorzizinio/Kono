@@ -553,7 +553,7 @@ object CardCatalog {
             ),
             Ability(
                 name = "Explosão de Fogo Sagrado",
-                description = "A cada 4 ataques, o fogo sagrado explode causando 22% do HP máximo do alvo como dano verdadeiro.",
+                description = "A cada 4 ataques, o fogo sagrado explode causando 22% do HP máximo do alvo como dano real.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnAttackEvery(4),
                 effects = listOf(
@@ -1169,7 +1169,7 @@ object CardCatalog {
     private val demonHunterCrossbow = CardDefinition(
         id = "DEMON_HUNTER_CROSSBOW",
         name = "Besta da Caçadora de Demônios",
-        description = "A cada 3 ataques, dispara uma flecha de prata que causa dano verdadeiro com base no HP máximo do alvo. Excelente contra alvos com muita vida.",
+        description = "A cada 3 ataques, dispara uma flecha de prata que causa dano real com base no HP máximo do alvo. Excelente contra alvos com muita vida.",
         type = CardType.EQUIPMENT,
         rarity = Rarity.LEGENDARY,
         slot = EquipmentSlot.WEAPON,
@@ -1182,7 +1182,7 @@ object CardCatalog {
         abilities = listOf(
             Ability(
                 name = "Flecha de Prata",
-                description = "A cada 3 ataques, dispara uma flecha que causa 7% do HP máximo do alvo como dano verdadeiro.",
+                description = "A cada 3 ataques, dispara uma flecha que causa 7% do HP máximo do alvo como dano real.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnAttackEvery(3),
                 effects = listOf(
@@ -1309,7 +1309,7 @@ object CardCatalog {
     private val undefined = CardDefinition(
         id = "UNDEFINED",
         name = "undefined",
-        description = "erro: undefined não é um item",
+        description = "`error: undefined is not an item`",
         type = CardType.EQUIPMENT,
         rarity = Rarity.MYTHIC,
         slot = EquipmentSlot.TRINKET,
@@ -1376,18 +1376,18 @@ object CardCatalog {
             ),
             Ability(
                 name = "Chama Divina",
-                description = "Cada ataque aplica a chama divina ao alvo, causando 20% do ATK atual como dano verdadeiro adicional.",
+                description = "Cada ataque aplica a chama divina ao alvo, causando 20% do ATK atual como dano real adicional.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnHit,
                 effects = listOf(
-                    Effect.Custom("True damage 20% ATK") { self, unit, state ->
+                    Effect.Custom("Real damage 20% ATK") { self, unit, state ->
                         val damage = (self.stats[Stat.ATK] ?: 0.0) * 0.20
                         if (damage <= 0 || unit == null) return@Custom
                         state.combatLog += "🔥 A chama divina penetra em ${unit.card.name} causando ${
                             "%.1f".format(
                                 damage
                             )
-                        } de dano verdadeiro!"
+                        } de dano real!"
                         unit.hp -= damage
                     }
                 )
@@ -1419,12 +1419,7 @@ object CardCatalog {
         )
     )
 
-    // =========================================================================
-    // NEW — COMMON CHARACTERS
-    // =========================================================================
 
-    // Fast offensive common. Trades all durability for ATK and SPEED.
-    // Max lv6: HP ~350, ATK ~59, DEF 4. EHP ~364 — the squishiest common.
     private val goblin = CardDefinition(
         id = "GOBLIN",
         name = "Goblin",
@@ -1455,12 +1450,6 @@ object CardCatalog {
         )
     )
 
-    // =========================================================================
-    // NEW — RARE CHARACTERS
-    // =========================================================================
-
-    // Defensive rare. Grows harder to kill every 2 turns.
-    // Max lv10: HP ~692, DEF ~91. EHP base ~1322, grows further with ability.
     private val ironGuardian = CardDefinition(
         id = "IRON_GUARDIAN",
         name = "Guardião de Ferro",
@@ -1491,12 +1480,6 @@ object CardCatalog {
         )
     )
 
-    // =========================================================================
-    // NEW — EPIC CHARACTERS
-    // =========================================================================
-
-    // Speed assassin. Virtually no DEF, very high ATK and SPEED. Executes low-HP targets.
-    // Max lv14: ATK ~120, SPEED ~164 (1.64 avg attacks/turn), HP ~396. EHP ~428.
     private val shadow = CardDefinition(
         id = "SHADOW",
         name = "Sombra",
@@ -1536,8 +1519,7 @@ object CardCatalog {
         )
     )
 
-    // Rage tank. Grows stronger with every hit received. High risk/reward.
-    // Max lv14: HP ~658, ATK ~91. After 10 hits of rage: +80 ATK = 171 total.
+
     private val berserker = CardDefinition(
         id = "BERSERKER",
         name = "Berserker",
@@ -1579,12 +1561,7 @@ object CardCatalog {
         )
     )
 
-    // =========================================================================
-    // NEW — LEGENDARY CHARACTERS
-    // =========================================================================
 
-    // Counter tank. Extremely high DEF. Retaliates with magic AoE on every hit received.
-    // Max lv18: HP ~1095, DEF ~170 (229 after Pele de Pedra). Counter: DEF*0.20 magic AoE per hit.
     private val ironGargoyle = CardDefinition(
         id = "IRON_GARGOYLE",
         name = "Gárgula de Ferro",
@@ -1638,8 +1615,6 @@ object CardCatalog {
         )
     )
 
-    // Pure glass cannon mage. Lowest DEF of all legendaries. AoE magic every 2 turns + huge burst when low.
-    // Max lv18: ATK ~190, DEF 15 (unchanged). AoE = 190*0.60 = 114 magic to all enemies every 2 turns.
     private val voidMage = CardDefinition(
         id = "VOID_MAGE",
         name = "Mago do Vazio",
@@ -1690,12 +1665,7 @@ object CardCatalog {
         )
     )
 
-    // =========================================================================
-    // NEW — RARE EQUIPMENT
-    // =========================================================================
 
-    // Pure speed item. No abilities. -20 HP as trade-off.
-    // Max lv10: SPEED +48, HP -20.
     private val quickBoots = CardDefinition(
         id = "QUICK_BOOTS",
         name = "Botas Velozes",
@@ -1712,8 +1682,7 @@ object CardCatalog {
         abilities = emptyList()
     )
 
-    // Magic AoE item. Sacrifices DEF for periodic magic blasts.
-    // Max lv10: ATK +33, -8 DEF. Pulse: 30 magic to ALL enemies every 3 turns.
+
     private val boneStaff = CardDefinition(
         id = "BONE_STAFF",
         name = "Cajado de Osso",
@@ -1740,12 +1709,7 @@ object CardCatalog {
         )
     )
 
-    // =========================================================================
-    // NEW — EPIC EQUIPMENT
-    // =========================================================================
 
-    // Thorns-on-hit. Every time the wearer is struck, deals magic AoE to all enemies.
-    // Max lv14: DEF +84, HP +125. Combined DEF*0.25 magic AoE per hit.
     private val thornmail = CardDefinition(
         id = "THORNMAIL",
         name = "Malha de Espinhos",
@@ -1783,8 +1747,7 @@ object CardCatalog {
         )
     )
 
-    // Sustain item. Lifesteal + periodic heal. No ATK contribution.
-    // Max lv14: HP +184, LIFESTEAL 0.25. Every 3 turns: +50 HP heal.
+
     private val elixirVial = CardDefinition(
         id = "ELIXIR_VIAL",
         name = "Vial de Elixir",
@@ -1814,12 +1777,7 @@ object CardCatalog {
         )
     )
 
-    // =========================================================================
-    // NEW — LEGENDARY EQUIPMENT
-    // =========================================================================
 
-    // Armor shredder. Percentage-based DEF shred — scales with enemy armor, cap ~28% total.
-    // Ruptura: -15% DEF opener to all enemies. Corrosivo: -5% per hit, 3 stacks max per enemy.
     private val siegebreaker = CardDefinition(
         id = "SIEGEBREAKER",
         name = "Quebra-Muralhas",
@@ -1924,62 +1882,6 @@ object CardCatalog {
         )
     )
 
-    private val cosmicOrb = CardDefinition(
-        id = "COSMIC_ORB",
-        name = "Orbe Cósmico",
-        description = "Uma esfera de poder cósmico. Amplifica imensamente o ATK e HP — mas corrói completamente a capacidade defensiva do portador.",
-        type = CardType.EQUIPMENT,
-        rarity = Rarity.MYTHIC,
-        slot = EquipmentSlot.TRINKET,
-        baseStats = mapOf(
-            Stat.ATK to 80.0,
-            Stat.HP to 80.0,
-            Stat.SPEED to 12.0,
-            Stat.DEF to -35.0
-        ),
-        statsPerLevel = mapOf(
-            Stat.ATK to 12.0,
-            Stat.HP to 18.0
-        ),
-        tags = setOf("cosmic", "aoe", "scaling"),
-        abilities = listOf(
-            Ability(
-                name = "Singularidade",
-                description = "No início da batalha, a singularidade amplifica o portador: +30% ATK e +30% HP máximo.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnBattleStart,
-                effects = listOf(
-                    Effect.StatIncreasePercent(stat = Stat.ATK, percent = 0.30),
-                    Effect.StatIncreasePercent(stat = Stat.HP, percent = 0.30)
-                )
-            ),
-            Ability(
-                name = "Pulso Cósmico",
-                description = "A cada 2 turnos, o orbe pulsa energia cósmica causando 50% do ATK como dano mágico a todos os inimigos.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnTurnEvery(2),
-                effects = listOf(
-                    Effect.DamageBasedOnStat(
-                        stat = Stat.ATK,
-                        scaling = 0.50,
-                        statSource = StatSource.SELF,
-                        target = AbilityTarget.ALL_ENEMIES,
-                        damageType = DamageType.MAGIC
-                    )
-                )
-            ),
-            Ability(
-                name = "Vórtice de Poder",
-                description = "A cada 4 turnos, o vórtice se intensifica, concedendo +32 ATK e +2 SPEED permanentes.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnTurnEvery(4),
-                effects = listOf(
-                    Effect.BuffStat(stat = Stat.ATK, value = 32.0),
-                    Effect.BuffStat(stat = Stat.SPEED, value = 2.0)
-                )
-            )
-        )
-    )
 
     private val royalCrossbowman = CardDefinition(
         id = "ROYAL_CROSSBOWMAN",
@@ -2358,7 +2260,7 @@ object CardCatalog {
             ),
             Ability(
                 name = "Golpe Abrasador",
-                description = "A cada 3 ataques, o calor acumulado explode: causa 80% do ATK atual como dano verdadeiro.",
+                description = "A cada 3 ataques, o calor acumulado explode: causa 80% do ATK atual como dano real.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnAttackEvery(3),
                 effects = listOf(
@@ -3195,10 +3097,10 @@ object CardCatalog {
         siegebreaker, twinFangKatana, solarbrand,
         stormBoots, soulPendant, renouncedSwordCloth,
         // Equipment — Mythic
-        undefined, sunGodGreatsword, cosmicOrb, glacialOrb,
-        samiStaff, samiCloth, samiBoots, frozenRose,
+        undefined, sunGodGreatsword,
+        glacialOrb, samiStaff, samiCloth, samiBoots, frozenRose, // sami related
 
-        konoTwinbladeL, konoTwinbladeR
+        konoTwinbladeL, konoTwinbladeR // kono
     )
 
     private val byId = all.associateBy { it.id }

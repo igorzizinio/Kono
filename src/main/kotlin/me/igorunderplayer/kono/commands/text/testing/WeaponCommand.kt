@@ -32,7 +32,8 @@ class WeaponCommand(
         val args = args.toMutableList()
         if (args.isEmpty()) {
             event.message.reply {
-                content = "Use: `weapon upgrade <instance_id>`, `weapon bulk <instance_id> <target_level>` ou `weapon dismantle <instance_id>`."
+                content =
+                    "Use: `weapon upgrade <instance_id>`, `weapon bulk <instance_id> <target_level>` ou `weapon dismantle <instance_id>`."
             }
             return
         }
@@ -94,24 +95,45 @@ class WeaponCommand(
                         when (val result = upgradeEquipmentHandler.bulkExecute(userId, instanceId, targetLevel)) {
                             is UpgradeEquipmentHandler.BulkResult.Success -> {
                                 event.message.reply {
-                                    content = "✅ **${result.equipmentName}** upou de **Lv.${result.previousLevel}** para **Lv.${result.newLevel}**! " +
-                                            "(gasto: ${result.konosSpent} konos, ${result.smithingStonesSpent} smithing stones)"
+                                    content =
+                                        "✅ **${result.equipmentName}** upou de **Lv.${result.previousLevel}** para **Lv.${result.newLevel}**! " +
+                                                "(gasto: ${result.konosSpent} konos, ${result.smithingStonesSpent} smithing stones)"
                                 }
                             }
+
                             is UpgradeEquipmentHandler.BulkResult.UserNotFound ->
                                 event.message.reply { content = "Usuário não encontrado. Use `register`." }
+
                             is UpgradeEquipmentHandler.BulkResult.EquipmentNotFound ->
                                 event.message.reply { content = "Equipamento não encontrado na sua conta." }
+
                             is UpgradeEquipmentHandler.BulkResult.InvalidCardType ->
                                 event.message.reply { content = "A carta informada não é um equipamento válido." }
+
                             is UpgradeEquipmentHandler.BulkResult.TargetExceedsCap ->
-                                event.message.reply { content = "Nível alvo (${result.targetLevel}) excede o limite de raridade (${result.levelCap})." }
+                                event.message.reply {
+                                    content =
+                                        "Nível alvo (${result.targetLevel}) excede o limite de raridade (${result.levelCap})."
+                                }
+
                             is UpgradeEquipmentHandler.BulkResult.AlreadyAtOrAboveLevel ->
-                                event.message.reply { content = "O equipamento já está no nível ${result.currentLevel}, igual ou acima do alvo (${result.targetLevel})." }
+                                event.message.reply {
+                                    content =
+                                        "O equipamento já está no nível ${result.currentLevel}, igual ou acima do alvo (${result.targetLevel})."
+                                }
+
                             is UpgradeEquipmentHandler.BulkResult.NotEnoughKonos ->
-                                event.message.reply { content = "Konos insuficientes: precisa de ${result.required}, você tem ${result.current}." }
+                                event.message.reply {
+                                    content =
+                                        "Konos insuficientes: precisa de ${result.required}, você tem ${result.current}."
+                                }
+
                             is UpgradeEquipmentHandler.BulkResult.NotEnoughSmithingStones ->
-                                event.message.reply { content = "Smithing Stones insuficientes: precisa de ${result.required}, você tem ${result.current}." }
+                                event.message.reply {
+                                    content =
+                                        "Smithing Stones insuficientes: precisa de ${result.required}, você tem ${result.current}."
+                                }
+
                             is UpgradeEquipmentHandler.BulkResult.PersistFailed ->
                                 event.message.reply { content = "Erro ao persistir upgrade. Tente novamente." }
                         }
@@ -119,18 +141,36 @@ class WeaponCommand(
 
                     is UpgradeEquipmentHandler.BulkPreviewResult.UserNotFound ->
                         event.message.reply { content = "Usuário não encontrado. Use `register`." }
+
                     is UpgradeEquipmentHandler.BulkPreviewResult.EquipmentNotFound ->
                         event.message.reply { content = "Equipamento não encontrado na sua conta." }
+
                     is UpgradeEquipmentHandler.BulkPreviewResult.InvalidCardType ->
                         event.message.reply { content = "A carta informada não é um equipamento." }
+
                     is UpgradeEquipmentHandler.BulkPreviewResult.TargetExceedsCap ->
-                        event.message.reply { content = "Nível alvo (${preview.targetLevel}) excede o limite de raridade (${preview.levelCap})." }
+                        event.message.reply {
+                            content =
+                                "Nível alvo (${preview.targetLevel}) excede o limite de raridade (${preview.levelCap})."
+                        }
+
                     is UpgradeEquipmentHandler.BulkPreviewResult.AlreadyAtOrAboveLevel ->
-                        event.message.reply { content = "O equipamento já está no nível ${preview.currentLevel}, igual ou acima do alvo (${preview.targetLevel})." }
+                        event.message.reply {
+                            content =
+                                "O equipamento já está no nível ${preview.currentLevel}, igual ou acima do alvo (${preview.targetLevel})."
+                        }
+
                     is UpgradeEquipmentHandler.BulkPreviewResult.NotEnoughKonos ->
-                        event.message.reply { content = "Konos insuficientes: precisa de ${preview.required}, você tem ${preview.current}." }
+                        event.message.reply {
+                            content =
+                                "Konos insuficientes: precisa de ${preview.required}, você tem ${preview.current}."
+                        }
+
                     is UpgradeEquipmentHandler.BulkPreviewResult.NotEnoughSmithingStones ->
-                        event.message.reply { content = "Smithing Stones insuficientes: precisa de ${preview.required}, você tem ${preview.current}." }
+                        event.message.reply {
+                            content =
+                                "Smithing Stones insuficientes: precisa de ${preview.required}, você tem ${preview.current}."
+                        }
                 }
             }
 
