@@ -10,7 +10,11 @@ import me.igorunderplayer.kono.domain.team.TeamState
 
 
 class CombatEngine(
-    private val state: CombatState
+    private val state: CombatState,
+    // NOVO: unitId -> controller. Vazio por padrão = comportamento 100% igual ao antigo.
+    // Unidades sem entrada aqui continuam sendo resolvidas automaticamente mesmo
+    // dentro do modo "controlled" (dá pra misturar IA + player no mesmo combate).
+    private val controllersByUnitId: Map<String, TurnController> = emptyMap()
 ) {
 
     private var battleStartProcessed = false
@@ -27,6 +31,135 @@ class CombatEngine(
         processBattleStart()
         processTurn()
     }
+
+    // ============================================================
+    // NOVO: entradas "controlled" — mesma orquestração de turno, mas
+    // consultando um TurnController por unidade quando existir um
+    // registrado. Não chamam nem alteram processTurn()/run()/
+    // processNextTurn() originais — zero risco pro fluxo automático.
+    // ============================================================
+
+    suspend fun runControlled() {
+        processBattleStart()
+        while (!state.isFinished()) {
+            processTurnControlled()
+        }
+    }
+
+    suspend fun processNextTurnControlled() {
+        if (state.isFinished()) return
+        processBattleStart()
+        processTurnControlled()
+    }
+
+    private suspend fun processTurnControlled() {
+
+        state.combatLog += "\n🔄 ===== TURNO ${state.turn} ====="
+
+        val units = state.teams
+            .flatMap { it.units }
+            .filter { it.hp > 0 }
+            .sortedByDescending { it.stats[Stat.SPEED] ?: 0.0 }
+
+        for (unit in units) {
+
+            if (unit.hp <= 0) continue
+
+            enqueue(CombatEvent.TurnStart(unit))
+            drainQueue()
+
+            val attackCount = resolveAttackCount(unit)
+            val controller = controllersByUnitId[unit.id]
+
+            if (controller == null) {
+                // caminho automático, idêntico ao processTurn() original
+                if (attackCount > 1) {
+                    logMultiAttack(unit, attackCount)
+                }
+
+                repeat(attackCount) {
+                    val target = findTarget(unit) ?: return@repeat
+                    enqueue(CombatEvent.Attack(unit, target))
+                    drainQueue()
+                }
+            } else {
+                repeat(attackCount) {
+                    if (state.isFinished() || unit.hp <= 0) return@repeat
+
+                    val action = controller.decideAction(unit, state, activeAbilitiesOf(unit))
+                    executeAction(unit, action)
+                    drainQueue()
+                }
+            }
+
+            if (state.isFinished()) return
+        }
+
+        processTemporaryModifiersEndOfRound()
+
+        state.turn++
+    }
+
+    private fun executeAction(unit: Unit, action: CombatAction) {
+        when (action) {
+            is CombatAction.BasicAttack -> {
+                val target = action.target?.takeIf { it.hp > 0 } ?: findTarget(unit) ?: return
+                enqueue(CombatEvent.Attack(unit, target))
+            }
+
+            is CombatAction.UseAbility -> useActiveAbility(unit, action.ability, action.target)
+
+            CombatAction.Pass -> {
+                state.combatLog += "⏸️ ${unitLabel(unit, state)} passou a vez."
+            }
+        }
+    }
+
+    private fun activeAbilitiesOf(unit: Unit): List<Ability> {
+        // TODO: quando o modelo de Ability tiver custo/cooldown, filtrar aqui
+        // (ex: it.cooldownRemaining <= 0) antes de oferecer pro player.
+        return unit.abilities.filter { it.type == AbilityType.ACTIVE }
+    }
+
+    private fun useActiveAbility(unit: Unit, ability: Ability, explicitTarget: Unit?) {
+        if (ability.type != AbilityType.ACTIVE) {
+            state.combatLog += "⚠️ ${unitLabel(unit, state)} tentou usar [${ability.name}], que não é uma habilidade ativa."
+            return
+        }
+
+        if (ability.once) {
+            val onceKey = onceAbilityKey(unit, ability)
+            if (!state.onceTriggeredAbilityKeys.add(onceKey)) {
+                state.combatLog += "🚫 ${unitLabel(unit, state)} já usou [${ability.name}] nesta partida."
+                return
+            }
+        }
+
+        state.combatLog += "🌟 ${unitLabel(unit, state)} usou [${ability.name}]"
+
+        // Reaproveita o mesmo CombatEvent.Attack usado no modo automático como
+        // "contexto" pra resolveTargets(ENEMY) conseguir achar o alvo — assim
+        // não duplicamos a lógica de applyEffect() que já existe pras passivas.
+        val targetForContext = explicitTarget?.takeIf { it.hp > 0 } ?: findTarget(unit) ?: unit
+        val pseudoEvent = CombatEvent.Attack(unit, targetForContext)
+
+        ability.effects.forEach { effect ->
+            applyEffect(effect, unit, pseudoEvent, ability.name)
+        }
+    }
+
+    private fun logMultiAttack(unit: Unit, attackCount: Int) {
+        state.combatLog += "⚡ ${
+            unitLabel(
+                unit,
+                state
+            )
+        } vai atacar $attackCount vezes este turno! (SPEED: ${unit.stats[Stat.SPEED]?.toInt() ?: 0})"
+    }
+
+    // ============================================================
+    // A partir daqui: código original, sem alterações.
+    // ============================================================
 
     private fun processTurn() {
 
@@ -78,7 +211,6 @@ class CombatEngine(
 
         battleStartProcessed = true
 
-        // Foundation for upcoming 3x3: every team enters combat with deterministic slots.
         state.teams.forEach { it.normalizeSlots() }
 
         enqueue(CombatEvent.BattleStart)
@@ -256,7 +388,7 @@ class CombatEngine(
                         owner,
                         state
                     )
-                } gerou $granted moeda(s) (Time ${team.id}: ${team.coins()})"
+                } gerou $granted fichas(s) (Time ${team.id}: ${team.coins()})"
             }
 
             is Effect.AddCoinsScaling -> {
@@ -265,7 +397,7 @@ class CombatEngine(
                 if (granted <= 0) return
 
                 team.addCoins(granted)
-                state.combatLog += "💰 ${owner.card.name} gerou $granted moeda(s) escaladas para o time ${team.id}. Total: ${team.coins()}"
+                state.combatLog += "💰 ${owner.card.name} gerou $granted fichas(s) para o time ${team.id}. Total: ${team.coins()}"
             }
 
             is Effect.BuffStatByTeamCoins -> {
@@ -1070,5 +1202,3 @@ class CombatEngine(
         }
     }
 }
-
-

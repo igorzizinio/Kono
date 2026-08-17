@@ -3,6 +3,7 @@ package me.igorunderplayer.kono.domain.card
 import me.igorunderplayer.kono.domain.card.ability.*
 import me.igorunderplayer.kono.domain.gameplay.CombatEvent
 import me.igorunderplayer.kono.domain.gameplay.TemporaryStatModifier
+import kotlin.random.Random
 
 
 // =============================================================================
@@ -384,7 +385,7 @@ object CardCatalog {
         abilities = listOf(
             Ability(
                 name = "Mestre da Mesa",
-                description = "A cada turno, Markus gera de 1 a 3 fichas para a equipe.",
+                description = "A cada turno, Markus gera 3 fichas para a equipe.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnTurnStart,
                 effects = listOf(
@@ -397,7 +398,34 @@ object CardCatalog {
                 type = AbilityType.ACTIVE,
                 trigger = AbilityTrigger.Manual,
                 // TODO:
-                effects = listOf()
+                effects = listOf(
+                    // para cada moeda 1 instancia de dano com base no atk será adicionado, o scalling continua sendo random
+                    Effect.Custom("Ataque de fichas") { self, target, state ->
+                        if (target == null) {
+                            state.combatLog += "Nenhum alvo foi encontrado para `Ataque de fichas`"
+                            return@Custom
+                        }
+                        val team = state.teams.find { it -> it.units.contains(self) }
+                        if (team == null) return@Custom
+                        val coins = team.coins()
+
+                        var damage= 0.0
+
+                        for (i in 0..coins) {
+                            damage += (self.stats[Stat.ATK] ?: 0.0) * Random.nextDouble(0.2, 0.8)
+                        }
+
+                        state.queue.add(
+                            CombatEvent.BeforeDamage(
+                                source = self,
+                                target = target,
+                                damage = damage
+                            )
+                        )
+
+                        state.combatLog += "ALL-IN Disparado! Dano causado $damage a ${target.card.name}"
+                    }
+                )
             )
         )
     )
