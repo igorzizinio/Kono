@@ -363,15 +363,15 @@ object CardCatalog {
         name = "Markus, Mestre das Apostas",
         description = "O grande apostador. Gera moedas e aposta com elas todo turno — alto risco, alta recompensa. DEF fraca é seu preço.",
         type = CardType.CHARACTER,
-        rarity = Rarity.LEGENDARY,
+        rarity = Rarity.MYTHIC,
         faction = "markus_gang",
         baseStats = mapOf(
             Stat.HP to 760.0,
-            Stat.ATK to 64.0,
+            Stat.ATK to 54.0,
             Stat.DEF to 20.0,
-            Stat.SPEED to 115.0,
-            Stat.CRIT_CHANCE to 0.18,
-            Stat.CRIT_DAMAGE to 1.60
+            Stat.SPEED to 110.0,
+            Stat.CRIT_CHANCE to 0.10,
+            Stat.CRIT_DAMAGE to 2.0
         ),
         statsPerLevel = mapOf(
             Stat.HP to 10.0,
@@ -384,13 +384,20 @@ object CardCatalog {
         abilities = listOf(
             Ability(
                 name = "Mestre da Mesa",
-                description = "A cada turno, Markus gera 2 moedas de cassino para a equipe e aposta com elas para obter efeitos aleatórios escalados.",
+                description = "A cada turno, Markus gera de 1 a 3 fichas para a equipe.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnTurnStart,
                 effects = listOf(
-                    Effect.AddCoins(value = 2, scaleWithGangSynergy = false),
-                    Effect.Random(profile = "MARKUS_GAMBLER")
+                    Effect.AddCoins(value = 3, scaleWithGangSynergy = false)
                 )
+            ),
+            Ability(
+                name = "Golpe all-in",
+                description = "Markus utiliza **todas** as fichas da equipe para um ataque poderoso",
+                type = AbilityType.ACTIVE,
+                trigger = AbilityTrigger.Manual,
+                // TODO:
+                effects = listOf()
             )
         )
     )
@@ -3074,7 +3081,7 @@ object CardCatalog {
         aureKing,
         // Characters — Mythic
         unleashedJuniorKnight,
-        sami,
+        // sami,
 
         // Characters — Kono
         kono,
@@ -3098,7 +3105,7 @@ object CardCatalog {
         stormBoots, soulPendant, renouncedSwordCloth,
         // Equipment — Mythic
         undefined, sunGodGreatsword,
-        glacialOrb, samiStaff, samiCloth, samiBoots, frozenRose, // sami related
+        // glacialOrb, samiStaff, samiCloth, samiBoots, frozenRose, // sami related
 
         konoTwinbladeL, konoTwinbladeR // kono
     )
