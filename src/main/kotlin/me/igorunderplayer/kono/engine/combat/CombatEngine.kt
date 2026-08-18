@@ -11,9 +11,6 @@ import me.igorunderplayer.kono.domain.team.TeamState
 
 class CombatEngine(
     private val state: CombatState,
-    // NOVO: unitId -> controller. Vazio por padrão = comportamento 100% igual ao antigo.
-    // Unidades sem entrada aqui continuam sendo resolvidas automaticamente mesmo
-    // dentro do modo "controlled" (dá pra misturar IA + player no mesmo combate).
     private val controllersByUnitId: Map<String, TurnController> = emptyMap()
 ) {
 
@@ -31,13 +28,6 @@ class CombatEngine(
         processBattleStart()
         processTurn()
     }
-
-    // ============================================================
-    // NOVO: entradas "controlled" — mesma orquestração de turno, mas
-    // consultando um TurnController por unidade quando existir um
-    // registrado. Não chamam nem alteram processTurn()/run()/
-    // processNextTurn() originais — zero risco pro fluxo automático.
-    // ============================================================
 
     suspend fun runControlled() {
         processBattleStart()
@@ -137,9 +127,6 @@ class CombatEngine(
 
         state.combatLog += "🌟 ${unitLabel(unit, state)} usou [${ability.name}]"
 
-        // Reaproveita o mesmo CombatEvent.Attack usado no modo automático como
-        // "contexto" pra resolveTargets(ENEMY) conseguir achar o alvo — assim
-        // não duplicamos a lógica de applyEffect() que já existe pras passivas.
         val targetForContext = explicitTarget?.takeIf { it.hp > 0 } ?: findTarget(unit) ?: unit
         val pseudoEvent = CombatEvent.Attack(unit, targetForContext)
 
@@ -157,9 +144,41 @@ class CombatEngine(
         } vai atacar $attackCount vezes este turno! (SPEED: ${unit.stats[Stat.SPEED]?.toInt() ?: 0})"
     }
 
-    // ============================================================
-    // A partir daqui: código original, sem alterações.
-    // ============================================================
+    fun aliveEnemiesOf(unit: Unit): List<Unit> {
+        val team = findTeam(unit) ?: return emptyList()
+        val enemyTeam = state.teams.firstOrNull { it != team } ?: return emptyList()
+        return enemyTeam.aliveUnits()
+    }
+
+    fun aliveAlliesOf(unit: Unit, includeSelf: Boolean = false): List<Unit> {
+        val team = findTeam(unit) ?: return emptyList()
+        return team.units.filter { it.hp > 0 && (includeSelf || it != unit) }
+    }
+
+    fun manualTargetKind(ability: Ability): AbilityTarget? {
+        for (effect in ability.effects) {
+            val target = when (effect) {
+                is Effect.Damage -> effect.target
+                is Effect.DamageBasedOnStat -> effect.target
+                is Effect.Heal -> effect.target
+                is Effect.BuffStat -> effect.target
+                is Effect.StatIncreasePercent -> effect.target
+                is Effect.BuffStatByTeamCoins -> effect.target
+                is Effect.ExecuteBellowHealth -> effect.target
+                else -> null
+            }
+            if (target == AbilityTarget.ENEMY || target == AbilityTarget.ALLY) return target
+        }
+        return null
+    }
+
+    fun manualTargetCandidates(unit: Unit, kind: AbilityTarget): List<Unit> {
+        return when (kind) {
+            AbilityTarget.ENEMY -> aliveEnemiesOf(unit)
+            AbilityTarget.ALLY -> aliveAlliesOf(unit)
+            else -> emptyList()
+        }
+    }
 
     private fun processTurn() {
 
@@ -1191,6 +1210,7 @@ class CombatEngine(
                 damage * (100.0 / (100.0 + defense))
             }
 
+            // TODO: update magic damage resistances
             DamageType.MAGIC -> {
                 val defContrib = (target.stats[Stat.DEF] ?: 0.0) * 0.25
                 val intDiff = (target.stats[Stat.INT] ?: 0.0) - (source.stats[Stat.INT] ?: 0.0)

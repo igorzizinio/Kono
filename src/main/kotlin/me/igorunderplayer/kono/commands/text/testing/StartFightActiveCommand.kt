@@ -1,39 +1,43 @@
 package me.igorunderplayer.kono.commands.text.testing
 
 import dev.kord.common.entity.ButtonStyle
+import dev.kord.core.Kord
 import dev.kord.core.behavior.edit
 import dev.kord.core.behavior.interaction.respondEphemeral
 import dev.kord.core.behavior.reply
 import dev.kord.core.entity.Message
+import dev.kord.core.entity.User
+import dev.kord.core.entity.effectiveName
+import dev.kord.core.event.interaction.ButtonInteractionCreateEvent
 import dev.kord.core.event.message.MessageCreateEvent
+import dev.kord.core.on
 import dev.kord.rest.builder.component.ActionRowBuilder
 import dev.kord.rest.builder.message.embed
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.withTimeoutOrNull
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandCategory
+import me.igorunderplayer.kono.domain.card.Stat
 import me.igorunderplayer.kono.domain.card.ability.Ability
 import me.igorunderplayer.kono.domain.gameplay.CombatState
 import me.igorunderplayer.kono.domain.gameplay.Team
-import me.igorunderplayer.kono.domain.team.BuildUnitHandler
 import me.igorunderplayer.kono.engine.combat.CombatAction
 import me.igorunderplayer.kono.engine.combat.CombatEngine
 import me.igorunderplayer.kono.engine.combat.PlayerTurnController
+import me.igorunderplayer.kono.engine.combat.TurnController
+import me.igorunderplayer.kono.services.TeamBattleService
 import me.igorunderplayer.kono.utils.getMentionedUser
-import me.igorunderplayer.kono.utils.interaction.awaitButtonInteraction
 import me.igorunderplayer.kono.utils.interaction.awaitFirstButtonInteraction
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import me.igorunderplayer.kono.domain.gameplay.Unit as CombatUnit
 
-/**
- * Igual ao StartFightCommand, mas o time do player é controlado ativamente:
- * a cada "hit" do turno da unidade dele, o bot pergunta se quer atacar ou usar
- * uma habilidade ativa, ao invés de resolver tudo automaticamente.
- *
- * O time inimigo continua 100% automático (não registramos controller pra ele).
- */
-class StartFightActiveCommand(
-    private val buildUnitHandler: BuildUnitHandler,
+
+class StartTeamFightCommand(
+    private val teamBattleService: TeamBattleService,
 ) : BaseCommand(
-    "startfightactive",
-    description = "inicia uma batalha contra um oponente, com controle de habilidades ativas",
+    "teamfight",
+    description = "inicia uma batalha em equipe (3x3+), cada jogador controlando seu time",
     category = CommandCategory.Game
 ) {
 
@@ -43,119 +47,186 @@ class StartFightActiveCommand(
         val enemyUser = getMentionedUser(event.message, args)
         if (enemyUser == null || enemyUser.id == event.message.author?.id) return
 
-        val playerUnit = resolveUnitOrReply(
-            event = event,
-            discordId = playerUser.id.value.toLong(),
-            isEnemy = false
-        ) ?: return
-
-        val enemyUnit = resolveUnitOrReply(
-            event = event,
-            discordId = enemyUser.id.value.toLong(),
-            isEnemy = true
-        ) ?: return
+        val playerUnits = resolveTeamOrReply(event, playerUser, isEnemy = false) ?: return
+        val enemyUnits = resolveTeamOrReply(event, enemyUser, isEnemy = true) ?: return
 
         val combatState = CombatState(
             teams = listOf(
-                Team("player", mutableListOf(playerUnit)),
-                Team("enemy", mutableListOf(enemyUnit))
+                Team("player", playerUnits.toMutableList()),
+                Team("enemy", enemyUnits.toMutableList())
             )
         )
 
         val combatId = "${event.message.channelId}-${event.message.id}"
-        val nextRoundButtonId = "$combatId-next"
+        val continueButtonId = "$combatId-continue"
+        val allowedUserIds = setOf(playerUser.id.value.toLong(), enemyUser.id.value.toLong())
 
         var actionMsg: Message = event.message.reply {
             embed {
-                title = "⚔️ Combate iniciado"
-                description =
-                    "${playerUser.username} vs ${enemyUser.username}\n\nClique em **Próxima rodada** para avançar o combate."
+                title = "⚔️ Batalha em equipe iniciada"
+                description = buildString {
+                    appendLine("**${playerUser.username}** vs **${enemyUser.username}**")
+                    appendLine()
+                    appendLine("Time de ${playerUser.username}: ${playerUnits.joinToString(", ") { it.card.name }}")
+                    appendLine("Time de ${enemyUser.username}: ${enemyUnits.joinToString(", ") { it.card.name }}")
+                    appendLine()
+                    appendLine("Clique em **Continuar** para começar.")
+                }
             }
-            addComponent(createNextRoundRow(nextRoundButtonId))
+            addComponent(createContinueRow(continueButtonId))
         }
 
-        // Local suspend fun (não lambda solta) pra poder capturar e reatribuir `actionMsg`
-        // diretamente, sem precisar de callback/holder.
-        suspend fun promptPlayerAction(unit: CombatUnit, availableAbilities: List<Ability>): CombatAction {
+        lateinit var engine: CombatEngine
+
+        fun displayNameOf(u: CombatUnit) = combatState.unitDisplayNamesById[u.id] ?: u.card.name
+        fun teamIdOf(u: CombatUnit) = combatState.teams.first { it.units.contains(u) }.id
+
+        suspend fun promptTargetSelection(
+            owner: User,
+            unit: CombatUnit,
+            ability: Ability,
+            candidates: List<CombatUnit>
+        ): CombatUnit? {
+            val targetBaseId = "$combatId-target-${System.currentTimeMillis()}"
+            val targetButtonIds = candidates.indices.map { "$targetBaseId:$it" }
+
+            actionMsg = actionMsg.edit {
+                embed {
+                    title = "🎯 ${owner.username}, escolha o alvo de [${ability.name}]"
+                    description = candidates.joinToString("\n") {
+                        "• **${displayNameOf(it)}** (${it.hp.toInt()} HP) — time ${teamIdOf(it)}"
+                    }
+                }
+                addComponent(ActionRowBuilder().apply {
+                    candidates.forEachIndexed { index, candidate ->
+                        interactionButton(ButtonStyle.Secondary, targetButtonIds[index]) {
+                            label = displayNameOf(candidate).take(80)
+                        }
+                    }
+                })
+            }
+
+            val result = event.kord.awaitFirstButtonInteraction(
+                ids = targetButtonIds,
+                allowedUserId = owner.id.value.toLong()
+            ) ?: run {
+                combatState.combatLog += "⏱️ ${unit.card.name} não escolheu alvo a tempo, alvo automático será usado."
+                return null
+            }
+
+            val (chosenId, buttonInteraction) = result
+            val chosenTarget = candidates.getOrNull(targetButtonIds.indexOf(chosenId))
+
+            buttonInteraction.interaction.respondEphemeral {
+                content = if (chosenTarget != null) {
+                    "🎯 Alvo: ${displayNameOf(chosenTarget)}"
+                } else {
+                    "⚠️ Alvo inválido, usando seleção automática."
+                }
+            }
+
+            return chosenTarget
+        }
+
+        suspend fun promptPlayerAction(owner: User, unit: CombatUnit, availableAbilities: List<Ability>): CombatAction {
             val actionBaseId = "$combatId-action-${System.currentTimeMillis()}"
             val attackButtonId = "$actionBaseId:attack"
             val abilityButtonIds = availableAbilities.indices.map { "$actionBaseId:ability:$it" }
 
+            val maxHp = unit.stats[Stat.HP]?.toInt()
+            val hpText = if (maxHp != null) "${unit.hp.toInt()}/$maxHp HP" else "${unit.hp.toInt()} HP"
+
             actionMsg = actionMsg.edit {
                 embed {
-                    title = "🎮 Sua vez, ${playerUser.username}"
-                    description = "**${unit.card.name}** — escolha uma ação para este golpe."
+                    title = "🎮 Vez de ${owner.username}"
+                    description = buildString {
+                        appendLine("Controlando **${unit.card.name}** (time ${teamIdOf(unit)}) — $hpText")
+                        appendLine()
+                        if (availableAbilities.isEmpty()) {
+                            appendLine("Nenhuma habilidade ativa disponível — ataque ou aguarde novas cartas.")
+                        } else {
+                            appendLine("Habilidades disponíveis:")
+                            availableAbilities.forEach { appendLine("• **${it.name}**") }
+                        }
+                    }
                 }
-                addComponent(createActionRow(attackButtonId, unit, availableAbilities, abilityButtonIds))
+                addComponent(createActionRow(attackButtonId, availableAbilities, abilityButtonIds))
             }
 
             val allIds = listOf(attackButtonId) + abilityButtonIds
             val result = event.kord.awaitFirstButtonInteraction(
                 ids = allIds,
-                allowedUserId = playerUser.id.value.toLong()
+                allowedUserId = owner.id.value.toLong()
             )
 
             if (result == null) {
-                combatState.combatLog += "⏱️ ${unit.card.name} não respondeu a tempo e atacou automaticamente."
+                combatState.combatLog += "⏱️ ${unit.card.name} (${owner.username}) não respondeu a tempo e atacou automaticamente."
                 return CombatAction.BasicAttack()
             }
 
             val (chosenId, buttonInteraction) = result
 
-            return if (chosenId == attackButtonId) {
+            if (chosenId == attackButtonId) {
                 buttonInteraction.interaction.respondEphemeral { content = "⚔️ Ataque básico escolhido." }
-                CombatAction.BasicAttack()
-            } else {
-                val abilityIndex = abilityButtonIds.indexOf(chosenId)
-                val ability = availableAbilities.getOrNull(abilityIndex)
+                return CombatAction.BasicAttack()
+            }
 
-                if (ability == null) {
-                    buttonInteraction.interaction.respondEphemeral { content = "⚠️ Ação inválida, atacando." }
-                    CombatAction.BasicAttack()
-                } else {
-                    buttonInteraction.interaction.respondEphemeral { content = "🌟 [${ability.name}] escolhida." }
-                    CombatAction.UseAbility(ability)
-                }
+            val ability = availableAbilities.getOrNull(abilityButtonIds.indexOf(chosenId))
+            if (ability == null) {
+                buttonInteraction.interaction.respondEphemeral { content = "⚠️ Ação inválida, atacando." }
+                return CombatAction.BasicAttack()
+            }
+
+            buttonInteraction.interaction.respondEphemeral { content = "🌟 [${ability.name}] escolhida." }
+
+            // Com 3+ unidades por lado isso agora entra em cena de verdade: se a
+            // ability mirar ENEMY/ALLY e houver mais de um candidato, pergunta qual.
+            val manualKind = engine.manualTargetKind(ability)
+            val target = if (manualKind != null) {
+                val candidates = engine.manualTargetCandidates(unit, manualKind)
+                if (candidates.size > 1) promptTargetSelection(owner, unit, ability, candidates) else null
+            } else {
+                null
+            }
+
+            return CombatAction.UseAbility(ability, target)
+        }
+
+        val controllersByUnitId: Map<String, TurnController> = buildMap {
+            playerUnits.forEach { unit ->
+                put(unit.id, PlayerTurnController { u, abilities -> promptPlayerAction(playerUser, u, abilities) })
+            }
+            enemyUnits.forEach { unit ->
+                put(unit.id, PlayerTurnController { u, abilities -> promptPlayerAction(enemyUser, u, abilities) })
             }
         }
 
-        val playerController = PlayerTurnController { unit, availableAbilities ->
-            promptPlayerAction(unit, availableAbilities)
-        }
-
-        val engine = CombatEngine(
-            state = combatState,
-            controllersByUnitId = mapOf(playerUnit.id to playerController)
-        )
+        engine = CombatEngine(state = combatState, controllersByUnitId = controllersByUnitId)
 
         while (!combatState.isFinished()) {
-            val buttonInteraction = event.kord.awaitButtonInteraction(
-                customId = nextRoundButtonId,
-                allowedUserId = playerUser.id.value.toLong()
+            val interaction = awaitButtonFromAny(
+                kord = event.kord,
+                customId = continueButtonId,
+                allowedUserIds = allowedUserIds
             )
 
-            if (buttonInteraction == null) {
+            if (interaction == null) {
                 actionMsg.edit {
-                    components = mutableListOf(createNextRoundRow(nextRoundButtonId, disabled = true))
+                    components = mutableListOf(createContinueRow(continueButtonId, disabled = true))
                 }
                 return
             }
 
-            buttonInteraction.interaction.respondEphemeral {
-                content = "⚔️ Prosseguindo com a batalha"
-            }
+            interaction.interaction.respondEphemeral { content = "⚔️ Prosseguindo com a batalha" }
 
             combatState.combatLog.clear()
-            // aqui dentro, sempre que for a vez da unidade do player, promptPlayerAction()
-            // vai editar actionMsg e suspender até o clique — o engine só continua depois disso.
+            // Dentro dessa chamada, pra cada unidade com controller (ambos os
+            // times, agora), promptPlayerAction() edita actionMsg e suspende
+            // até o dono clicar — o engine só segue depois disso.
             engine.processNextTurnControlled()
 
             val isFinished = combatState.isFinished()
-            val title = if (isFinished) {
-                "🏁 Combate finalizado"
-            } else {
-                "⚔️ Turno ${combatState.turn - 1}"
-            }
+            val title = if (isFinished) "🏁 Combate finalizado" else "⚔️ Turno ${combatState.turn - 1}"
 
             val description = if (isFinished) {
                 buildFinalCombatDescription(
@@ -175,23 +246,46 @@ class StartFightActiveCommand(
                     this.title = title
                     this.description = description
                 }
-                if (!isFinished) {
-                    addComponent(createNextRoundRow(nextRoundButtonId))
-                }
+                if (!isFinished) addComponent(createContinueRow(continueButtonId))
             }
         }
     }
 
-    private fun createNextRoundRow(customId: String, disabled: Boolean = false) = ActionRowBuilder().apply {
+    /**
+     * Igual ao teu awaitButtonInteraction, mas aceitando clique de qualquer
+     * usuário dentro de [allowedUserIds] — os dois jogadores da luta, no caso
+     * do botão "Continuar". Se quiser, dá pra mover isso pro teu arquivo de
+     * utils de interação como um overload.
+     */
+    private suspend fun awaitButtonFromAny(
+        kord: Kord,
+        customId: String,
+        allowedUserIds: Set<Long>,
+        timeout: Duration = 60.seconds
+    ): ButtonInteractionCreateEvent? {
+        val pressed = CompletableDeferred<ButtonInteractionCreateEvent>()
+        val listener = kord.on<ButtonInteractionCreateEvent> {
+            val interaction = this.interaction
+            if (interaction.component.customId != customId) return@on
+            if (interaction.user.id.value.toLong() !in allowedUserIds) return@on
+            if (!pressed.isCompleted) pressed.complete(this)
+        }
+        return try {
+            withTimeoutOrNull(timeout) { pressed.await() }
+        } finally {
+            listener.cancel()
+        }
+    }
+
+    private fun createContinueRow(customId: String, disabled: Boolean = false) = ActionRowBuilder().apply {
         interactionButton(ButtonStyle.Primary, customId) {
-            label = "Próxima rodada"
+            label = "Continuar"
             this.disabled = disabled
         }
     }
 
     private fun createActionRow(
         attackButtonId: String,
-        unit: CombatUnit,
         availableAbilities: List<Ability>,
         abilityButtonIds: List<String>
     ) = ActionRowBuilder().apply {
@@ -209,42 +303,32 @@ class StartFightActiveCommand(
         }
     }
 
-    private suspend fun resolveUnitOrReply(
+    /**
+     * Chama o resolver de time injetado no construtor. Troque a lambda na
+     * hora de instanciar o comando pra apontar pro seu sistema de times já
+     * existente (o mesmo que o modo automático usa) — ex:
+     *
+     * ```
+     * StartTeamFightCommand { discordId ->
+     *     when (val result = buildTeamHandler.executeByDiscordId(discordId)) {
+     *         is BuildTeamHandler.Result.Success -> TeamResolution.Success(result.units)
+     *         BuildTeamHandler.Result.UserNotFound -> TeamResolution.Failure("você ainda não possui registro.")
+     *         BuildTeamHandler.Result.NoTeamBuilt -> TeamResolution.Failure("você ainda não montou um time.")
+     *     }
+     * }
+     * ```
+     */
+    private suspend fun resolveTeamOrReply(
         event: MessageCreateEvent,
-        discordId: Long,
+        discordUser: User,
         isEnemy: Boolean
-    ): CombatUnit? {
-        return when (val result = buildUnitHandler.executeByDiscordId(discordId)) {
-            is BuildUnitHandler.Result.Success -> result.unit
-            BuildUnitHandler.Result.UserNotFound -> {
-                event.message.reply {
-                    content = if (isEnemy) {
-                        "❌ Seu inimigo ainda não possui registro."
-                    } else {
-                        "❌ Você ainda não possui registro."
-                    }
-                }
-                null
-            }
+    ): List<CombatUnit>? {
+        return when (val result = teamBattleService.buildPlayerRoster(discordUser.id.value.toLong(), discordUser.effectiveName)) {
+            is TeamBattleService.RosterResult.Success -> result.units
 
-            BuildUnitHandler.Result.NoActiveCard -> {
+            is TeamBattleService.RosterResult.Failure -> {
                 event.message.reply {
-                    content = if (isEnemy) {
-                        "❌ Seu inimigo ainda não selecionou um personagem ativo."
-                    } else {
-                        "❌ Você precisa selecionar um personagem ativo."
-                    }
-                }
-                null
-            }
-
-            is BuildUnitHandler.Result.CharacterNotFound -> {
-                event.message.reply {
-                    content = if (isEnemy) {
-                        "❌ Não foi possível carregar o personagem ativo do seu inimigo (id ${result.activeCharacterId})."
-                    } else {
-                        "❌ Não foi possível carregar seu personagem ativo (id ${result.activeCharacterId})."
-                    }
+                    content = result.message
                 }
                 null
             }

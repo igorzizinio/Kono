@@ -157,13 +157,18 @@ object CardCatalog {
                 effects = listOf(Effect.Heal(value = 10.0, target = AbilityTarget.SELF))
             ),
             Ability(
-                name = "Muralha do Esquadrão",
-                description = "A cada turno, Jorge ganha +1 DEF permanente e cura todos os aliados em 4 HP.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnTurnStart,
+                name = "Golpe do Guardião",
+                description = "Jorge converte parte de sua resistência em um golpe pesado.",
+                type = AbilityType.ACTIVE,
+                trigger = AbilityTrigger.Manual,
                 effects = listOf(
-                    Effect.BuffStat(stat = Stat.DEF, value = 1.0, target = AbilityTarget.SELF),
-                    Effect.Heal(value = 4.0, target = AbilityTarget.ALL_ALLIES)
+                    Effect.DamageBasedOnStat(
+                        stat = Stat.DEF,
+                        scaling = 0.6,
+                        statSource = StatSource.SELF,
+                        target = AbilityTarget.ENEMY,
+                        damageType = DamageType.PHYSICAL
+                    )
                 )
             )
         )
@@ -172,81 +177,217 @@ object CardCatalog {
     private val veyn = CardDefinition(
         id = "VEYN",
         name = "Veyn",
-        description = "Besteiro de Markus. Um capanga fiel, ágil, muito habilidoso. Utiliza de uma besta para ataques rápidos de precisos em seus inimigos.",
+        description = "O melhor atirador de Markus. Silencioso, paciente e extremamente preciso — Veyn não precisa de muitos disparos quando conhece exatamente onde acertar.",
         type = CardType.CHARACTER,
         rarity = Rarity.LEGENDARY,
         faction = "markus_gang",
         baseStats = mapOf(
-            Stat.HP to 440.0,
-            Stat.ATK to 44.0,
-            Stat.DEF to 16.0,
-            Stat.SPEED to 130.0,
-            Stat.CRIT_CHANCE to 0.18,
-            Stat.CRIT_DAMAGE to 1.40
+            Stat.HP to 420.0,
+            Stat.ATK to 48.0,
+            Stat.DEF to 14.0,
+            Stat.SPEED to 125.0,
+            Stat.CRIT_CHANCE to 0.15,
+            Stat.CRIT_DAMAGE to 1.50
         ),
         statsPerLevel = mapOf(
             Stat.HP to 4.0,
-            Stat.ATK to 8.0,
+            Stat.ATK to 7.0,
             Stat.SPEED to 1.5,
-            Stat.CRIT_CHANCE to 0.02
+            Stat.CRIT_CHANCE to 0.015
         ),
-        tags = setOf("rng", "gambler", "speed", "archer", "marksman", "risk"),
+        tags = setOf(
+            "speed",
+            "archer",
+            "marksman",
+            "precision",
+            "execution"
+        ),
         abilities = listOf(
-            Ability(
-                name = "Ataques velozes",
-                description = "A cada 2 ataques, Veyn libera uma rajada precisa que causa 25% do ATK de dano extra ao alvo.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnAttackEvery(2),
-                effects = listOf(
-                    Effect.DamageBasedOnStat(
-                        stat = Stat.ATK,
-                        scaling = 0.25,
-                        statSource = StatSource.SELF
-                    )
-                )
-            ),
-            Ability(
-                name = "Ritmo de Cassino",
-                description = "A cada turno, Veyn gera fichas de cassino para a equipe com base na sua **${Stat.CRIT_CHANCE.prettyName()}** e **${Stat.SPEED.prettyName()}**",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnTurnStart,
-                effects = listOf(
-                    // Effect.AddCoins(value = 1, scaleWithGangSynergy = false)
-                    Effect.Custom("Gerando fichas") { self, _, state ->
-                        if (Random.nextDouble() > (self.stats[Stat.CRIT_CHANCE] ?: 0.0)){
-                            state.combatLog += "${self.card.name} falhou em gerar fichas de cassino para o time!"
-                            return@Custom
-                        }
 
-                        // Cada 80 de speed gerar 1 ficha
-                        val coins = ((self.stats[Stat.SPEED] ?: 0.0) / 80.0).toInt()
-                        state.teams.find { it.units.contains(self) }?.addCoins(coins)
-                        state.combatLog += "${self.card.name} gerou $coins fichas de cassino para a equipe!"
+            // =====================================================================
+            // PASSIVE — OLHO DE ÁGUIA
+            // =====================================================================
+
+            Ability(
+                name = "Olho de Águia",
+                description = "A cada ataque contra um inimigo, Veyn acumula uma Marca de Mira nesse alvo. Cada marca aumenta em 5% o dano de Veyn contra ele. Máximo de 3 marcas.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnHit,
+                effects = listOf(
+                    Effect.Custom("VEYN_AIM_MARK") { self, target, state ->
+                        if (target == null || target.hp <= 0) return@Custom
+
+                        val markKey = "veyn:aim:${self.id}:${target.id}"
+                        val currentMarks = (state.globalFlags[markKey] as? Int) ?: 0
+
+                        if (currentMarks >= 3) return@Custom
+
+                        val newMarks = currentMarks + 1
+                        state.globalFlags[markKey] = newMarks
+
+                        state.combatLog +=
+                            "🎯 ${self.card.name} marcou ${target.card.name} " +
+                                    "(${newMarks}/3)."
                     }
                 )
             ),
+
+            // =====================================================================
+            // PASSIVE — PONTO FRACO
+            // =====================================================================
+
             Ability(
-                name = "Rajada do cassino",
-                description = "Veyn realiza ataques rápidos utilizando as fichas da equipe",
+                name = "Ponto Fraco",
+                description = "Inimigos com 3 Marcas de Mira revelam seu ponto fraco. Contra eles, os ataques de Veyn ganham 20% de CRIT_CHANCE e ignoram 25% da DEF.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnHit,
+                effects = listOf(
+                    Effect.Custom("VEYN_WEAK_POINT") { self, target, state ->
+                        if (target == null || target.hp <= 0) return@Custom
+
+                        val markKey = "veyn:aim:${self.id}:${target.id}"
+                        val marks = (state.globalFlags[markKey] as? Int) ?: 0
+
+                        if (marks < 3) return@Custom
+
+                        /*
+                         * O bônus de crítico é aplicado apenas durante este ataque.
+                         * Como o sistema atual não possui um Effect explícito para
+                         * "crit chance neste ataque", usamos a rolagem manual aqui.
+                         *
+                         * O dano/crit normal do ataque continua sendo processado
+                         * pelo CombatEvent.
+                         *
+                         * A redução de DEF é aplicada apenas temporariamente para
+                         * não destruir permanentemente os atributos do alvo.
+                         */
+
+                        val def = target.stats[Stat.DEF] ?: 0.0
+                        if (def <= 0.0) return@Custom
+
+                        val reduction = def * 0.25
+                        target.stats[Stat.DEF] = def - reduction
+
+                        state.globalFlags["veyn:def_restore:${self.id}:${target.id}"] = reduction
+
+                        state.combatLog +=
+                            "🎯 ${self.card.name} encontrou o ponto fraco de " +
+                                    "${target.card.name} (-25% DEF)."
+                    }
+                )
+            ),
+
+            // =====================================================================
+            // PASSIVE — APOSTA CERTA
+            // =====================================================================
+
+            Ability(
+                name = "Aposta Certa",
+                description = "Veyn é especialista em esperar o momento certo. Ao atingir um inimigo com 3 Marcas de Mira, seu próximo ataque contra ele recebe +30% de CRIT_DAMAGE.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnHit,
+                effects = listOf(
+                    Effect.Custom("VEYN_PERFECT_BET") { self, target, state ->
+                        if (target == null || target.hp <= 0) return@Custom
+
+                        val markKey = "veyn:aim:${self.id}:${target.id}"
+                        val marks = (state.globalFlags[markKey] as? Int) ?: 0
+
+                        if (marks < 3) return@Custom
+
+                        state.globalFlags["veyn:perfect:${self.id}:${target.id}"] = true
+
+                        state.combatLog +=
+                            "🎯 ${self.card.name} preparou um disparo perfeito contra " +
+                                    "${target.card.name}."
+                    }
+                )
+            ),
+
+            // =====================================================================
+            // ACTIVE — DISPARO PERFEITO
+            // =====================================================================
+
+            Ability(
+                name = "Disparo Perfeito",
+                description = "Veyn concentra toda sua mira em um único disparo. O dano aumenta conforme as Marcas de Mira no alvo. Com 3 marcas, o disparo ignora 50% da DEF e causa dano crítico garantido.",
                 type = AbilityType.ACTIVE,
                 trigger = AbilityTrigger.Manual,
                 effects = listOf(
-                    Effect.Custom("Dano com base em fichas") { self, target, state ->
-                        val team = state.teams.find { it.units.contains(self) }
+                    Effect.Custom("VEYN_PERFECT_SHOT") { self, target, state ->
+                        if (target == null || target.hp <= 0) return@Custom
 
-                        if (team == null || target == null) return@Custom
-                        val coins = team.coins()
+                        val markKey = "veyn:aim:${self.id}:${target.id}"
+                        val marks = (state.globalFlags[markKey] as? Int) ?: 0
 
-                        repeat(coins) {
-                            team.addCoins(-1)
-                            val damage = self.stats[Stat.ATK]?.times(0.3) ?: 0.0
-                            state.queue.add(
-                                CombatEvent.BeforeDamage(
-                                    source = self,
-                                    target = target,
-                                    damage = damage
-                                )
+                        val atk = self.stats[Stat.ATK] ?: 0.0
+                        val originalDef = target.stats[Stat.DEF] ?: 0.0
+
+                        /*
+                         * Multiplicador baseado na preparação:
+                         *
+                         * 0 marcas = 100%
+                         * 1 marca  = 130%
+                         * 2 marcas = 170%
+                         * 3 marcas = 230%
+                         */
+                        val multiplier = when (marks) {
+                            0 -> 1.00
+                            1 -> 1.30
+                            2 -> 1.70
+                            else -> 2.30
+                        }
+
+                        val damage = atk * multiplier
+
+                        /*
+                         * Com 3 marcas, o disparo ignora 50% da DEF.
+                         * Como o CombatEvent provavelmente calcula a mitigação
+                         * posteriormente, reduzimos temporariamente a DEF.
+                         */
+                        if (marks >= 3 && originalDef > 0.0) {
+                            target.stats[Stat.DEF] = originalDef * 0.50
+                        }
+
+                        val perfectShot = marks >= 3
+
+                        state.combatLog +=
+                            "🏹 ${self.card.name} dispara o DISPARO PERFEITO contra " +
+                                    "${target.card.name} — $marks marcas, " +
+                                    "${"%.0f".format(multiplier * 100)}% ATK" +
+                                    if (perfectShot) " — PONTO FRACO!" else ""
+
+                        state.queue.add(
+                            CombatEvent.BeforeDamage(
+                                source = self,
+                                target = target,
+                                damage = damage,
+                                damageType = DamageType.PHYSICAL,
+                                canCrit = perfectShot
                             )
+                        )
+
+                        /*
+                         * O disparo consome toda a preparação.
+                         */
+                        state.globalFlags.remove(markKey)
+                        state.globalFlags.remove(
+                            "veyn:perfect:${self.id}:${target.id}"
+                        )
+
+                        /*
+                         * Restaura a DEF caso tenhamos alterado para o disparo.
+                         *
+                         * Como o dano está na queue, a restauração precisa acontecer
+                         * após o processamento do evento. O sistema atual não possui
+                         * um trigger explícito de "AfterDamage", então registramos
+                         * o valor para que o CombatEvent/dispatcher possa restaurá-lo
+                         * caso necessário.
+                         */
+                        if (marks >= 3 && originalDef > 0.0) {
+                            state.globalFlags[
+                                "veyn:restore_def:${self.id}:${target.id}"
+                            ] = originalDef
                         }
                     }
                 )
@@ -330,12 +471,12 @@ object CardCatalog {
         abilities = listOf(
             Ability(
                 name = "Graça Contínua",
-                description = "A cada turno, Lumina cura todos os aliados vivos em 8% de seu ATK.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnTurnStart,
+                description = "Lumina cura todos os aliados vivos em 15% de seu ATK.",
+                type = AbilityType.ACTIVE,
+                trigger = AbilityTrigger.Manual,
                 effects = listOf(
                     Effect.Custom("Heal allies 8% ATK") { self, _, state ->
-                        val healAmount = (self.stats[Stat.ATK] ?: 0.0) * 0.08
+                        val healAmount = (self.stats[Stat.ATK] ?: 0.0) * 0.15
                         if (healAmount <= 0) return@Custom
                         val team = state.teams.firstOrNull { it.units.contains(self) } ?: return@Custom
                         team.units.filter { it.hp > 0 }.forEach { ally ->
@@ -350,9 +491,9 @@ object CardCatalog {
             ),
             Ability(
                 name = "Bênção da Aurora",
-                description = "A cada 3 turnos, Lumina concede a todos os aliados +15% ATK e +15% DEF temporários por 2 rodadas.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnTurnEvery(3),
+                description = "Lumina concede a todos os aliados +15% ATK e +15% DEF temporários por 2 rodadas.",
+                type = AbilityType.ACTIVE,
+                trigger = AbilityTrigger.Manual,
                 effects = listOf(
                     Effect.Custom("Temp buff ATK+DEF 15%") { self, _, state ->
                         val atk = self.stats[Stat.ATK] ?: 0.0
@@ -397,14 +538,11 @@ object CardCatalog {
         )
     )
 
-    // =========================================================================
-    // LEGENDARY CHARACTERS
-    // =========================================================================
 
     private val markus = CardDefinition(
         id = "MARKUS",
         name = "Markus, Mestre das Apostas",
-        description = "O grande apostador. Gera moedas e aposta com elas todo turno — alto risco, alta recompensa. DEF fraca é seu preço.",
+        description = "O maior apostador do cassino. Para Markus, toda ficha é uma oportunidade — e toda oportunidade merece uma aposta.",
         type = CardType.CHARACTER,
         rarity = Rarity.MYTHIC,
         faction = "markus_gang",
@@ -423,151 +561,680 @@ object CardCatalog {
             Stat.CRIT_CHANCE to 0.01,
             Stat.CRIT_DAMAGE to 0.02
         ),
-        tags = setOf("rng", "gambler", "risk", "chaos", "scaling", "boss", "markus_gang", "malignant"),
+        tags = setOf(
+            "rng",
+            "gambler",
+            "risk",
+            "chaos",
+            "scaling",
+            "boss",
+            "markus_gang",
+            "malignant"
+        ),
         abilities = listOf(
+
+            // =====================================================================
+            // PASSIVE — MESTRE DA MESA
+            // =====================================================================
+
             Ability(
                 name = "Mestre da Mesa",
-                description = "A cada turno, Markus gera 3 fichas para a equipe.",
+                description = "A cada turno, Markus gera 3 fichas para sua equipe. Sempre que uma ficha é adicionada ou gasta por Markus, existe uma pequena chance de desencadear um Evento da Mesa.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnTurnStart,
                 effects = listOf(
-                    Effect.AddCoins(value = 3, scaleWithGangSynergy = false)
+                    Effect.Custom("MARKUS_TABLE_MASTER") { self, _, state ->
+                        val team = state.teams.firstOrNull { it.units.contains(self) }
+                            ?: return@Custom
+
+                        team.addCoins(3)
+
+                        state.combatLog +=
+                            "🎰 ${self.card.name} recebeu 3 fichas."
+
+                        /*
+                         * Pequena chance de um evento acontecer simplesmente
+                         * porque Markus entrou em uma nova rodada.
+                         *
+                         * Isso evita que o sistema fique completamente previsível.
+                         */
+                        if (Random.nextDouble() < 0.12) {
+                            state.combatLog +=
+                                "🎲 A mesa chamou Markus para uma aposta!"
+
+                            state.globalFlags["markus:table_event"] = true
+                        }
+                    }
                 )
             ),
+
+            // =====================================================================
+            // PASSIVE — A CASA SEMPRE GANHA
+            // =====================================================================
+
             Ability(
-                name = "Golpe all-in",
-                description = "Markus utiliza **todas** as fichas da equipe para um ataque poderoso",
+                name = "A Casa Sempre Ganha",
+                description = "Sempre que Markus perde fichas, existe uma chance de recuperar parte delas. Quando a sorte decide devolver o dinheiro, um novo Evento da Mesa pode acontecer.",
+                type = AbilityType.PASSIVE,
+                trigger = AbilityTrigger.OnTurnStart,
+                effects = listOf(
+                    Effect.Custom("MARKUS_HOUSE_ALWAYS_WINS") { self, _, state ->
+                        val team = state.teams.firstOrNull { it.units.contains(self) }
+                            ?: return@Custom
+
+                        val previousCoins =
+                            (state.globalFlags["markus:previous_coins"] as? Int)
+                                ?: team.coins()
+
+                        val currentCoins = team.coins()
+
+                        state.globalFlags["markus:previous_coins"] = currentCoins
+
+                        /*
+                         * Detecta se Markus perdeu fichas desde o último turno.
+                         */
+                        if (currentCoins < previousCoins) {
+                            val lost = previousCoins - currentCoins
+
+                            if (Random.nextDouble() < 0.25) {
+                                val refund = maxOf(1, lost / 2)
+
+                                team.addCoins(refund)
+
+                                state.combatLog +=
+                                    "🃏 ${self.card.name} recuperou $refund fichas da mesa!"
+                            }
+                        }
+                    }
+                )
+            ),
+
+            // =====================================================================
+            // ACTIVE — APOSTA BAIXA
+            // =====================================================================
+
+            Ability(
+                name = "Aposta Baixa",
+                description = "Markus aposta 3 fichas para provocar um pequeno Evento da Mesa. O resultado pode beneficiar Markus, sua equipe ou seus inimigos.",
                 type = AbilityType.ACTIVE,
                 trigger = AbilityTrigger.Manual,
                 effects = listOf(
-                    Effect.Custom("Ataque de fichas") { self, target, state ->
-                        if (target == null) {
-                            state.combatLog += "Nenhum alvo foi encontrado para `Ataque de fichas`"
+                    Effect.Custom("MARKUS_LOW_BET") { self, target, state ->
+                        val team = state.teams.firstOrNull { it.units.contains(self) }
+                            ?: return@Custom
+
+                        if (team.coins() < 3) {
+                            state.combatLog +=
+                                "🎰 ${self.card.name} não possui fichas suficientes para Aposta Baixa."
                             return@Custom
                         }
-                        val team = state.teams.find { it -> it.units.contains(self) }
-                        if (team == null) return@Custom
+
+                        team.addCoins(-3)
+
+                        state.combatLog +=
+                            "🎲 ${self.card.name} apostou 3 fichas..."
+
+                        when (Random.nextInt(0, 8)) {
+
+                            // -----------------------------------------------------
+                            // GANHO
+                            // -----------------------------------------------------
+
+                            0 -> {
+                                team.addCoins(5)
+
+                                state.combatLog +=
+                                    "💰 PEQUENA VITÓRIA! Markus ganhou 5 fichas."
+                            }
+
+                            // -----------------------------------------------------
+                            // CURA
+                            // -----------------------------------------------------
+
+                            1 -> {
+                                val maxHp = self.stats[Stat.HP] ?: 0.0
+                                val heal = maxHp * 0.15
+
+                                self.hp = minOf(
+                                    self.hp + heal,
+                                    maxHp
+                                )
+
+                                state.combatLog +=
+                                    "❤️ A sorte sorriu! Markus recuperou ${"%.1f".format(heal)} HP."
+                            }
+
+                            // -----------------------------------------------------
+                            // ATAQUE
+                            // -----------------------------------------------------
+
+                            2 -> {
+                                if (target != null && target.hp > 0) {
+                                    val damage =
+                                        (self.stats[Stat.ATK] ?: 0.0) * 1.25
+
+                                    state.queue.add(
+                                        CombatEvent.BeforeDamage(
+                                            source = self,
+                                            target = target,
+                                            damage = damage
+                                        )
+                                    )
+
+                                    state.combatLog +=
+                                        "💥 APOSTA OFENSIVA! Markus causou ${"%.1f".format(damage)} de dano."
+                                }
+                            }
+
+                            // -----------------------------------------------------
+                            // BUFF ATK
+                            // -----------------------------------------------------
+
+                            3 -> {
+                                val bonus =
+                                    (self.stats[Stat.ATK] ?: 0.0) * 0.15
+
+                                self.stats[Stat.ATK] =
+                                    (self.stats[Stat.ATK] ?: 0.0) + bonus
+
+                                state.combatLog +=
+                                    "🔥 Markus ganhou +${"%.1f".format(bonus)} ATK permanentemente!"
+                            }
+
+                            // -----------------------------------------------------
+                            // BUFF SPEED
+                            // -----------------------------------------------------
+
+                            4 -> {
+                                val bonus =
+                                    (self.stats[Stat.SPEED] ?: 0.0) * 0.10
+
+                                self.stats[Stat.SPEED] =
+                                    (self.stats[Stat.SPEED] ?: 0.0) + bonus
+
+                                state.combatLog +=
+                                    "⚡ Markus ficou mais rápido! +${"%.1f".format(bonus)} SPEED."
+                            }
+
+                            // -----------------------------------------------------
+                            // DEBUFF
+                            // -----------------------------------------------------
+
+                            5 -> {
+                                if (target != null && target.hp > 0) {
+                                    val def = target.stats[Stat.DEF] ?: 0.0
+                                    val reduction = def * 0.15
+
+                                    target.stats[Stat.DEF] =
+                                        maxOf(0.0, def - reduction)
+
+                                    state.combatLog +=
+                                        "💀 APOSTA SUJA! ${target.card.name} perdeu ${"%.1f".format(reduction)} DEF."
+                                }
+                            }
+
+                            // -----------------------------------------------------
+                            // PERDA
+                            // -----------------------------------------------------
+
+                            6 -> {
+                                if (team.coins() > 0) {
+                                    team.addCoins(-1)
+
+                                    state.combatLog +=
+                                        "💸 A CASA GANHOU! Markus perdeu mais uma ficha."
+                                } else {
+                                    state.combatLog +=
+                                        "💸 A CASA GANHOU! Markus ficou sem fichas."
+                                }
+                            }
+
+                            // -----------------------------------------------------
+                            // JACKPOT
+                            // -----------------------------------------------------
+
+                            7 -> {
+                                val jackpot = 8
+
+                                team.addCoins(jackpot)
+
+                                state.combatLog +=
+                                    "🎰 JACKPOT! Markus ganhou $jackpot fichas!"
+                            }
+                        }
+                    }
+                )
+            ),
+
+            // =====================================================================
+            // ACTIVE — DOBRO OU NADA
+            // =====================================================================
+
+            Ability(
+                name = "Dobro ou Nada",
+                description = "Markus aposta todas as fichas da equipe. 40% de chance de dobrá-las, 30% de perder tudo, 20% de conseguir um Jackpot e 10% de sofrer um desastre.",
+                type = AbilityType.ACTIVE,
+                trigger = AbilityTrigger.Manual,
+                effects = listOf(
+                    Effect.Custom("MARKUS_DOUBLE_OR_NOTHING") { self, _, state ->
+                        val team = state.teams.firstOrNull { it.units.contains(self) }
+                            ?: return@Custom
+
                         val coins = team.coins()
 
-                        var damage = 0.0
-
-                        repeat(coins) {
-                            team.addCoins(-1)
-                            damage += (self.stats[Stat.ATK] ?: 0.0) * Random.nextDouble(0.2, 0.8)
+                        if (coins <= 0) {
+                            state.combatLog +=
+                                "🎰 ${self.card.name} não possui fichas para apostar."
+                            return@Custom
                         }
 
-                        state.queue.add(
-                            CombatEvent.BeforeDamage(
-                                source = self,
-                                target = target,
-                                damage = damage
-                            )
-                        )
+                        team.addCoins(-coins)
 
-                        state.combatLog += "ALL-IN Disparado! Dano causado $damage a ${target.card.name}"
-                    }
-                )
-            )
-        )
-    )
+                        state.combatLog +=
+                            "🎲 ${self.card.name} colocou $coins fichas na mesa."
 
-    private val solarPaladin = CardDefinition(
-        id = "SOLAR_PALADIN",
-        name = "Paladino Solar",
-        description = "Guerreiro sagrado que converte força em resistência. Lento, mas quase indestrutível em uma equipe de fé.",
-        type = CardType.CHARACTER,
-        rarity = Rarity.LEGENDARY,
-        faction = "sol",
-        baseStats = mapOf(
-            Stat.HP to 900.0,
-            Stat.ATK to 65.0,
-            Stat.DEF to 68.0,
-            Stat.SPEED to 72.0,
-            Stat.CRIT_CHANCE to 0.16,
-            Stat.CRIT_DAMAGE to 1.50
-        ),
-        statsPerLevel = mapOf(
-            Stat.HP to 32.0,
-            Stat.ATK to 6.0,
-            Stat.DEF to 6.0
-        ),
-        tags = setOf("tank", "bruiser", "sol", "scaling", "sustain"),
-        abilities = listOf(
-            Ability(
-                name = "Corpo Consagrado",
-                description = "A cada turno, converte 22% do ATK em cura e 12% do ATK em DEF temporária (1 turno).",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnTurnStart,
-                effects = listOf(
-                    Effect.Custom("ATK to sustain") { self, _, state ->
-                        val atk = self.stats[Stat.ATK] ?: 0.0
-                        val heal = atk * 0.22
-                        val defBonus = atk * 0.12
-                        val maxHp = self.stats[Stat.HP] ?: return@Custom
-                        val before = self.hp
-                        self.hp = (self.hp + heal).coerceAtMost(maxHp)
-                        self.stats[Stat.DEF] = (self.stats[Stat.DEF] ?: 0.0) + defBonus
-                        state.temporaryStatModifiers += TemporaryStatModifier(
-                            unitId = self.id,
-                            stat = Stat.DEF,
-                            delta = defBonus,
-                            remainingRounds = 1,
-                            source = "PALADIN_CORPO"
-                        )
-                        val healed = self.hp - before
-                        if (healed > 0) state.combatLog += "☀️ ${self.card.name} converteu força em ${
-                            "%.1f".format(
-                                healed
-                            )
-                        } de cura e +${defBonus.toInt()} DEF temporária."
+                        when (Random.nextInt(0, 100)) {
+
+                            // =====================================================
+                            // VITÓRIA — 40%
+                            // =====================================================
+
+                            in 0..39 -> {
+                                val winnings = coins * 2
+
+                                team.addCoins(winnings)
+
+                                val atkBonus =
+                                    (self.stats[Stat.ATK] ?: 0.0) * 0.15
+
+                                self.stats[Stat.ATK] =
+                                    (self.stats[Stat.ATK] ?: 0.0) + atkBonus
+
+                                state.combatLog +=
+                                    "💰 DOBRO OU NADA — VITÓRIA! " +
+                                            "$coins → $winnings fichas. " +
+                                            "Markus ganhou +${"%.1f".format(atkBonus)} ATK."
+                            }
+
+                            // =====================================================
+                            // DERROTA — 30%
+                            // =====================================================
+
+                            in 40..69 -> {
+                                state.combatLog +=
+                                    "💸 DOBRO OU NADA — DERROTA! " +
+                                            "Markus perdeu todas as $coins fichas."
+                            }
+
+                            // =====================================================
+                            // JACKPOT — 20%
+                            // =====================================================
+
+                            in 70..89 -> {
+                                val winnings = coins * 3
+
+                                team.addCoins(winnings)
+
+                                state.combatLog +=
+                                    "🎰 JACKPOT! " +
+                                            "$coins → $winnings fichas!"
+                            }
+
+                            // =====================================================
+                            // DESASTRE — 10%
+                            // =====================================================
+
+                            else -> {
+                                val maxHp =
+                                    self.stats[Stat.HP] ?: 0.0
+
+                                val damage =
+                                    maxHp * 0.10
+
+                                self.hp = maxOf(
+                                    1.0,
+                                    self.hp - damage
+                                )
+
+                                state.combatLog +=
+                                    "💀 DESASTRE! A casa roubou tudo e Markus " +
+                                            "sofreu ${"%.1f".format(damage)} de dano!"
+                            }
+                        }
                     }
                 )
             ),
+
+            // =====================================================================
+            // ACTIVE — ALL-IN
+            // =====================================================================
+
             Ability(
-                name = "Égide da Fé",
-                description = "A cada 3 turnos, cria um escudo equivalente a 100% do ATK atual.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnTurnEvery(3),
+                name = "ALL-IN",
+                description = "Markus aposta todas as fichas restantes. Quanto maior a aposta, mais caóticos e poderosos são os possíveis resultados.",
+                type = AbilityType.ACTIVE,
+                trigger = AbilityTrigger.Manual,
                 effects = listOf(
-                    Effect.Custom("Shield from ATK") { self, _, state ->
-                        val shield = self.stats[Stat.ATK] ?: 0.0
-                        val maxHp = self.stats[Stat.HP] ?: return@Custom
-                        val before = self.hp
-                        self.hp = (self.hp + shield).coerceAtMost(maxHp)
-                        val gained = self.hp - before
-                        if (gained > 0) state.combatLog += "🛡️ ${self.card.name} ganhou ${gained.toInt()} de proteção divina."
-                    }
-                )
-            ),
-            Ability(
-                name = "Juramento Sagrado",
-                description = "Enquanto houver aliados da facção sol, o Paladino ganha DEF temporária (1 turno) e compartilha resistência com o time.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnTurnStart,
-                effects = listOf(
-                    Effect.Custom("Faith synergy DEF share") { self, _, state ->
-                        val team = state.teams.firstOrNull { it.units.contains(self) } ?: return@Custom
-                        val faithAllies = team.units.count { it.card.faction == "sol" && it.hp > 0 }
-                        if (faithAllies <= 1) return@Custom
-                        val bonusDef = 6.0 * faithAllies
-                        self.stats[Stat.DEF] = (self.stats[Stat.DEF] ?: 0.0) + bonusDef
-                        state.temporaryStatModifiers += TemporaryStatModifier(
-                            unitId = self.id,
-                            stat = Stat.DEF,
-                            delta = bonusDef,
-                            remainingRounds = 1,
-                            source = "PALADIN_FAITH"
-                        )
-                        team.units.filter { it.id != self.id && it.hp > 0 }.forEach { ally ->
-                            state.temporaryStatModifiers += TemporaryStatModifier(
-                                unitId = ally.id,
-                                stat = Stat.DEF,
-                                delta = bonusDef * 0.5,
-                                remainingRounds = 1,
-                                source = "PALADIN_FAITH"
-                            )
+                    Effect.Custom("MARKUS_ALL_IN") { self, target, state ->
+                        if (target == null || target.hp <= 0) {
+                            state.combatLog +=
+                                "🎰 ALL-IN cancelado: nenhum alvo válido."
+                            return@Custom
                         }
-                        state.combatLog += "✝️ ${self.card.name} fortaleceu o time com fé ($faithAllies aliados)."
+
+                        val team = state.teams.firstOrNull { it.units.contains(self) }
+                            ?: return@Custom
+
+                        val coins = team.coins()
+
+                        if (coins <= 0) {
+                            state.combatLog +=
+                                "🎰 ALL-IN cancelado: Markus não possui fichas."
+                            return@Custom
+                        }
+
+                        team.addCoins(-coins)
+
+                        state.combatLog +=
+                            "💀 ${self.card.name} declarou ALL-IN com $coins fichas!"
+
+                        /*
+                         * Quanto mais fichas, maior o acesso aos resultados
+                         * realmente absurdos.
+                         */
+                        val roll = Random.nextInt(0, 100)
+
+                        val atk =
+                            self.stats[Stat.ATK] ?: 0.0
+
+                        when {
+
+                            // =====================================================
+                            // 0-4 FICHAS — APOSTA PEQUENA
+                            // =====================================================
+
+                            coins < 5 -> {
+                                val damage = atk * Random.nextDouble(0.8, 1.8)
+
+                                state.queue.add(
+                                    CombatEvent.BeforeDamage(
+                                        source = self,
+                                        target = target,
+                                        damage = damage
+                                    )
+                                )
+
+                                state.combatLog +=
+                                    "🎲 A mesa devolveu um ataque simples: " +
+                                            "${"%.1f".format(damage)} de dano."
+                            }
+
+                            // =====================================================
+                            // 5-9 FICHAS
+                            // =====================================================
+
+                            coins < 10 -> {
+                                when {
+
+                                    roll < 70 -> {
+                                        val damage =
+                                            atk * Random.nextDouble(2.0, 3.5)
+
+                                        state.queue.add(
+                                            CombatEvent.BeforeDamage(
+                                                source = self,
+                                                target = target,
+                                                damage = damage
+                                            )
+                                        )
+
+                                        state.combatLog +=
+                                            "💥 GRANDE APOSTA! " +
+                                                    "${"%.1f".format(damage)} de dano."
+                                    }
+
+                                    roll < 90 -> {
+                                        val damage =
+                                            atk * Random.nextDouble(4.0, 6.0)
+
+                                        state.queue.add(
+                                            CombatEvent.BeforeDamage(
+                                                source = self,
+                                                target = target,
+                                                damage = damage
+                                            )
+                                        )
+
+                                        state.combatLog +=
+                                            "🔥 APOSTA VENCEDORA! " +
+                                                    "${"%.1f".format(damage)} de dano."
+                                    }
+
+                                    else -> {
+                                        team.addCoins(coins * 2)
+
+                                        state.combatLog +=
+                                            "🎰 JACKPOT! " +
+                                                    "Markus recuperou ${coins * 2} fichas!"
+                                    }
+                                }
+                            }
+
+                            // =====================================================
+                            // 10-19 FICHAS
+                            // =====================================================
+
+                            coins < 20 -> {
+                                when {
+
+                                    roll < 50 -> {
+                                        val damage =
+                                            atk * Random.nextDouble(4.0, 7.0)
+
+                                        state.queue.add(
+                                            CombatEvent.BeforeDamage(
+                                                source = self,
+                                                target = target,
+                                                damage = damage
+                                            )
+                                        )
+
+                                        state.combatLog +=
+                                            "💥 ALL-IN! Markus explodiu a mesa " +
+                                                    "causando ${"%.1f".format(damage)} de dano."
+                                    }
+
+                                    roll < 75 -> {
+                                        repeat(3) {
+                                            val damage =
+                                                atk * Random.nextDouble(1.5, 3.0)
+
+                                            state.queue.add(
+                                                CombatEvent.BeforeDamage(
+                                                    source = self,
+                                                    target = target,
+                                                    damage = damage
+                                                )
+                                            )
+                                        }
+
+                                        state.combatLog +=
+                                            "🔫 RAJADA DA SORTE! " +
+                                                    "Markus disparou 3 ataques!"
+                                    }
+
+                                    roll < 95 -> {
+                                        team.addCoins(coins * 2)
+
+                                        state.combatLog +=
+                                            "🎰 JACKPOT! " +
+                                                    "A mesa devolveu ${coins * 2} fichas!"
+                                    }
+
+                                    else -> {
+                                        val damage =
+                                            self.stats[Stat.HP]?.times(0.20) ?: 0.0
+
+                                        self.hp =
+                                            maxOf(1.0, self.hp - damage)
+
+                                        state.combatLog +=
+                                            "💀 DESASTRE! Markus perdeu o ALL-IN " +
+                                                    "e sofreu ${"%.1f".format(damage)} de dano."
+                                    }
+                                }
+                            }
+
+                            // =====================================================
+                            // 20+ FICHAS — MODO CAOS
+                            // =====================================================
+
+                            else -> {
+                                when {
+
+                                    // -------------------------------------------------
+                                    // 40% — DANO ABSURDO
+                                    // -------------------------------------------------
+
+                                    roll < 40 -> {
+                                        val damage =
+                                            atk * Random.nextDouble(8.0, 14.0)
+
+                                        state.queue.add(
+                                            CombatEvent.BeforeDamage(
+                                                source = self,
+                                                target = target,
+                                                damage = damage
+                                            )
+                                        )
+
+                                        state.combatLog +=
+                                            "🔥🔥 MEGA APOSTA! " +
+                                                    "Markus causou ${"%.1f".format(damage)} de dano!"
+                                    }
+
+                                    // -------------------------------------------------
+                                    // 25% — MULTI ATTACK
+                                    // -------------------------------------------------
+
+                                    roll < 65 -> {
+                                        repeat(5) {
+                                            val damage =
+                                                atk * Random.nextDouble(1.5, 3.5)
+
+                                            state.queue.add(
+                                                CombatEvent.BeforeDamage(
+                                                    source = self,
+                                                    target = target,
+                                                    damage = damage
+                                                )
+                                            )
+                                        }
+
+                                        state.combatLog +=
+                                            "🔫🔫🔫 CAOS TOTAL! " +
+                                                    "Markus realizou 5 ataques!"
+                                    }
+
+                                    // -------------------------------------------------
+                                    // 20% — JACKPOT
+                                    // -------------------------------------------------
+
+                                    roll < 85 -> {
+                                        val winnings =
+                                            coins * 3
+
+                                        team.addCoins(winnings)
+
+                                        state.combatLog +=
+                                            "🎰👑 MEGA JACKPOT! " +
+                                                    "$coins → $winnings fichas!"
+                                    }
+
+                                    // -------------------------------------------------
+                                    // 10% — EVENTO ALEATÓRIO
+                                    // -------------------------------------------------
+
+                                    roll < 95 -> {
+                                        when (Random.nextInt(0, 4)) {
+
+                                            0 -> {
+                                                val bonus =
+                                                    atk * 0.50
+
+                                                self.stats[Stat.ATK] =
+                                                    (self.stats[Stat.ATK] ?: 0.0) + bonus
+
+                                                state.combatLog +=
+                                                    "🃏 CARTA CORINGA! " +
+                                                            "Markus ganhou +${"%.1f".format(bonus)} ATK."
+                                            }
+
+                                            1 -> {
+                                                val maxHp =
+                                                    self.stats[Stat.HP] ?: 0.0
+
+                                                val heal =
+                                                    maxHp * 0.50
+
+                                                self.hp =
+                                                    minOf(
+                                                        self.hp + heal,
+                                                        maxHp
+                                                    )
+
+                                                state.combatLog +=
+                                                    "❤️ CARTA CORINGA! " +
+                                                            "Markus recuperou ${"%.1f".format(heal)} HP."
+                                            }
+
+                                            2 -> {
+                                                team.addCoins(10)
+
+                                                state.combatLog +=
+                                                    "🪙 CARTA CORINGA! " +
+                                                            "Markus ganhou 10 fichas extras."
+                                            }
+
+                                            else -> {
+                                                val damage =
+                                                    atk * Random.nextDouble(3.0, 8.0)
+
+                                                state.queue.add(
+                                                    CombatEvent.BeforeDamage(
+                                                        source = self,
+                                                        target = target,
+                                                        damage = damage
+                                                    )
+                                                )
+
+                                                state.combatLog +=
+                                                    "🃏 CARTA CORINGA! " +
+                                                            "Um disparo aleatório causou " +
+                                                            "${"%.1f".format(damage)} de dano."
+                                            }
+                                        }
+                                    }
+
+                                    // -------------------------------------------------
+                                    // 5% — DESASTRE
+                                    // -------------------------------------------------
+
+                                    else -> {
+                                        val damage =
+                                            self.stats[Stat.HP]?.times(0.35) ?: 0.0
+
+                                        self.hp =
+                                            maxOf(1.0, self.hp - damage)
+
+                                        state.combatLog +=
+                                            "💀💀 A CASA QUEBROU MARKUS! " +
+                                                    "Ele perdeu o ALL-IN e sofreu " +
+                                                    "${"%.1f".format(damage)} de dano!"
+                                    }
+                                }
+                            }
+                        }
                     }
                 )
             )
@@ -1164,41 +1831,6 @@ object CardCatalog {
         )
     )
 
-    private val arcaneFocus = CardDefinition(
-        id = "ARCANE_FOCUS",
-        name = "Foco Arcano",
-        description = "Um amuleto que canaliza energia mágica pura. Quanto mais INT o portador tiver, mais devastadora é a descarga periódica.",
-        type = CardType.EQUIPMENT,
-        rarity = Rarity.EPIC,
-        slot = EquipmentSlot.TRINKET,
-        baseStats = mapOf(
-            Stat.INT to 50.0,
-            Stat.ATK to 18.0,
-            Stat.DEF to -12.0
-        ),
-        statsPerLevel = mapOf(
-            Stat.INT to 5.0,
-            Stat.ATK to 2.0
-        ),
-        tags = setOf("magic", "int", "aoe"),
-        abilities = listOf(
-            Ability(
-                name = "Descarga Arcana",
-                description = "A cada 2 turnos, libera uma descarga de energia arcana causando 30% do INT atual como dano mágico a todos os inimigos.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnTurnEvery(2),
-                effects = listOf(
-                    Effect.DamageBasedOnStat(
-                        stat = Stat.INT,
-                        scaling = 0.30,
-                        statSource = StatSource.SELF,
-                        target = AbilityTarget.ALL_ENEMIES,
-                        damageType = DamageType.MAGIC
-                    )
-                )
-            )
-        )
-    )
 
     // =========================================================================
     // LEGENDARY EQUIPMENT
@@ -1556,88 +2188,6 @@ object CardCatalog {
         )
     )
 
-    private val shadow = CardDefinition(
-        id = "SHADOW",
-        name = "Sombra",
-        description = "Assassina ultrarrápida. Não aguenta punição, mas dificilmente dá chance para o inimigo reagir.",
-        type = CardType.CHARACTER,
-        rarity = Rarity.EPIC,
-        baseStats = mapOf(
-            Stat.HP to 430.0,
-            Stat.ATK to 68.0,
-            Stat.DEF to 8.0,
-            Stat.SPEED to 138.0,
-            Stat.CRIT_CHANCE to 0.22,
-            Stat.CRIT_DAMAGE to 1.55
-        ),
-        statsPerLevel = mapOf(
-            Stat.HP to 5.0,
-            Stat.ATK to 6.0,
-            Stat.SPEED to 2.5,
-            Stat.CRIT_CHANCE to 0.01
-        ),
-        tags = setOf("fast", "assassin"),
-        abilities = listOf(
-            Ability(
-                name = "Abertura",
-                description = "No início da batalha, Sombra aproveita o elemento surpresa e ganha +25% de ATK permanente.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnBattleStart,
-                effects = listOf(Effect.StatIncreasePercent(stat = Stat.ATK, percent = 0.25))
-            ),
-            Ability(
-                name = "Lâmina Sombria",
-                description = "Ao causar dano, executa alvos com menos de 20% de vida.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnDamageDealt,
-                effects = listOf(Effect.ExecuteBellowHealth(threshold = 0.20))
-            )
-        )
-    )
-
-
-    private val berserker = CardDefinition(
-        id = "BERSERKER",
-        name = "Berserker",
-        description = "Quanto mais apanha, mais perigoso fica. Fraco de início, devastador no final.",
-        type = CardType.CHARACTER,
-        rarity = Rarity.EPIC,
-        baseStats = mapOf(
-            Stat.HP to 580.0,
-            Stat.ATK to 52.0,
-            Stat.DEF to 14.0,
-            Stat.SPEED to 96.0,
-            Stat.CRIT_CHANCE to 0.15,
-            Stat.CRIT_DAMAGE to 1.40
-        ),
-        statsPerLevel = mapOf(
-            Stat.HP to 10.0,
-            Stat.ATK to 4.5,
-            Stat.SPEED to 1.5
-        ),
-        tags = setOf("rage", "bruiser"),
-        abilities = listOf(
-            Ability(
-                name = "Fúria",
-                description = "A cada golpe recebido, o Berserker entra em fúria e ganha +7 de ATK permanente.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnDamageTaken(),
-                effects = listOf(Effect.BuffStat(stat = Stat.ATK, value = 7.0, target = AbilityTarget.SELF))
-            ),
-            Ability(
-                name = "Última Resistência",
-                description = "Ao cair abaixo de 50% de vida, a raiva explode: +35% ATK e +20% SPEED.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnBellowHealth(0.50),
-                effects = listOf(
-                    Effect.StatIncreasePercent(stat = Stat.ATK, percent = 0.35),
-                    Effect.StatIncreasePercent(stat = Stat.SPEED, percent = 0.20)
-                )
-            )
-        )
-    )
-
-
     private val ironGargoyle = CardDefinition(
         id = "IRON_GARGOYLE",
         name = "Gárgula de Ferro",
@@ -1691,56 +2241,6 @@ object CardCatalog {
         )
     )
 
-    private val voidMage = CardDefinition(
-        id = "VOID_MAGE",
-        name = "Mago do Vazio",
-        description = "Poder mágico puro e devastador. Praticamente sem defesa — um único golpe bem dado pode encerrá-lo.",
-        type = CardType.CHARACTER,
-        rarity = Rarity.LEGENDARY,
-        baseStats = mapOf(
-            Stat.HP to 600.0,
-            Stat.ATK to 68.0,
-            Stat.DEF to 15.0,
-            Stat.SPEED to 102.0,
-            Stat.CRIT_CHANCE to 0.18,
-            Stat.CRIT_DAMAGE to 1.5
-        ),
-        statsPerLevel = mapOf(
-            Stat.HP to 12.0,
-            Stat.ATK to 8.0,
-            Stat.SPEED to 2.5,
-            Stat.CRIT_CHANCE to 0.01
-        ),
-        tags = setOf("mage", "aoe", "glass-cannon"),
-        abilities = listOf(
-            Ability(
-                name = "Explosão de Vazio",
-                description = "A cada 2 turnos, o Mago libera uma explosão de energia do vazio causando 70% do ATK como dano mágico a todos os inimigos.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnTurnEvery(2),
-                effects = listOf(
-                    Effect.DamageBasedOnStat(
-                        stat = Stat.ATK,
-                        scaling = 0.70,
-                        statSource = StatSource.SELF,
-                        target = AbilityTarget.ALL_ENEMIES,
-                        damageType = DamageType.MAGIC
-                    )
-                )
-            ),
-            Ability(
-                name = "Convergência do Vazio",
-                description = "Ao cair abaixo de 30% de vida, o vazio converge em poder máximo: +55% ATK e +30% SPEED.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnBellowHealth(0.30),
-                effects = listOf(
-                    Effect.StatIncreasePercent(stat = Stat.ATK, percent = 0.55),
-                    Effect.StatIncreasePercent(stat = Stat.SPEED, percent = 0.30)
-                )
-            )
-        )
-    )
-
 
     private val quickBoots = CardDefinition(
         id = "QUICK_BOOTS",
@@ -1756,33 +2256,6 @@ object CardCatalog {
         statsPerLevel = mapOf(Stat.SPEED to 4.0),
         tags = setOf("speed", "light"),
         abilities = emptyList()
-    )
-
-
-    private val boneStaff = CardDefinition(
-        id = "BONE_STAFF",
-        name = "Cajado de Osso",
-        description = "Um cajado arcano talhado de ossos. Pulsa energia sombria a cada três turnos, atingindo todos os inimigos.",
-        type = CardType.EQUIPMENT,
-        rarity = Rarity.RARE,
-        slot = EquipmentSlot.WEAPON,
-        baseStats = mapOf(
-            Stat.ATK to 20.0,
-            Stat.DEF to -8.0
-        ),
-        statsPerLevel = mapOf(Stat.ATK to 3.5),
-        tags = setOf("magic", "aoe"),
-        abilities = listOf(
-            Ability(
-                name = "Pulso Sombrio",
-                description = "A cada 3 turnos, o cajado emite um pulso de energia sombria causando 50 de dano mágico a todos os inimigos.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnTurnEvery(3),
-                effects = listOf(
-                    Effect.Damage(value = 50.0, target = AbilityTarget.ALL_ENEMIES, damageType = DamageType.MAGIC)
-                )
-            )
-        )
     )
 
 
@@ -1993,365 +2466,6 @@ object CardCatalog {
         )
     )
 
-    private val aureaSoldier = CardDefinition(
-        id = "AUREA_SOLDIER",
-        name = "Soldado de Aurea",
-        description = "Treinado desde cedo para tratar combate como devoção. Individualmente sólido — em grupo, perigoso.",
-        type = CardType.CHARACTER,
-        rarity = Rarity.RARE,
-        faction = "sol",
-        baseStats = mapOf(
-            Stat.HP to 490.0,
-            Stat.ATK to 40.0,
-            Stat.DEF to 26.0,
-            Stat.SPEED to 80.0,
-            Stat.CRIT_CHANCE to 0.09,
-            Stat.CRIT_DAMAGE to 1.28
-        ),
-        statsPerLevel = mapOf(
-            Stat.HP to 10.0,
-            Stat.ATK to 3.5,
-            Stat.DEF to 2.5
-        ),
-        tags = setOf("sol", "frontline"),
-        abilities = listOf(
-            Ability(
-                name = "Formação Solar",
-                description = "No início da batalha, para cada aliado da facção 'sol' no time, ganha +8 ATK e +5 DEF.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnBattleStart,
-                effects = listOf(
-                    Effect.Custom("Sol formation bonus") { self, _, state ->
-                        val team = state.teams.firstOrNull { it.units.contains(self) } ?: return@Custom
-                        val solCount = team.units.count { it.card.faction == "sol" && it.hp > 0 }
-                        if (solCount <= 1) return@Custom
-                        val allies = solCount - 1
-                        val atkBonus = 8.0 * allies
-                        val defBonus = 5.0 * allies
-                        self.stats[Stat.ATK] = (self.stats[Stat.ATK] ?: 0.0) + atkBonus
-                        self.stats[Stat.DEF] = (self.stats[Stat.DEF] ?: 0.0) + defBonus
-                        state.combatLog += "☀️ ${self.card.name} entrou em formação solar com $allies aliado(s): +${atkBonus.toInt()} ATK, +${defBonus.toInt()} DEF."
-                    }
-                )
-            )
-        )
-    )
-
-    private val goldenKnight = CardDefinition(
-        id = "GOLDEN_KNIGHT",
-        name = "Cavaleiro Dourado",
-        description = "A linha de frente de Aurea. Cada golpe recebido fortalece sua armadura — e ao cair, transfere esse poder aos aliados.",
-        type = CardType.CHARACTER,
-        rarity = Rarity.EPIC,
-        faction = "sol",
-        baseStats = mapOf(
-            Stat.HP to 710.0,
-            Stat.ATK to 44.0,
-            Stat.DEF to 56.0,
-            Stat.SPEED to 72.0,
-            Stat.CRIT_CHANCE to 0.10,
-            Stat.CRIT_DAMAGE to 1.30
-        ),
-        statsPerLevel = mapOf(
-            Stat.HP to 16.0,
-            Stat.ATK to 3.0,
-            Stat.DEF to 5.0
-        ),
-        tags = setOf("sol", "tank", "frontline", "defense"),
-        abilities = listOf(
-            Ability(
-                name = "Têmpera Solar",
-                description = "Ao receber dano, a armadura absorve o impacto e endurece: ganha +3 DEF permanente.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnDamageTaken(),
-                effects = listOf(
-                    Effect.BuffStat(stat = Stat.DEF, value = 3.0, target = AbilityTarget.SELF)
-                )
-            ),
-            Ability(
-                name = "Guardião da Cidade",
-                description = "A cada 3 turnos, concede +10 DEF temporária (2 turnos) a todos os aliados da facção 'sol'.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnTurnEvery(3),
-                effects = listOf(
-                    Effect.Custom("Sol DEF share") { self, _, state ->
-                        val team = state.teams.firstOrNull { it.units.contains(self) } ?: return@Custom
-                        val targets = team.units.filter { it.card.faction == "sol" && it.hp > 0 && it.id != self.id }
-                        if (targets.isEmpty()) return@Custom
-                        targets.forEach { ally ->
-                            ally.stats[Stat.DEF] = (ally.stats[Stat.DEF] ?: 0.0) + 10.0
-                            state.temporaryStatModifiers += TemporaryStatModifier(
-                                unitId = ally.id,
-                                stat = Stat.DEF,
-                                delta = 10.0,
-                                remainingRounds = 2,
-                                source = "GOLDEN_KNIGHT_GUARDIAN"
-                            )
-                            state.combatLog += "🛡️ ${ally.card.name} recebeu +10 DEF temporária (Guardião da Cidade)."
-                        }
-                    }
-                )
-            ),
-            Ability(
-                name = "Legado da Batalha",
-                description = "Ao morrer, converte 40% da DEF acumulada em ATK permanente para todos os aliados 'sol' vivos.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnDeath,
-                once = true,
-                effects = listOf(
-                    Effect.Custom("Death DEF transfer") { self, _, state ->
-                        val team = state.teams.firstOrNull { it.units.contains(self) } ?: return@Custom
-                        val legacyAtk = (self.stats[Stat.DEF] ?: 0.0) * 0.40
-                        if (legacyAtk <= 0) return@Custom
-                        val targets = team.units.filter { it.card.faction == "sol" && it.hp > 0 }
-                        targets.forEach { ally ->
-                            ally.stats[Stat.ATK] = (ally.stats[Stat.ATK] ?: 0.0) + legacyAtk
-                            state.combatLog += "⚔️ ${ally.card.name} herdou +${legacyAtk.toInt()} ATK do Cavaleiro Dourado."
-                        }
-                    }
-                )
-            )
-        )
-    )
-
-
-    private val sunPriestess = CardDefinition(
-        id = "SUN_PRIESTESS",
-        name = "Sacerdotisa do Sol",
-        description = "A fé de Aurea tem uma face marcial e uma espiritual. Ela é a segunda — mas não confunda espiritualidade com passividade.",
-        type = CardType.CHARACTER,
-        rarity = Rarity.EPIC,
-        faction = "sol",
-        baseStats = mapOf(
-            Stat.HP to 590.0,
-            Stat.ATK to 54.0,
-            Stat.DEF to 32.0,
-            Stat.SPEED to 85.0,
-            Stat.CRIT_CHANCE to 0.10,
-            Stat.CRIT_DAMAGE to 1.30
-        ),
-        statsPerLevel = mapOf(
-            Stat.HP to 14.0,
-            Stat.ATK to 5.0,
-            Stat.DEF to 2.5
-        ),
-        tags = setOf("sol", "support", "healing"),
-        abilities = listOf(
-            Ability(
-                name = "Cura pela Luz",
-                description = "A cada turno, cura aliados: membros 'sol' recebem 10% do ATK, demais recebem 5%.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnTurnStart,
-                effects = listOf(
-                    Effect.Custom("Sol heal") { self, _, state ->
-                        val atk = self.stats[Stat.ATK] ?: 0.0
-                        val team = state.teams.firstOrNull { it.units.contains(self) } ?: return@Custom
-                        team.units.filter { it.hp > 0 }.forEach { ally ->
-                            val isSol = ally.card.faction == "sol"
-                            val heal = atk * if (isSol) 0.10 else 0.05
-                            val maxHp = ally.stats[Stat.HP] ?: return@forEach
-                            val before = ally.hp
-                            ally.hp = (ally.hp + heal).coerceAtMost(maxHp)
-                            val healed = ally.hp - before
-                            if (healed > 0)
-                                state.combatLog += "☀️ ${ally.card.name} curado em ${"%.1f".format(healed)} (${if (isSol) "solar" else "normal"})."
-                        }
-                    }
-                )
-            ),
-            Ability(
-                name = "Bênção do Zênite",
-                description = "A cada 4 turnos, concede +15% ATK e +15% DEF temporários (2 turnos) a todos os aliados 'sol'.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnTurnEvery(4),
-                effects = listOf(
-                    Effect.Custom("Sol zenith buff") { self, _, state ->
-                        val team = state.teams.firstOrNull { it.units.contains(self) } ?: return@Custom
-                        team.units.filter { it.card.faction == "sol" && it.hp > 0 }.forEach { ally ->
-                            val atkBonus = (ally.stats[Stat.ATK] ?: 0.0) * 0.15
-                            val defBonus = (ally.stats[Stat.DEF] ?: 0.0) * 0.15
-                            ally.stats[Stat.ATK] = (ally.stats[Stat.ATK] ?: 0.0) + atkBonus
-                            ally.stats[Stat.DEF] = (ally.stats[Stat.DEF] ?: 0.0) + defBonus
-                            state.temporaryStatModifiers += TemporaryStatModifier(
-                                unitId = ally.id, stat = Stat.ATK,
-                                delta = atkBonus, remainingRounds = 2,
-                                source = "ZENITH_BUFF"
-                            )
-                            state.temporaryStatModifiers += TemporaryStatModifier(
-                                unitId = ally.id, stat = Stat.DEF,
-                                delta = defBonus, remainingRounds = 2,
-                                source = "ZENITH_BUFF"
-                            )
-                            state.combatLog += "🌞 ${ally.card.name} recebeu Bênção do Zênite (+${atkBonus.toInt()} ATK, +${defBonus.toInt()} DEF)."
-                        }
-                    }
-                )
-            )
-        )
-    )
-
-    private val aureKing = CardDefinition(
-        id = "AURE_KING",
-        name = "Rei de Aurea",
-        description = "O monarca não reina com decretos. Reina com o exemplo. Cada batalha que travou, travou na frente.",
-        type = CardType.CHARACTER,
-        rarity = Rarity.LEGENDARY,
-        faction = "sol",
-        baseStats = mapOf(
-            Stat.HP to 860.0,
-            Stat.ATK to 74.0,
-            Stat.DEF to 52.0,
-            Stat.SPEED to 88.0,
-            Stat.CRIT_CHANCE to 0.18,
-            Stat.CRIT_DAMAGE to 1.65
-        ),
-        statsPerLevel = mapOf(
-            Stat.HP to 20.0,
-            Stat.ATK to 7.0,
-            Stat.DEF to 4.0,
-            Stat.CRIT_CHANCE to 0.01
-        ),
-        tags = setOf("sol", "boss", "king", "scaling", "bruiser"),
-        abilities = listOf(
-            Ability(
-                name = "Presença Real",
-                description = "No início da batalha, todos os aliados ganham +12 ATK. Aliados 'sol' ganham +12 ATK e +8 DEF adicionais.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnBattleStart,
-                effects = listOf(
-                    Effect.Custom("Royal aura") { self, _, state ->
-                        val team = state.teams.firstOrNull { it.units.contains(self) } ?: return@Custom
-                        team.units.filter { it.hp > 0 && it.id != self.id }.forEach { ally ->
-                            val isSol = ally.card.faction == "sol"
-                            val atkBonus = if (isSol) 24.0 else 12.0
-                            val defBonus = if (isSol) 8.0 else 0.0
-                            ally.stats[Stat.ATK] = (ally.stats[Stat.ATK] ?: 0.0) + atkBonus
-                            if (defBonus > 0) ally.stats[Stat.DEF] = (ally.stats[Stat.DEF] ?: 0.0) + defBonus
-                            state.combatLog += "👑 ${ally.card.name} recebeu Presença Real ${if (isSol) "(+${atkBonus.toInt()} ATK, +${defBonus.toInt()} DEF)" else "(+${atkBonus.toInt()} ATK)"}."
-                        }
-                    }
-                )
-            ),
-            Ability(
-                name = "Chama do Trono",
-                description = "A cada ataque, o Rei acumula calor solar: +4 ATK permanente.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnHit,
-                effects = listOf(
-                    Effect.BuffStat(stat = Stat.ATK, value = 4.0, target = AbilityTarget.SELF)
-                )
-            ),
-            Ability(
-                name = "Cólera Solar",
-                description = "Ao cair abaixo de 45% de vida, a coroa arde: +60% ATK e +25% SPEED. Ocorre uma única vez.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnBellowHealth(0.45),
-                once = true,
-                effects = listOf(
-                    Effect.StatIncreasePercent(stat = Stat.ATK, percent = 0.60),
-                    Effect.StatIncreasePercent(stat = Stat.SPEED, percent = 0.25)
-                )
-            ),
-            Ability(
-                name = "Execução do Rei",
-                description = "Ao causar dano, executa inimigos com menos de 20% de vida.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnDamageDealt,
-                effects = listOf(
-                    Effect.ExecuteBellowHealth(threshold = 0.20)
-                )
-            )
-        )
-    )
-
-    private val aureGoldenArmor = CardDefinition(
-        id = "AURE_GOLDEN_ARMOR",
-        name = "Armadura Dourada de Aurea",
-        description = "Forjada sob o sol de Aurea por gerações. Cura o portador proporcionalmente ao time solar que o cerca.",
-        type = CardType.EQUIPMENT,
-        rarity = Rarity.EPIC,
-        slot = EquipmentSlot.ARMOR,
-        faction = "sol",
-        baseStats = mapOf(
-            Stat.DEF to 44.0,
-            Stat.HP to 80.0
-        ),
-        statsPerLevel = mapOf(
-            Stat.DEF to 5.0,
-            Stat.HP to 12.0
-        ),
-        tags = setOf("sol", "armor", "defense", "sustain"),
-        abilities = listOf(
-            Ability(
-                name = "Reflexo Solar",
-                description = "A cada 2 turnos, cura o portador em 12 HP por cada aliado da facção 'sol' vivo no time.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnTurnEvery(2),
-                effects = listOf(
-                    Effect.Custom("Sol armor regen") { self, _, state ->
-                        val team = state.teams.firstOrNull { it.units.contains(self) } ?: return@Custom
-                        val solCount = team.units.count { it.card.faction == "sol" && it.hp > 0 }
-                        if (solCount == 0) return@Custom
-                        val heal = 12.0 * solCount
-                        val maxHp = self.stats[Stat.HP] ?: return@Custom
-                        val before = self.hp
-                        self.hp = (self.hp + heal).coerceAtMost(maxHp)
-                        val healed = self.hp - before
-                        if (healed > 0)
-                            state.combatLog += "☀️ Reflexo Solar: +${healed.toInt()} HP ($solCount aliado(s) solar(es))."
-                    }
-                )
-            )
-        )
-    )
-
-
-    private val solarbrand = CardDefinition(
-        id = "SOLARBRAND",
-        name = "Lâmina da Aurora",
-        description = "Uma espada forjada pelos ferreiros de Aurea que imita o movimento do sol — lenta no amanhecer, devastadora ao meio-dia.",
-        type = CardType.EQUIPMENT,
-        rarity = Rarity.LEGENDARY,
-        slot = EquipmentSlot.WEAPON,
-        faction = "sol",
-        baseStats = mapOf(
-            Stat.ATK to 42.0,
-            Stat.CRIT_CHANCE to 0.12,
-            Stat.CRIT_DAMAGE to 0.30
-        ),
-        statsPerLevel = mapOf(
-            Stat.ATK to 5.5,
-            Stat.CRIT_CHANCE to 0.01
-        ),
-        tags = setOf("sol", "weapon", "scaling"),
-        abilities = listOf(
-            Ability(
-                name = "Chama do Amanhecer",
-                description = "A cada turno, a lâmina aquece e ganha +6 ATK permanente.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnTurnStart,
-                effects = listOf(
-                    Effect.BuffStat(stat = Stat.ATK, value = 6.0, target = AbilityTarget.SELF)
-                )
-            ),
-            Ability(
-                name = "Golpe Abrasador",
-                description = "A cada 3 ataques, o calor acumulado explode: causa 80% do ATK atual como dano real.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnAttackEvery(3),
-                effects = listOf(
-                    Effect.DamageBasedOnStat(
-                        stat = Stat.ATK,
-                        scaling = 0.80,
-                        statSource = StatSource.SELF,
-                        target = AbilityTarget.ENEMY,
-                        damageType = DamageType.TRUE
-                    )
-                )
-            )
-        )
-    )
-
     private val swiftHunterCloth = CardDefinition(
         id = "SWIFT_HUNTER_CLOTH",
         name = "Manto do Vento Cortante",
@@ -2459,459 +2573,6 @@ object CardCatalog {
                 trigger = AbilityTrigger.OnHit,
                 effects = listOf(
                     Effect.DamageBasedOnStat(Stat.INT, 0.8, damageType = DamageType.MAGIC)
-                )
-            )
-        )
-    )
-
-    private val glacialOrb = CardDefinition(
-        id = "GLACIAL_ORB",
-        name = "Orbe Glacial",
-        description = "Orbe de gelo ancestral sintonizado com a magia de Sami. Pulsa com frio vivo a cada toque — e quando um inimigo está congelado, libera uma onda glacial devastadora.",
-        type = CardType.EQUIPMENT,
-        rarity = Rarity.MYTHIC,
-        slot = EquipmentSlot.TRINKET,
-        baseStats = mapOf(
-            Stat.INT to 90.0,
-            Stat.SPEED to 10.0,
-            Stat.DEF to -15.0
-        ),
-        statsPerLevel = mapOf(
-            Stat.INT to 10.0,
-            Stat.SPEED to 1.0
-        ),
-        tags = setOf("magic", "int", "ice"),
-        abilities = listOf(
-            Ability(
-                name = "Despertar Glacial",
-                description = "No início da batalha, o orbe desperta e amplifica o poder arcano do portador em +25% de INT permanentemente.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnBattleStart,
-                once = true,
-                effects = listOf(
-                    Effect.StatIncreasePercent(stat = Stat.INT, percent = 0.25)
-                )
-            ),
-            Ability(
-                name = "Amplificação Glacial",
-                description = "Ao atacar um inimigo afetado pela Lua de Gelo, o orbe libera uma onda glacial adicional causando 60% do INT atual como dano mágico.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnHit,
-                effects = listOf(
-                    Effect.Custom("Glacial Amplification") { self, target, state ->
-                        if (target == null) return@Custom
-                        val hasIceDebuff = state.temporaryStatModifiers.any {
-                            it.unitId == target.id && (it.source == "ICE_MOON_VULN" || it.source == "ICE_MOON_SLOW")
-                        }
-                        if (!hasIceDebuff) return@Custom
-                        val intStat = self.stats[Stat.INT] ?: 0.0
-                        val damage = intStat * 0.60
-                        if (damage <= 0) return@Custom
-                        state.queue.add(
-                            CombatEvent.BeforeDamage(
-                                source = self,
-                                target = target,
-                                damage = damage,
-                                damageType = DamageType.MAGIC,
-                                canCrit = false
-                            )
-                        )
-                        state.combatLog += "❄️ Amplificação Glacial: ${target.card.name} está congelado! (+${damage.toInt()} dano mágico)"
-                    }
-                )
-            )
-        )
-    )
-
-    private val samiStaff = CardDefinition(
-        id = "SAMI_STAFF",
-        name = "Cetro do Solstício Glacial",
-        description = "Forjado do gelo vivo do mundo antigo, este cetro responde apenas ao toque de Sami. Em suas mãos, cada feitiço pulsa com frio eterno — quanto maior a inteligência, mais devastador o inverno que ela convoca.",
-        type = CardType.EQUIPMENT,
-        rarity = Rarity.MYTHIC,
-        slot = EquipmentSlot.WEAPON,
-        baseStats = mapOf(
-            Stat.INT to 130.0,
-            Stat.ATK to 10.0,
-            Stat.DEF to -20.0,
-            Stat.SPEED to 5.0
-        ),
-        statsPerLevel = mapOf(
-            Stat.INT to 15.0,
-            Stat.ATK to 1.0
-        ),
-        tags = setOf("magic", "int", "ice", "sami", "signature"),
-        abilities = listOf(
-            Ability(
-                name = "Feitiço Glacial",
-                description = "Cada ataque conjura um feitiço de gelo adicional que causa 45% do INT atual como dano mágico.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnHit,
-                effects = listOf(
-                    Effect.DamageBasedOnStat(
-                        stat = Stat.INT,
-                        scaling = 0.45,
-                        statSource = StatSource.SELF,
-                        target = AbilityTarget.ENEMY,
-                        damageType = DamageType.MAGIC
-                    )
-                )
-            ),
-            Ability(
-                name = "Amplificação Polar",
-                description = "No início da batalha, o cetro amplifica o poder arcano do portador em +35% INT permanente.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnBattleStart,
-                once = true,
-                effects = listOf(
-                    Effect.StatIncreasePercent(stat = Stat.INT, percent = 0.35)
-                )
-            ),
-            Ability(
-                name = "Vórtice Glacial",
-                description = "A cada 3 turnos, canaliza um vórtice de gelo que causa 120% do INT atual como dano mágico a todos os inimigos.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnTurnEvery(3),
-                effects = listOf(
-                    Effect.DamageBasedOnStat(
-                        stat = Stat.INT,
-                        scaling = 1.20,
-                        statSource = StatSource.SELF,
-                        target = AbilityTarget.ALL_ENEMIES,
-                        damageType = DamageType.MAGIC
-                    )
-                )
-            )
-        )
-    )
-
-    private val samiCloth = CardDefinition(
-        id = "SAMI_CLOTH",
-        name = "Manto do Coração de Gelo",
-        description = "Tecido de névoa cristalizada, costurado por Sami na noite em que dominou sua primeira Lua de Gelo. O manto responde ao INT de quem o veste — quanto maior a inteligência, mais sólido o escudo de gelo que o envolve.",
-        type = CardType.EQUIPMENT,
-        rarity = Rarity.MYTHIC,
-        slot = EquipmentSlot.ARMOR,
-        baseStats = mapOf(
-            Stat.INT to 75.0,
-            Stat.DEF to 35.0,
-            Stat.HP to 150.0
-        ),
-        statsPerLevel = mapOf(
-            Stat.INT to 8.0,
-            Stat.DEF to 4.0,
-            Stat.HP to 18.0
-        ),
-        tags = setOf("magic", "int", "ice", "sami", "signature", "shield"),
-        abilities = listOf(
-            Ability(
-                name = "Casulo de Gelo",
-                description = "No início da batalha, cristaliza o ar ao redor do portador criando um escudo equivalente a 65% do INT atual como HP adicional.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnBattleStart,
-                once = true,
-                effects = listOf(
-                    Effect.Custom("Ice Shell Shield") { self, _, state ->
-                        val intStat = self.stats[Stat.INT] ?: 0.0
-                        val shieldHp = intStat * 0.65
-                        if (shieldHp <= 0) return@Custom
-                        self.stats[Stat.HP] = (self.stats[Stat.HP] ?: 0.0) + shieldHp
-                        self.hp += shieldHp
-                        state.temporaryStatModifiers += TemporaryStatModifier(
-                            unitId = self.id,
-                            stat = Stat.HP,
-                            delta = shieldHp,
-                            remainingRounds = 99,
-                            source = "ICE_SHELL"
-                        )
-                        state.combatLog += "🧊 ${self.card.name} ergueu um Casulo de Gelo (+${shieldHp.toInt()} HP de escudo glacial)."
-                    }
-                )
-            ),
-            Ability(
-                name = "Armadura Glacial",
-                description = "A cada 2 turnos, a armadura de gelo se renova: ganha DEF temporária equivalente a 50% do INT atual por 2 turnos.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnTurnEvery(2),
-                effects = listOf(
-                    Effect.Custom("Glacial Armor DEF") { self, _, state ->
-                        val intStat = self.stats[Stat.INT] ?: 0.0
-                        val defBonus = intStat * 0.50
-                        if (defBonus <= 0) return@Custom
-                        self.stats[Stat.DEF] = (self.stats[Stat.DEF] ?: 0.0) + defBonus
-                        state.temporaryStatModifiers += TemporaryStatModifier(
-                            unitId = self.id,
-                            stat = Stat.DEF,
-                            delta = defBonus,
-                            remainingRounds = 2,
-                            source = "GLACIAL_ARMOR"
-                        )
-                        state.combatLog += "❄️ ${self.card.name} renova sua Armadura Glacial (+${defBonus.toInt()} DEF por 2 turnos)."
-                    }
-                )
-            ),
-            Ability(
-                name = "Mente Afiada pelo Frio",
-                description = "Ao receber dano, os cristais de gelo se compactam e aguçam a mente: ganha +3 INT permanente. A dor afina o intelecto.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnDamageTaken(),
-                effects = listOf(
-                    Effect.BuffStat(stat = Stat.INT, value = 3.0, target = AbilityTarget.SELF)
-                )
-            )
-        )
-    )
-
-    private val samiBoots = CardDefinition(
-        id = "SAMI_BOOTS",
-        name = "Sandálias do Eterno Inverno",
-        description = "Calçados tecidos do gelo mais puro do mundo antigo. Cada passo refresca a mente de Sami e converte sua velocidade em energia destrutiva. Quem ousa segui-la pisa em terreno gelado.",
-        type = CardType.EQUIPMENT,
-        rarity = Rarity.MYTHIC,
-        slot = EquipmentSlot.BOOTS,
-        baseStats = mapOf(
-            Stat.SPEED to 42.0,
-            Stat.INT to 55.0,
-            Stat.DEF to -8.0
-        ),
-        statsPerLevel = mapOf(
-            Stat.SPEED to 5.0,
-            Stat.INT to 5.0
-        ),
-        tags = setOf("speed", "ice", "magic", "int", "sami", "signature"),
-        abilities = listOf(
-            Ability(
-                name = "Deslize Glacial",
-                description = "No início da batalha, a velocidade é amplificada pelo gelo: ganha +SPEED equivalente a 25% do INT atual permanentemente.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnBattleStart,
-                once = true,
-                effects = listOf(
-                    Effect.Custom("INT to SPEED") { self, _, state ->
-                        val intStat = self.stats[Stat.INT] ?: 0.0
-                        val speedBonus = intStat * 0.25
-                        if (speedBonus <= 0) return@Custom
-                        self.stats[Stat.SPEED] = (self.stats[Stat.SPEED] ?: 0.0) + speedBonus
-                        state.combatLog += "❄️ ${self.card.name} desliza sobre o gelo eterno (+${speedBonus.toInt()} SPEED)."
-                    }
-                )
-            ),
-            Ability(
-                name = "Rastro Glacial",
-                description = "Cada ataque converte velocidade em energia glacial: causa 15% da SPEED atual como dano mágico adicional ao alvo.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnHit,
-                effects = listOf(
-                    Effect.DamageBasedOnStat(
-                        stat = Stat.SPEED,
-                        scaling = 0.15,
-                        statSource = StatSource.SELF,
-                        target = AbilityTarget.ENEMY,
-                        damageType = DamageType.MAGIC
-                    )
-                )
-            )
-        )
-    )
-
-    private val frozenRose = CardDefinition(
-        id = "FROZEN_ROSE",
-        name = "Rosa Congelada",
-        description = "Uma rosa petrificada em gelo eterno. Beleza imóvel que esconde perigo vivo — cada toque libera espinhos de gelo, e quando floresce, o inverno corrói a resistência mágica de tudo ao redor.",
-        type = CardType.EQUIPMENT,
-        rarity = Rarity.MYTHIC,
-        slot = EquipmentSlot.SECONDARY,
-        baseStats = mapOf(
-            Stat.INT to 85.0,
-            Stat.HP to 100.0,
-            Stat.DEF to 20.0
-        ),
-        statsPerLevel = mapOf(
-            Stat.INT to 9.0,
-            Stat.HP to 12.0,
-            Stat.DEF to 2.0
-        ),
-        tags = setOf("magic", "int", "ice", "sami", "signature", "counter"),
-        abilities = listOf(
-            Ability(
-                name = "Espinhos de Gelo",
-                description = "Ao receber dano, a rosa libera espinhos glaciais que causam 55% do INT atual como dano mágico ao atacante.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnDamageTaken(),
-                effects = listOf(
-                    Effect.Custom("Ice Thorns counter") { self, target, state ->
-                        if (target == null || target.hp <= 0 || target.id == self.id) return@Custom
-                        val damage = (self.stats[Stat.INT] ?: 0.0) * 0.55
-                        if (damage <= 0) return@Custom
-                        state.queue.add(
-                            CombatEvent.BeforeDamage(
-                                source = self,
-                                target = target,
-                                damage = damage,
-                                damageType = DamageType.MAGIC,
-                                canCrit = false
-                            )
-                        )
-                        state.combatLog += "🌹 Espinhos de Gelo: ${target.card.name} sofre ${damage.toInt()} de dano mágico."
-                    }
-                )
-            ),
-            Ability(
-                name = "Florescência Glacial",
-                description = "A cada 4 turnos, a rosa desabrocha em pleno inverno: causa 90% do INT atual como dano mágico a todos os inimigos e reduz o INT deles em 25 por 2 turnos.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnTurnEvery(4),
-                effects = listOf(
-                    Effect.DamageBasedOnStat(
-                        stat = Stat.INT,
-                        scaling = 0.90,
-                        statSource = StatSource.SELF,
-                        target = AbilityTarget.ALL_ENEMIES,
-                        damageType = DamageType.MAGIC
-                    ),
-                    Effect.Custom("Bloom INT shred") { self, _, state ->
-                        val ownerTeam =
-                            state.teams.firstOrNull { t -> t.units.any { u -> u.id == self.id } } ?: return@Custom
-                        val enemies = state.teams.filter { it != ownerTeam }.flatMap { it.units }.filter { it.hp > 0 }
-                        for (enemy in enemies) {
-                            val reduction = 25.0
-                            enemy.stats[Stat.INT] = (enemy.stats[Stat.INT] ?: 0.0) - reduction
-                            state.temporaryStatModifiers += TemporaryStatModifier(
-                                unitId = enemy.id,
-                                stat = Stat.INT,
-                                delta = -reduction,
-                                remainingRounds = 2,
-                                source = "FROZEN_ROSE_BLOOM"
-                            )
-                            state.combatLog += "🌹 ${enemy.card.name} foi tocado pela Florescência Glacial: −${reduction.toInt()} INT (2t)."
-                        }
-                    }
-                )
-            )
-        )
-    )
-
-    val sami = CardDefinition(
-        id = "SAMI",
-        name = "Sami, a Arquimaga",
-        rarity = Rarity.MYTHIC,
-        description = "Arquimaga de inteligência descomunal e poder arcano sem igual. Enquanto sua mente permanece clara, seu INT atinge patamares inalcançáveis — mas a dor a desequilibra. Sua Lua de Gelo é temida em três reinos.",
-        type = CardType.CHARACTER,
-        baseStats = mapOf(
-            Stat.HP to 780.0,
-            Stat.DEF to 38.0,
-            Stat.ATK to 32.0,
-            Stat.INT to 98.0,
-            Stat.CRIT_CHANCE to 0.15,
-            Stat.CRIT_DAMAGE to 1.5,
-            Stat.SPEED to 120.0
-        ),
-        statsPerLevel = mapOf(
-            Stat.HP to 18.0,
-            Stat.INT to 8.0,
-            Stat.SPEED to 2.0,
-            Stat.CRIT_CHANCE to 0.01
-        ),
-        abilities = listOf(
-            Ability(
-                name = "Foco Absoluto",
-                description = "Enquanto acima de 60% de vida, Sami concentra seu poder arcano e ganha +30% de INT. O bônus é removido automaticamente ao cair abaixo do limiar.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnTurnStart,
-                effects = listOf(
-                    Effect.Custom("Foco Absoluto condicional") { self, _, state ->
-                        val maxHp = self.stats[Stat.HP] ?: 0.0
-                        val focusKey = "SAMI_FOCUS_ACTIVE"
-                        val bonusKey = "SAMI_FOCUS_BONUS"
-                        val isActive = (state.globalFlags[focusKey] as? Boolean) ?: false
-                        val isAboveThreshold = self.hp >= maxHp * 0.60
-
-                        if (isAboveThreshold && !isActive) {
-                            val intStat = self.stats[Stat.INT] ?: 0.0
-                            val bonus = intStat * 0.30
-                            self.stats[Stat.INT] = intStat + bonus
-                            state.globalFlags[focusKey] = true
-                            state.globalFlags[bonusKey] = bonus
-                            state.combatLog += "🔮 ${self.card.name} entrou em foco absoluto! (+30% INT)"
-                        } else if (!isAboveThreshold && isActive) {
-                            val bonus = (state.globalFlags[bonusKey] as? Double) ?: 0.0
-                            self.stats[Stat.INT] = ((self.stats[Stat.INT] ?: 0.0) - bonus).coerceAtLeast(0.0)
-                            state.globalFlags[focusKey] = false
-                            state.globalFlags[bonusKey] = 0.0
-                            state.combatLog += "💔 ${self.card.name} perdeu o foco absoluto."
-                        }
-                    }
-                )
-            ),
-            Ability(
-                name = "Canalizador Arcano",
-                description = "Cada ataque desencadeia uma descarga mágica adicional que escala com INT, causando 25% do INT atual como dano mágico.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnHit,
-                effects = listOf(
-                    Effect.DamageBasedOnStat(Stat.INT, 0.25, damageType = DamageType.MAGIC)
-                )
-            ),
-            Ability(
-                name = "Escudo de Gelo",
-                description = "A cada 3 turnos, Sami envolve a si mesma em armadura de gelo, ganhando +DEF temporária equivalente a 40% do seu INT atual por 2 turnos. Quanto maior o INT, mais sólido o escudo.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnTurnEvery(3),
-                effects = listOf(
-                    Effect.Custom("Ice Shield") { self, _, state ->
-                        val intStat = self.stats[Stat.INT] ?: 0.0
-                        val shieldDef = intStat * 0.4
-                        if (shieldDef <= 0) return@Custom
-                        self.stats[Stat.DEF] = (self.stats[Stat.DEF] ?: 0.0) + shieldDef
-                        state.temporaryStatModifiers += TemporaryStatModifier(
-                            unitId = self.id,
-                            stat = Stat.DEF,
-                            delta = shieldDef,
-                            remainingRounds = 2,
-                            source = "ICE_SHIELD"
-                        )
-                        state.combatLog += "🧊 ${self.card.name} ergueu um Escudo de Gelo (+${shieldDef.toInt()} DEF por 2 turnos)."
-                    }
-                )
-            ),
-            Ability(
-                name = "Lua de Gelo",
-                description = "A cada 4 turnos, conjura uma Lua de Gelo que explode em área — causa 140% do INT como dano mágico, reduz a SPEED de todos os inimigos em 30 por 3 turnos e os deixa vulneráveis a dano mágico (−40 INT) por 2 turnos.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnTurnEvery(4),
-                effects = listOf(
-                    Effect.DamageBasedOnStat(
-                        Stat.INT,
-                        1.4,
-                        target = AbilityTarget.ALL_ENEMIES,
-                        damageType = DamageType.MAGIC
-                    ),
-                    Effect.Custom("Ice Moon debuffs") { self, _, state ->
-                        val ownerTeam =
-                            state.teams.firstOrNull { t -> t.units.any { u -> u.id == self.id } } ?: return@Custom
-                        val enemies = state.teams.filter { it != ownerTeam }.flatMap { it.units }.filter { it.hp > 0 }
-                        for (enemy in enemies) {
-                            val speedReduction = 30.0
-                            enemy.stats[Stat.SPEED] = (enemy.stats[Stat.SPEED] ?: 0.0) - speedReduction
-                            state.temporaryStatModifiers += TemporaryStatModifier(
-                                unitId = enemy.id,
-                                stat = Stat.SPEED,
-                                delta = -speedReduction,
-                                remainingRounds = 3,
-                                source = "ICE_MOON_SLOW"
-                            )
-                            val intReduction = 40.0
-                            enemy.stats[Stat.INT] = (enemy.stats[Stat.INT] ?: 0.0) - intReduction
-                            state.temporaryStatModifiers += TemporaryStatModifier(
-                                unitId = enemy.id,
-                                stat = Stat.INT,
-                                delta = -intReduction,
-                                remainingRounds = 2,
-                                source = "ICE_MOON_VULN"
-                            )
-                            state.combatLog += "🌙 ${enemy.card.name} foi atingido pela Lua de Gelo: −${speedReduction.toInt()} SPEED (3t) e vulnerável a magia (2t)."
-                        }
-                    }
                 )
             )
         )
@@ -3132,21 +2793,13 @@ object CardCatalog {
         thief,
         ironGuardian,
         royalCrossbowman,
-        aureaSoldier,
         // Characters — Epic
         jorge,
         aurum,
         lumina,
-        shadow,
-        berserker,
-        goldenKnight,
-        sunPriestess,
         // Characters — Legendary
         veyn,
-        solarPaladin,
         ironGargoyle,
-        voidMage,
-        aureKing,
         // Characters — Mythic
         markus,
         unleashedJuniorKnight,
@@ -3161,16 +2814,16 @@ object CardCatalog {
         woodenSword, dagger, ironArmor, ironTorc,
         // Equipment — Rare
         ironSword, ironShield, heavyIronArmor,
-        katana, vampireRing, quickBoots, boneStaff,
+        katana, vampireRing, quickBoots,
         magicCrystal, reinforcedPauldrons,
         // Equipment — Epic
         polishedKatana, vampireCore, greatsword,
         gamblerCharm, devotionStaff, thornmail,
-        elixirVial, heavySteelBoots, swiftHunterCloth, aureGoldenArmor,
-        bulwarkShield, arcaneFocus,
+        elixirVial, heavySteelBoots, swiftHunterCloth,
+        bulwarkShield,
         // Equipment — Legendary
         critfish, demonHunterCrossbow, allInEmblem,
-        siegebreaker, twinFangKatana, solarbrand,
+        siegebreaker, twinFangKatana,
         stormBoots, soulPendant, renouncedSwordCloth,
         // Equipment — Mythic
         undefined, sunGodGreatsword,
