@@ -5,6 +5,9 @@ import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.rest.builder.message.embed
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.domain.card.*
+import me.igorunderplayer.kono.domain.card.ability.Ability
+import me.igorunderplayer.kono.domain.card.ability.AbilityTrigger
+import me.igorunderplayer.kono.domain.card.ability.AbilityType
 import me.igorunderplayer.kono.domain.card.ability.DamageType
 import me.igorunderplayer.kono.domain.card.ability.Effect
 import me.igorunderplayer.kono.domain.card.ability.ScalingMode
@@ -91,7 +94,7 @@ class CardCommand(
                     field {
                         name = "📈 Stats por nível"
                         value = card.statsPerLevel.entries.joinToString("\n") { (stat, value) ->
-                            "${stat.prettyName()}: +${prettyValue(stat, value)}"
+                            "${stat.prettyName()}: ${prettyValue(stat, value)}"
                         }
                         inline = true
                     }
@@ -107,21 +110,27 @@ class CardCommand(
                 }
 
                 // ⚔️ Habilidades
+                // ⚔️ Habilidades
                 if (card.abilities.isNotEmpty()) {
-                    field {
-                        name = "⚔️ Habilidades"
-                        value = card.abilities.joinToString("\n\n") { ability ->
 
-                            val effectsText = ability.effects.joinToString("\n") { effect ->
-                                formatEffect(effect)
+                    val abilityBlocks = card.abilities.map { ability ->
+                        formatAbility(ability)
+                    }
+
+                    val chunks = chunkFields(
+                        items = abilityBlocks,
+                        maxLength = 900
+                    )
+
+                    chunks.forEachIndexed { index, chunk ->
+                        field {
+                            name = if (chunks.size == 1) {
+                                "⚔️ Habilidades"
+                            } else {
+                                "⚔️ Habilidades ${index + 1}/${chunks.size}"
                             }
 
-                            """
-                            ${ability.type.prettyName()} **${ability.name}**
-                            *(Trigger: ${ability.trigger})*
-                            ${ability.description}
-                            $effectsText
-                            """.trimIndent()
+                            value = chunk.joinToString("\n\n")
                         }
                     }
                 }
@@ -129,62 +138,167 @@ class CardCommand(
         }
     }
 
-    private fun formatEffect(effect: Effect): String {
-        return when (effect) {
-            is Effect.Damage -> "• 💥 Causa ${effect.value} de dano (${damageTypeLabel(effect.damageType)})"
-            is Effect.DamageBasedOnStat ->
-                "• 💥 Causa ${effect.scaling}x ${effect.stat.prettyName()} (${damageTypeLabel(effect.damageType)})"
+    private fun formatAbility(ability: Ability): String {
 
-            is Effect.DamageIncreasePercent ->
-                "• 💥 +${effect.value * 100}% de dano"
+        val type = when (ability.type) {
+            AbilityType.PASSIVE -> "🟢 PASSIVA"
+            AbilityType.ACTIVE -> "🔵 ATIVA"
+            else -> "⚪ ${ability.type.prettyName()}"
+        }
 
-            is Effect.Heal ->
-                "• 💚 Cura ${effect.value}"
+        val trigger = formatTrigger(ability.trigger)
 
-            is Effect.BuffStat ->
-                "• 📈 +${effect.value} ${effect.stat.prettyName()}"
+        val description = compactDescription(ability.description)
 
-            is Effect.StatIncreasePercent ->
-                "• 📈 +${effect.percent * 100}% ${effect.stat.prettyName()}"
+        val effects = ability.effects.joinToString(" ") { formatEffectCompact(it) }
 
-            is Effect.AddCoins ->
-                "• 💰 Gera ${effect.value} moedas"
+        return buildString {
 
-            is Effect.AddCoinsScaling -> {
-                val factionBonusText = if (effect.allyFactionForBaseBonus.isNullOrBlank() || effect.baseBonus <= 0) {
-                    ""
-                } else {
-                    " • +${effect.baseBonus} base com ${effect.requiredAlliesForBaseBonus}+ aliado(s) da faccao ${effect.allyFactionForBaseBonus}"
-                }
+            append("$type • **${ability.name}**")
 
-                "• 💰 Gera ${effect.base} moeda(s) base +${effect.bonusPerStack} a cada ${effect.coinsPerStack} moedas do time$factionBonusText"
+            if (trigger.isNotBlank()) {
+                append(" `$trigger`")
             }
 
-            is Effect.BuffStatByTeamCoins -> {
-                val modeText = when (effect.mode) {
-                    ScalingMode.STACK -> "acumulativo"
-                    ScalingMode.HIGHEST_ONLY -> "apenas 1 stack"
-                }
-                val capText = effect.maxStacks?.let { " (max $it stacks)" } ?: ""
+            append("\n")
+            append(description)
 
-                "• 🎰 +${effect.valuePerStack} ${effect.stat.prettyName()} a cada ${effect.coinsPerStack} moedas do time [$modeText]$capText"
+            if (effects.isNotBlank()) {
+                append("\n")
+                append(effects)
+            }
+        }
+    }
+
+    private fun formatTrigger(trigger: AbilityTrigger): String {
+        return when (trigger) {
+            AbilityTrigger.Manual -> "Manual"
+
+            AbilityTrigger.OnTurnStart ->
+                "Início do turno"
+
+            AbilityTrigger.OnBattleStart ->
+                "Início da batalha"
+
+            AbilityTrigger.OnHit ->
+                "Ao acertar"
+
+            AbilityTrigger.OnCrit ->
+                "Ao critar"
+
+            is AbilityTrigger.OnTurnEvery ->
+                "A cada ${trigger.turns} turnos"
+
+            is AbilityTrigger.OnAttackEvery ->
+                "A cada ${trigger.attacks} ataques"
+
+            is AbilityTrigger.OnAttackAgainstTag ->
+                "Contra ${trigger.tag}"
+
+            else -> ""
+        }
+    }
+
+    private fun formatEffectCompact(effect: Effect): String {
+        return when (effect) {
+
+            is Effect.Damage ->
+                "💥 ${effect.value} dano ${damageTypeLabel(effect.damageType)}"
+
+            is Effect.DamageBasedOnStat ->
+                "💥 ${effect.scaling}x ${effect.stat.prettyName()}"
+
+            is Effect.DamageIncreasePercent ->
+                "💥 +${prettyPercent(effect.value)} dano"
+
+            is Effect.Heal ->
+                "💚 Cura ${prettyValue(Stat.HP, effect.value)}"
+
+            is Effect.BuffStat ->
+                "📈 +${effect.value} ${effect.stat.prettyName()}"
+
+            is Effect.StatIncreasePercent ->
+                "📈 +${prettyPercent(effect.percent)} ${effect.stat.prettyName()}"
+
+            is Effect.AddCoins ->
+                "💰 +${effect.value} fichas"
+
+            is Effect.AddCoinsScaling ->
+                "💰 +${effect.base} fichas + bônus por fichas do time"
+
+            is Effect.BuffStatByTeamCoins -> {
+                val mode = when (effect.mode) {
+                    ScalingMode.STACK -> "stack"
+                    ScalingMode.HIGHEST_ONLY -> "maior stack"
+                }
+
+                "🎰 +${effect.valuePerStack} ${effect.stat.prettyName()} / ${effect.coinsPerStack} fichas ($mode)"
             }
 
             is Effect.ProtectAlliesDamageShare ->
-                "• 🛡️ Intercepta ${(effect.sharePercent * 100).toInt()}% do dano recebido pelos aliados"
+                "🛡️ Intercepta ${(effect.sharePercent * 100).toInt()}% do dano aliado"
 
             Effect.Taunt ->
-                "• 🎯 Provoca inimigos e vira alvo prioritario"
+                "🎯 Provoca inimigos"
 
             is Effect.Random ->
-                "• 🎲 Efeito aleatório (${effect.profile})"
+                "🎲 Efeito aleatório: ${effect.profile}"
 
             is Effect.StatIncreaseWhileBelowHealth ->
-                "• ⚠️ +${effect.value} ${effect.stat.prettyName()} abaixo de ${(effect.threshold * 100).toInt()}% HP"
+                "⚠️ +${effect.value} ${effect.stat.prettyName()} abaixo de ${(effect.threshold * 100).toInt()}% HP"
 
-            else -> "• ❓ Efeito desconhecido"
+            else -> ""
         }
     }
+
+    private fun prettyPercent(value: Double): String {
+        return if (value % 1.0 == 0.0) {
+            "${(value * 100).toInt()}%"
+        } else {
+            "${"%.1f".format(value * 100)}%"
+        }
+    }
+
+    private fun compactDescription(description: String?): String {
+        return description
+            ?.replace(Regex("\\s+"), " ")
+            ?.trim() ?: ""
+    }
+
+    private fun chunkFields(
+        items: List<String>,
+        maxLength: Int
+    ): List<List<String>> {
+
+        val chunks = mutableListOf<MutableList<String>>()
+        var current = mutableListOf<String>()
+        var currentLength = 0
+
+        for (item in items) {
+
+            val additionalLength =
+                item.length + if (current.isEmpty()) 0 else 2
+
+            if (
+                current.isNotEmpty() &&
+                currentLength + additionalLength > maxLength
+            ) {
+                chunks += current
+                current = mutableListOf()
+                currentLength = 0
+            }
+
+            current += item
+            currentLength += additionalLength
+        }
+
+        if (current.isNotEmpty()) {
+            chunks += current
+        }
+
+        return chunks
+    }
+
 
     private fun damageTypeLabel(damageType: DamageType): String {
         return when (damageType) {

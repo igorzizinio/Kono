@@ -140,7 +140,7 @@ val appModule = module {
     factoryOf(::CardCommand) { bind<BaseCommand>() }
     factoryOf(::StoryCommand) { bind<BaseCommand>() }
     factoryOf(::AtmCommand) { bind<BaseCommand>() }
-    factoryOf(::StartFightActiveCommand) { bind<BaseCommand>() }
+    factoryOf(::StartTeamFightCommand) { bind<BaseCommand>() }
 
     // ========================
     // SLASH COMMANDS

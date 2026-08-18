@@ -34,11 +34,11 @@ class OpenRouterAIService(
 
             header("Authorization", "Bearer $apiKey")
 
-            header("HTTP-Referer", "https://kono.bot")
+            header("HTTP-Referer", "https://github.com/igorzizinio/Kono")
             header("X-Title", "Kono")
 
             timeout {
-                requestTimeoutMillis = 120_000 // 2 minutos
+                requestTimeoutMillis = 120_000 // 2 minutes
                 socketTimeoutMillis = 120_000
                 connectTimeoutMillis = 30_000
             }

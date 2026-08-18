@@ -22,7 +22,7 @@ class DatabaseManager {
         val (user, password) = uri.userInfo.split(":")
 
         val jdbcUrl =
-            "jdbc:postgresql://${uri.host}:${uri.port}${uri.path}?sslmode=require"
+            "jdbc:postgresql://${uri.host}:${uri.port}${uri.path}"
 
         return Database.connect(
             url = jdbcUrl,

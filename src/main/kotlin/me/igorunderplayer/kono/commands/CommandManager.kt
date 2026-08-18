@@ -20,6 +20,12 @@ enum class CommandCategory {
     Other
 }
 
+sealed class CommandResult {
+    object Success: CommandResult()
+    object CommandNotFound : CommandResult()
+    object Failure : CommandResult()
+}
+
 class CommandManager(
     private val kord: Kord,
     private val commands: List<BaseCommand>,
@@ -92,7 +98,7 @@ class CommandManager(
         cmd?.run(event)
     }
 
-    suspend fun handleCommand(event: MessageCreateEvent): Boolean {
+    suspend fun handleCommand(event: MessageCreateEvent): CommandResult {
         try {
 
             val args = event.message.content
@@ -100,23 +106,23 @@ class CommandManager(
                 .split(Regex("\\s+"))
                 .toMutableList()
 
-            if (args.isEmpty()) return false
+            if (args.isEmpty()) return CommandResult.CommandNotFound
 
             val id = event.kord.selfId.toString()
             val mention = args.removeAt(0)
             if (mention == "<@$id>" || mention == "<@!$id>") {
 
-                val command = searchCommand(args.removeAt(0)) ?: return false
+                val command = searchCommand(args.removeAt(0)) ?: return CommandResult.CommandNotFound
 
                 // DEV check
                 if (
                     command.category == CommandCategory.Developer &&
                     event.message.author?.id?.value != 477534823011844120u
-                ) return false
+                ) return CommandResult.CommandNotFound
 
                 // PERMISSION check
                 if (command.category == CommandCategory.Management) {
-                    val member = event.message.getAuthorAsMemberOrNull() ?: return false
+                    val member = event.message.getAuthorAsMemberOrNull() ?: return CommandResult.CommandNotFound
                     val permissions = member.getPermissions()
 
                     if (
@@ -126,11 +132,11 @@ class CommandManager(
                         event.message.reply {
                             content = "Você não tem permissão"
                         }
-                        return false
+                        return CommandResult.CommandNotFound
                     }
                 }
                 command.run(event, args.toTypedArray())
-                return true
+                return CommandResult.Success
             }
 
         } catch (exception: Exception) {
@@ -139,9 +145,10 @@ class CommandManager(
                 content = "\uD83D\uDE2D algo de errado aconteceu ao executar o comando"
             }
 
-            return false
+            return CommandResult.Failure
         }
 
-        return false
+        // é possivel chegar aqui?
+        return CommandResult.CommandNotFound
     }
 }
