@@ -172,7 +172,7 @@ object CardCatalog {
     private val veyn = CardDefinition(
         id = "VEYN",
         name = "Veyn",
-        description = "Besteiro de Markus. Extremamente veloz e frágil — mas cada 2 disparos libera uma rajada devastadora.",
+        description = "Besteiro de Markus. Um capanga fiel, ágil, muito habilidoso. Utiliza de uma besta para ataques rápidos de precisos em seus inimigos.",
         type = CardType.CHARACTER,
         rarity = Rarity.LEGENDARY,
         faction = "markus_gang",
@@ -185,15 +185,15 @@ object CardCatalog {
             Stat.CRIT_DAMAGE to 1.40
         ),
         statsPerLevel = mapOf(
-            Stat.HP to 5.0,
-            Stat.ATK to 3.0,
-            Stat.SPEED to 2.0,
-            Stat.CRIT_CHANCE to 0.01
+            Stat.HP to 4.0,
+            Stat.ATK to 8.0,
+            Stat.SPEED to 1.5,
+            Stat.CRIT_CHANCE to 0.02
         ),
         tags = setOf("rng", "gambler", "speed", "archer", "marksman", "risk"),
         abilities = listOf(
             Ability(
-                name = "Rajada Rítmica",
+                name = "Ataques velozes",
                 description = "A cada 2 ataques, Veyn libera uma rajada precisa que causa 25% do ATK de dano extra ao alvo.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnAttackEvery(2),
@@ -222,6 +222,32 @@ object CardCatalog {
                         val coins = ((self.stats[Stat.SPEED] ?: 0.0) / 80.0).toInt()
                         state.teams.find { it.units.contains(self) }?.addCoins(coins)
                         state.combatLog += "${self.card.name} gerou $coins fichas de cassino para a equipe!"
+                    }
+                )
+            ),
+            Ability(
+                name = "Rajada do cassino",
+                description = "Veyn realiza ataques rápidos utilizando as fichas da equipe",
+                type = AbilityType.ACTIVE,
+                trigger = AbilityTrigger.Manual,
+                effects = listOf(
+                    Effect.Custom("Dano com base em fichas") { self, target, state ->
+                        val team = state.teams.find { it.units.contains(self) }
+
+                        if (team == null || target == null) return@Custom
+                        val coins = team.coins()
+
+                        repeat(coins) {
+                            team.addCoins(-1)
+                            val damage = self.stats[Stat.ATK]?.times(0.3) ?: 0.0
+                            state.queue.add(
+                                CombatEvent.BeforeDamage(
+                                    source = self,
+                                    target = target,
+                                    damage = damage
+                                )
+                            )
+                        }
                     }
                 )
             )
@@ -413,9 +439,7 @@ object CardCatalog {
                 description = "Markus utiliza **todas** as fichas da equipe para um ataque poderoso",
                 type = AbilityType.ACTIVE,
                 trigger = AbilityTrigger.Manual,
-                // TODO:
                 effects = listOf(
-                    // para cada moeda 1 instancia de dano com base no atk será adicionado, o scalling continua sendo random
                     Effect.Custom("Ataque de fichas") { self, target, state ->
                         if (target == null) {
                             state.combatLog += "Nenhum alvo foi encontrado para `Ataque de fichas`"
@@ -425,9 +449,10 @@ object CardCatalog {
                         if (team == null) return@Custom
                         val coins = team.coins()
 
-                        var damage= 0.0
+                        var damage = 0.0
 
-                        for (i in 0..coins) {
+                        repeat(coins) {
+                            team.addCoins(-1)
                             damage += (self.stats[Stat.ATK] ?: 0.0) * Random.nextDouble(0.2, 0.8)
                         }
 
