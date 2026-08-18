@@ -3,6 +3,7 @@ package me.igorunderplayer.kono.domain.card
 import me.igorunderplayer.kono.domain.card.ability.*
 import me.igorunderplayer.kono.domain.gameplay.CombatEvent
 import me.igorunderplayer.kono.domain.gameplay.TemporaryStatModifier
+import kotlin.random.Random
 
 
 // =============================================================================
@@ -173,15 +174,15 @@ object CardCatalog {
         name = "Veyn",
         description = "Besteiro de Markus. Extremamente veloz e frágil — mas cada 2 disparos libera uma rajada devastadora.",
         type = CardType.CHARACTER,
-        rarity = Rarity.EPIC,
+        rarity = Rarity.LEGENDARY,
         faction = "markus_gang",
         baseStats = mapOf(
             Stat.HP to 440.0,
             Stat.ATK to 44.0,
             Stat.DEF to 16.0,
-            Stat.SPEED to 125.0,
-            Stat.CRIT_CHANCE to 0.16,
-            Stat.CRIT_DAMAGE to 1.30
+            Stat.SPEED to 130.0,
+            Stat.CRIT_CHANCE to 0.18,
+            Stat.CRIT_DAMAGE to 1.40
         ),
         statsPerLevel = mapOf(
             Stat.HP to 5.0,
@@ -193,19 +194,35 @@ object CardCatalog {
         abilities = listOf(
             Ability(
                 name = "Rajada Rítmica",
-                description = "A cada 2 ataques, Veyn libera uma rajada precisa que causa 25 de dano extra ao alvo.",
+                description = "A cada 2 ataques, Veyn libera uma rajada precisa que causa 25% do ATK de dano extra ao alvo.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnAttackEvery(2),
-                effects = listOf(Effect.Damage(value = 25.0, target = AbilityTarget.ENEMY))
+                effects = listOf(
+                    Effect.DamageBasedOnStat(
+                        stat = Stat.ATK,
+                        scaling = 0.25,
+                        statSource = StatSource.SELF
+                    )
+                )
             ),
             Ability(
                 name = "Ritmo de Cassino",
-                description = "A cada turno, Veyn gera 1 moeda de cassino para a equipe e aposta para obter efeitos aleatórios.",
+                description = "A cada turno, Veyn gera fichas de cassino para a equipe com base na sua **${Stat.CRIT_CHANCE.prettyName()}** e **${Stat.SPEED.prettyName()}**",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnTurnStart,
                 effects = listOf(
-                    Effect.AddCoins(value = 1, scaleWithGangSynergy = false),
-                    Effect.Random(profile = "MARKUS_GAMBLER")
+                    // Effect.AddCoins(value = 1, scaleWithGangSynergy = false)
+                    Effect.Custom("Gerando fichas") { self, _, state ->
+                        if (Random.nextDouble() > (self.stats[Stat.CRIT_CHANCE] ?: 0.0)){
+                            state.combatLog += "${self.card.name} falhou em gerar fichas de cassino para o time!"
+                            return@Custom
+                        }
+
+                        // Cada 80 de speed gerar 1 ficha
+                        val coins = ((self.stats[Stat.SPEED] ?: 0.0) / 80.0).toInt()
+                        state.teams.find { it.units.contains(self) }?.addCoins(coins)
+                        state.combatLog += "${self.card.name} gerou $coins fichas de cassino para a equipe!"
+                    }
                 )
             )
         )
@@ -363,15 +380,15 @@ object CardCatalog {
         name = "Markus, Mestre das Apostas",
         description = "O grande apostador. Gera moedas e aposta com elas todo turno — alto risco, alta recompensa. DEF fraca é seu preço.",
         type = CardType.CHARACTER,
-        rarity = Rarity.LEGENDARY,
+        rarity = Rarity.MYTHIC,
         faction = "markus_gang",
         baseStats = mapOf(
             Stat.HP to 760.0,
-            Stat.ATK to 64.0,
+            Stat.ATK to 54.0,
             Stat.DEF to 20.0,
-            Stat.SPEED to 115.0,
-            Stat.CRIT_CHANCE to 0.18,
-            Stat.CRIT_DAMAGE to 1.60
+            Stat.SPEED to 110.0,
+            Stat.CRIT_CHANCE to 0.10,
+            Stat.CRIT_DAMAGE to 2.0
         ),
         statsPerLevel = mapOf(
             Stat.HP to 10.0,
@@ -384,12 +401,46 @@ object CardCatalog {
         abilities = listOf(
             Ability(
                 name = "Mestre da Mesa",
-                description = "A cada turno, Markus gera 2 moedas de cassino para a equipe e aposta com elas para obter efeitos aleatórios escalados.",
+                description = "A cada turno, Markus gera 3 fichas para a equipe.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnTurnStart,
                 effects = listOf(
-                    Effect.AddCoins(value = 2, scaleWithGangSynergy = false),
-                    Effect.Random(profile = "MARKUS_GAMBLER")
+                    Effect.AddCoins(value = 3, scaleWithGangSynergy = false)
+                )
+            ),
+            Ability(
+                name = "Golpe all-in",
+                description = "Markus utiliza **todas** as fichas da equipe para um ataque poderoso",
+                type = AbilityType.ACTIVE,
+                trigger = AbilityTrigger.Manual,
+                // TODO:
+                effects = listOf(
+                    // para cada moeda 1 instancia de dano com base no atk será adicionado, o scalling continua sendo random
+                    Effect.Custom("Ataque de fichas") { self, target, state ->
+                        if (target == null) {
+                            state.combatLog += "Nenhum alvo foi encontrado para `Ataque de fichas`"
+                            return@Custom
+                        }
+                        val team = state.teams.find { it -> it.units.contains(self) }
+                        if (team == null) return@Custom
+                        val coins = team.coins()
+
+                        var damage= 0.0
+
+                        for (i in 0..coins) {
+                            damage += (self.stats[Stat.ATK] ?: 0.0) * Random.nextDouble(0.2, 0.8)
+                        }
+
+                        state.queue.add(
+                            CombatEvent.BeforeDamage(
+                                source = self,
+                                target = target,
+                                damage = damage
+                            )
+                        )
+
+                        state.combatLog += "ALL-IN Disparado! Dano causado $damage a ${target.card.name}"
+                    }
                 )
             )
         )
@@ -3059,7 +3110,6 @@ object CardCatalog {
         aureaSoldier,
         // Characters — Epic
         jorge,
-        veyn,
         aurum,
         lumina,
         shadow,
@@ -3067,14 +3117,15 @@ object CardCatalog {
         goldenKnight,
         sunPriestess,
         // Characters — Legendary
-        markus,
+        veyn,
         solarPaladin,
         ironGargoyle,
         voidMage,
         aureKing,
         // Characters — Mythic
+        markus,
         unleashedJuniorKnight,
-        sami,
+        // sami,
 
         // Characters — Kono
         kono,
@@ -3098,7 +3149,7 @@ object CardCatalog {
         stormBoots, soulPendant, renouncedSwordCloth,
         // Equipment — Mythic
         undefined, sunGodGreatsword,
-        glacialOrb, samiStaff, samiCloth, samiBoots, frozenRose, // sami related
+        // glacialOrb, samiStaff, samiCloth, samiBoots, frozenRose, // sami related
 
         konoTwinbladeL, konoTwinbladeR // kono
     )
