@@ -5,25 +5,37 @@ import dev.kord.core.behavior.edit
 import dev.kord.core.behavior.interaction.respondEphemeral
 import dev.kord.core.behavior.interaction.response.createEphemeralFollowup
 import dev.kord.core.behavior.reply
+import dev.kord.core.event.interaction.ButtonInteractionCreateEvent
 import dev.kord.core.event.message.MessageCreateEvent
+import dev.kord.core.on
 import dev.kord.rest.builder.component.ActionRowBuilder
 import dev.kord.rest.builder.message.embed
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.time.delay
+import kotlinx.coroutines.withTimeoutOrNull
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandCategory
 import me.igorunderplayer.kono.data.repositories.CardRepository
 import me.igorunderplayer.kono.domain.card.CardDefinition
 import me.igorunderplayer.kono.domain.card.CardType
 import me.igorunderplayer.kono.domain.card.Stat
+import me.igorunderplayer.kono.domain.card.ability.Ability
 import me.igorunderplayer.kono.domain.gameplay.CombatState
 import me.igorunderplayer.kono.domain.gameplay.Team
 import me.igorunderplayer.kono.domain.gameplay.Unit
 import me.igorunderplayer.kono.domain.team.BuildUnitHandler
+import me.igorunderplayer.kono.engine.combat.CombatAction
 import me.igorunderplayer.kono.engine.combat.CombatEngine
+import me.igorunderplayer.kono.engine.combat.PlayerTurnController
+import me.igorunderplayer.kono.engine.combat.RandomAiTurnController
+import me.igorunderplayer.kono.engine.combat.TurnController
 import me.igorunderplayer.kono.utils.getMentionedUser
 import me.igorunderplayer.kono.utils.interaction.awaitButtonInteraction
+import me.igorunderplayer.kono.utils.interaction.awaitFirstButtonInteraction
 import java.time.Duration
 import kotlin.random.Random
+import kotlin.time.Duration as KotlinDuration
+import kotlin.time.Duration.Companion.seconds
 
 class FightCommand(
     private val buildUnitHandler: BuildUnitHandler,
@@ -40,7 +52,6 @@ class FightCommand(
 
     override suspend fun run(event: MessageCreateEvent, args: Array<String>) {
         val discordId = event.message.author?.id?.value?.toLong() ?: return
-
 
         val enemyUser = getMentionedUser(event.message, args)
 
@@ -64,12 +75,15 @@ class FightCommand(
         val playerOwnerName = event.message.author?.username ?: "Jogador"
         val enemyOwnerName = enemyUser.username
 
-        runCombatAndSendEmbeds(
+        runCombat(
             event = event,
             player = player,
             enemy = enemy,
             playerOwnerName = playerOwnerName,
-            enemyOwnerName = enemyOwnerName
+            enemyOwnerName = enemyOwnerName,
+            playerDiscordId = discordId,
+            enemyDiscordId = enemyUser.id.value.toLong(),
+            isPvp = true
         )
     }
 
@@ -88,8 +102,6 @@ class FightCommand(
             isEnemy = false
         ) ?: return
 
-
-        // 🧠 buscar inimigo no DB
         val enemyDef = cardRepository.getDefinition(enemyName)
 
         if (enemyDef == null || enemyDef.type != CardType.CHARACTER) {
@@ -98,19 +110,20 @@ class FightCommand(
         }
 
         val enemy = createUnitFromDefinition(enemyDef)
-
         val playerOwnerName = event.message.author?.username ?: "Jogador"
 
-        runCombatAndSendEmbeds(
+        runCombat(
             event = event,
             player = player,
             enemy = enemy,
             playerOwnerName = playerOwnerName,
-            enemyOwnerName = "Bot"
+            enemyOwnerName = "Bot",
+            playerDiscordId = discordId,
+            enemyDiscordId = null,
+            isPvp = false
         )
     }
 
-    // 🔥 transforma CardDefinition em Unit (inimigo)
     private fun createUnitFromDefinition(def: CardDefinition): Unit {
         val stats = def.baseStats.toMutableMap()
 
@@ -166,12 +179,22 @@ class FightCommand(
         }
     }
 
-    private suspend fun runCombatAndSendEmbeds(
+    /**
+     * Roda o combate rodada a rodada (em vez de engine.run() de uma vez), pra
+     * dar espaço aos prompts de ação. Se [isPvp] for true, os dois lados são
+     * PlayerTurnController (cada um preso ao próprio Discord ID). Se for
+     * false, o time "enemy" usa RandomAiTurnController (IA aleatória, sem
+     * prompt) e [enemyDiscordId] pode ser null.
+     */
+    private suspend fun runCombat(
         event: MessageCreateEvent,
         player: Unit,
         enemy: Unit,
         playerOwnerName: String,
-        enemyOwnerName: String
+        enemyOwnerName: String,
+        playerDiscordId: Long,
+        enemyDiscordId: Long?,
+        isPvp: Boolean
     ) {
         val (playerDisplayName, enemyDisplayName) = resolveCombatantDisplayNames(
             playerName = player.card.name,
@@ -187,17 +210,203 @@ class FightCommand(
             ),
             rng = Random.Default
         )
-
         state.unitDisplayNamesById[player.id] = playerDisplayName
         state.unitDisplayNamesById[enemy.id] = enemyDisplayName
 
         val playerStartHp = player.hp
         val enemyStartHp = enemy.hp
 
-        val engine = CombatEngine(state)
-        engine.run()
-        val result = state
-        val playerAlive = result.teams[0].units.any { it.hp > 0 }
+        val combatId = "${event.message.channelId}-${event.message.id}-${System.currentTimeMillis()}"
+        val continueButtonId = "$combatId-continue"
+        val allowedContinueIds = if (isPvp && enemyDiscordId != null) {
+            setOf(playerDiscordId, enemyDiscordId)
+        } else {
+            setOf(playerDiscordId)
+        }
+
+        // Junta o log de todas as rodadas pro diário de batalha final —
+        // state.combatLog é limpo a cada rodada só pra mostrar o embed daquela rodada.
+        val fullCombatLog = mutableListOf<String>()
+
+        var msg = event.message.reply {
+            embed {
+                title = "⚔️ Combate iniciado"
+                description = buildString {
+                    appendLine("👤 **$playerDisplayName** (${playerStartHp.toInt()} HP)")
+                    appendLine("👹 **$enemyDisplayName** (${enemyStartHp.toInt()} HP)")
+                    appendLine()
+                    appendLine("Clique em **Próxima rodada** para avançar o combate.")
+                }
+            }
+            addComponent(createContinueRow(continueButtonId))
+        }
+
+        // Atribuído logo abaixo — só é lido de dentro dos prompts, que só
+        // rodam durante engine.processNextTurnControlled(), ou seja, depois de pronto.
+        lateinit var engine: CombatEngine
+
+        fun displayNameOf(u: Unit) = state.unitDisplayNamesById[u.id] ?: u.card.name
+        fun teamIdOf(u: Unit) = state.teams.first { it.units.contains(u) }.id
+        fun ownerNameOf(u: Unit) = if (teamIdOf(u) == "player") playerOwnerName else enemyOwnerName
+        fun ownerDiscordIdOf(u: Unit): Long? = if (teamIdOf(u) == "player") playerDiscordId else enemyDiscordId
+
+        suspend fun promptTargetSelection(unit: Unit, ability: Ability, candidates: List<Unit>): Unit? {
+            val ownerId = ownerDiscordIdOf(unit) ?: return null
+            val targetBaseId = "$combatId-target-${System.currentTimeMillis()}"
+            val targetButtonIds = candidates.indices.map { "$targetBaseId:$it" }
+
+            msg = msg.edit {
+                embed {
+                    title = "🎯 ${ownerNameOf(unit)}, escolha o alvo de [${ability.name}]"
+                    description = candidates.joinToString("\n") {
+                        "• **${displayNameOf(it)}** (${it.hp.toInt()} HP) — time ${teamIdOf(it)}"
+                    }
+                }
+                components = mutableListOf(ActionRowBuilder().apply {
+                    candidates.forEachIndexed { index, candidate ->
+                        interactionButton(ButtonStyle.Secondary, targetButtonIds[index]) {
+                            label = displayNameOf(candidate).take(80)
+                        }
+                    }
+                })
+            }
+
+            val result = event.kord.awaitFirstButtonInteraction(
+                ids = targetButtonIds,
+                allowedUserId = ownerId
+            ) ?: run {
+                state.combatLog += "⏱️ ${unit.card.name} não escolheu alvo a tempo, alvo automático será usado."
+                return null
+            }
+
+            val (chosenId, buttonInteraction) = result
+            val chosenTarget = candidates.getOrNull(targetButtonIds.indexOf(chosenId))
+
+            buttonInteraction.interaction.respondEphemeral {
+                content = if (chosenTarget != null) {
+                    "🎯 Alvo: ${displayNameOf(chosenTarget)}"
+                } else {
+                    "⚠️ Alvo inválido, usando seleção automática."
+                }
+            }
+
+            return chosenTarget
+        }
+
+        suspend fun promptPlayerAction(unit: Unit, availableAbilities: List<Ability>): CombatAction {
+            val ownerId = ownerDiscordIdOf(unit) ?: return CombatAction.BasicAttack()
+            val ownerName = ownerNameOf(unit)
+
+            val actionBaseId = "$combatId-action-${System.currentTimeMillis()}"
+            val attackButtonId = "$actionBaseId:attack"
+            val abilityButtonIds = availableAbilities.indices.map { "$actionBaseId:ability:$it" }
+
+            val maxHp = unit.stats[Stat.HP]?.toInt()
+            val hpText = if (maxHp != null) "${unit.hp.toInt()}/$maxHp HP" else "${unit.hp.toInt()} HP"
+
+            msg = msg.edit {
+                embed {
+                    title = "🎮 Vez de $ownerName"
+                    description = buildString {
+                        appendLine("Controlando **${unit.card.name}** — $hpText")
+                        appendLine()
+                        if (availableAbilities.isEmpty()) {
+                            appendLine("Nenhuma habilidade ativa disponível — ataque ou aguarde novas cartas.")
+                        } else {
+                            appendLine("Habilidades disponíveis:")
+                            availableAbilities.forEach { appendLine("• **${it.name}**") }
+                        }
+                    }
+                }
+                components = mutableListOf(createActionRow(attackButtonId, availableAbilities, abilityButtonIds))
+            }
+
+            val allIds = listOf(attackButtonId) + abilityButtonIds
+            val result = event.kord.awaitFirstButtonInteraction(ids = allIds, allowedUserId = ownerId)
+
+            if (result == null) {
+                state.combatLog += "⏱️ ${unit.card.name} ($ownerName) não respondeu a tempo e atacou automaticamente."
+                return CombatAction.BasicAttack()
+            }
+
+            val (chosenId, buttonInteraction) = result
+
+            if (chosenId == attackButtonId) {
+                buttonInteraction.interaction.respondEphemeral { content = "⚔️ Ataque básico escolhido." }
+                return CombatAction.BasicAttack()
+            }
+
+            val ability = availableAbilities.getOrNull(abilityButtonIds.indexOf(chosenId))
+            if (ability == null) {
+                buttonInteraction.interaction.respondEphemeral { content = "⚠️ Ação inválida, atacando." }
+                return CombatAction.BasicAttack()
+            }
+
+            buttonInteraction.interaction.respondEphemeral { content = "🌟 [${ability.name}] escolhida." }
+
+            val manualKind = engine.manualTargetKind(ability)
+            val target = if (manualKind != null) {
+                val candidates = engine.manualTargetCandidates(unit, manualKind)
+                if (candidates.size > 1) promptTargetSelection(unit, ability, candidates) else null
+            } else {
+                null
+            }
+
+            return CombatAction.UseAbility(ability, target)
+        }
+
+        val enemyController: TurnController = if (isPvp) {
+            PlayerTurnController { u, abilities -> promptPlayerAction(u, abilities) }
+        } else {
+            RandomAiTurnController()
+        }
+
+        val controllersByUnitId: Map<String, TurnController> = mapOf(
+            player.id to PlayerTurnController { u, abilities -> promptPlayerAction(u, abilities) },
+            enemy.id to enemyController
+        )
+
+        engine = CombatEngine(state = state, controllersByUnitId = controllersByUnitId)
+
+        while (!state.isFinished()) {
+            val buttonInteraction = if (allowedContinueIds.size > 1) {
+                awaitButtonFromAny(event.kord, continueButtonId, allowedContinueIds)
+            } else {
+                event.kord.awaitButtonInteraction(continueButtonId, allowedContinueIds.first())
+            }
+
+            if (buttonInteraction == null) {
+                msg.edit {
+                    components = mutableListOf(createContinueRow(continueButtonId, disabled = true))
+                }
+                return
+            }
+
+            buttonInteraction.interaction.respondEphemeral { content = "⚔️ Prosseguindo com a batalha" }
+
+            state.combatLog.clear()
+            // Dentro dessa chamada, promptPlayerAction() edita msg e suspende
+            // pra cada unidade com controller — o engine só segue depois disso.
+            engine.processNextTurnControlled()
+            fullCombatLog += state.combatLog
+
+            val isFinished = state.isFinished()
+            if (!isFinished) {
+                msg = msg.edit {
+                    embed {
+                        title = "⚔️ Turno ${state.turn - 1}"
+                        description = if (state.combatLog.isEmpty()) {
+                            "Nenhum evento foi registrado neste turno."
+                        } else {
+                            state.combatLog.joinToString("\n")
+                        }
+                    }
+                    components = mutableListOf(createContinueRow(continueButtonId))
+                }
+            }
+        }
+
+        val playerAlive = player.hp > 0
 
         val summary = buildCombatSummaryEmbed(
             playerDisplayName = playerDisplayName,
@@ -209,28 +418,23 @@ class FightCommand(
             playerAlive = playerAlive,
         )
 
-        val logPages = buildCombatLogEmbeds(result.combatLog)
-        val logButtonId = "fight-log-${event.message.channelId}-${event.message.id}-${System.currentTimeMillis()}"
+        val logPages = buildCombatLogEmbeds(fullCombatLog)
+        val logButtonId = "$combatId-log"
 
-        val resultMsg = event.message.reply {
+        msg = msg.edit {
             embed {
                 title = summary.title
                 description = summary.description
-                summary.footer?.let { footerText ->
-                    footer {
-                        text = footerText
-                    }
-                }
+                summary.footer?.let { footerText -> footer { text = footerText } }
             }
-
-            addComponent(createLogButton(logButtonId))
+            components = mutableListOf(createLogButton(logButtonId))
         }
 
         val logClick = event.kord.awaitButtonInteraction(
             customId = logButtonId,
-            allowedUserId = event.message.author?.id?.value?.toLong() ?: return
+            allowedUserId = playerDiscordId
         ) ?: run {
-            resultMsg.edit {
+            msg.edit {
                 components = mutableListOf(createLogButton(logButtonId, disabled = true))
             }
             return
@@ -243,11 +447,7 @@ class FightCommand(
             embed {
                 title = firstPage.title
                 description = firstPage.description
-                firstPage.footer?.let { footerText ->
-                    footer {
-                        text = footerText
-                    }
-                }
+                firstPage.footer?.let { footerText -> footer { text = footerText } }
             }
         }
 
@@ -256,15 +456,61 @@ class FightCommand(
                 embed {
                     title = page.title
                     description = page.description
-                    page.footer?.let { footerText ->
-                        footer {
-                            text = footerText
-                        }
-                    }
+                    page.footer?.let { footerText -> footer { text = footerText } }
                 }
             }
-
             delay(Duration.ofMillis(250)) // delay para não enviar tudo de uma vez
+        }
+    }
+
+    /**
+     * Igual ao awaitButtonInteraction que vocês já têm, mas aceita clique de
+     * qualquer usuário dentro de [allowedUserIds] — usado no botão "Próxima
+     * rodada" em lutas PvP, que os dois jogadores podem apertar.
+     */
+    private suspend fun awaitButtonFromAny(
+        kord: dev.kord.core.Kord,
+        customId: String,
+        allowedUserIds: Set<Long>,
+        timeout: KotlinDuration = 60.seconds
+    ): ButtonInteractionCreateEvent? {
+        val pressed = CompletableDeferred<ButtonInteractionCreateEvent>()
+        val listener = kord.on<ButtonInteractionCreateEvent> {
+            val interaction = this.interaction
+            if (interaction.component.customId != customId) return@on
+            if (interaction.user.id.value.toLong() !in allowedUserIds) return@on
+            if (!pressed.isCompleted) pressed.complete(this)
+        }
+        return try {
+            withTimeoutOrNull(timeout) { pressed.await() }
+        } finally {
+            listener.cancel()
+        }
+    }
+
+    private fun createContinueRow(customId: String, disabled: Boolean = false) = ActionRowBuilder().apply {
+        interactionButton(ButtonStyle.Primary, customId) {
+            label = "Próxima rodada"
+            this.disabled = disabled
+        }
+    }
+
+    private fun createActionRow(
+        attackButtonId: String,
+        availableAbilities: List<Ability>,
+        abilityButtonIds: List<String>
+    ) = ActionRowBuilder().apply {
+        interactionButton(ButtonStyle.Primary, attackButtonId) {
+            label = "⚔️ Atacar"
+        }
+
+        // Discord permite no máximo 5 botões por linha (1 já usado pro ataque).
+        // TODO: se algum personagem puder ter mais de 4 habilidades ativas
+        // disponíveis ao mesmo tempo, quebrar em uma segunda ActionRow.
+        availableAbilities.take(4).forEachIndexed { index, ability ->
+            interactionButton(ButtonStyle.Secondary, abilityButtonIds[index]) {
+                label = ability.name.take(80)
+            }
         }
     }
 

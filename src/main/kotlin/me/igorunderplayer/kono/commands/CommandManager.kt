@@ -21,7 +21,7 @@ enum class CommandCategory {
 }
 
 sealed class CommandResult {
-    object Success: CommandResult()
+    object Success : CommandResult()
     object CommandNotFound : CommandResult()
     object Failure : CommandResult()
 }

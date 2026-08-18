@@ -1,17 +1,17 @@
 package me.igorunderplayer.kono
 
 import dev.kord.core.Kord
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.serialization.kotlinx.json.json
+import io.ktor.client.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
-import me.igorunderplayer.kono.services.ai.OpenRouterAIService
 import me.igorunderplayer.kono.di.appModule
 import me.igorunderplayer.kono.services.ai.AIService
+import me.igorunderplayer.kono.services.ai.OpenRouterAIService
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
 

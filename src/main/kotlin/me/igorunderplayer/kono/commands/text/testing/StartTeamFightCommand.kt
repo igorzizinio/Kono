@@ -323,7 +323,8 @@ class StartTeamFightCommand(
         discordUser: User,
         isEnemy: Boolean
     ): List<CombatUnit>? {
-        return when (val result = teamBattleService.buildPlayerRoster(discordUser.id.value.toLong(), discordUser.effectiveName)) {
+        return when (val result =
+            teamBattleService.buildPlayerRoster(discordUser.id.value.toLong(), discordUser.effectiveName)) {
             is TeamBattleService.RosterResult.Success -> result.units
 
             is TeamBattleService.RosterResult.Failure -> {
