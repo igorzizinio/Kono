@@ -16,13 +16,21 @@ import me.igorunderplayer.kono.commands.CommandCategory
 import me.igorunderplayer.kono.data.repositories.UserRepository
 import me.igorunderplayer.kono.domain.battle.EnemyTeamCatalog
 import me.igorunderplayer.kono.domain.card.CardCatalog
+import me.igorunderplayer.kono.domain.card.Stat
+import me.igorunderplayer.kono.domain.card.ability.Ability
 import me.igorunderplayer.kono.domain.gameplay.CombatState
 import me.igorunderplayer.kono.domain.gameplay.Team
+import me.igorunderplayer.kono.engine.combat.CombatAction
 import me.igorunderplayer.kono.engine.combat.CombatEngine
+import me.igorunderplayer.kono.engine.combat.PlayerTurnController
+import me.igorunderplayer.kono.engine.combat.RandomAiTurnController
+import me.igorunderplayer.kono.engine.combat.TurnController
 import me.igorunderplayer.kono.services.TeamBattleService
 import me.igorunderplayer.kono.utils.interaction.awaitButtonInteraction
+import me.igorunderplayer.kono.utils.interaction.awaitFirstButtonInteraction
 import java.time.Duration
 import kotlin.random.Random
+import me.igorunderplayer.kono.domain.gameplay.Unit as CombatUnit
 
 class StoryCommand(
     private val teamBattleService: TeamBattleService,
@@ -184,7 +192,7 @@ class StoryCommand(
             color = COLOR_CHAPTER
         }
 
-        val chapterMessage = if (pendingMessage != null) {
+        var chapterMessage = if (pendingMessage != null) {
             pendingMessage.edit {
                 embed(chapterEmbedContent)
                 addComponent(ActionRowBuilder().apply {
@@ -223,7 +231,7 @@ class StoryCommand(
 
         fightClick.interaction.respondEphemeral { content = "⚔️ Iniciando batalha..." }
 
-        // ── Run combat ────────────────────────────────────────────────────────
+        // ── Build combat state ───────────────────────────────────────────────
         val enemyRoster = when (val result = teamBattleService.buildBotRoster(chapter.id)) {
             is TeamBattleService.RosterResult.Success -> result
             is TeamBattleService.RosterResult.Failure -> {
@@ -242,7 +250,179 @@ class StoryCommand(
         playerRoster.units.forEach { state.unitDisplayNamesById[it.id] = it.card.name }
         enemyRoster.units.forEach { state.unitDisplayNamesById[it.id] = it.card.name }
 
-        CombatEngine(state).run()
+        // ── Run combat round by round: player controla suas unidades via
+        // prompt, os bots do capítulo usam RandomAiTurnController (sem prompt).
+        val combatId = "story-combat-$baseId"
+        val continueButtonId = "$combatId-continue"
+        val fullCombatLog = mutableListOf<String>()
+
+        lateinit var engine: CombatEngine
+
+        fun displayNameOf(u: CombatUnit) = state.unitDisplayNamesById[u.id] ?: u.card.name
+        fun teamIdOf(u: CombatUnit) = state.teams.first { it.units.contains(u) }.id
+
+        suspend fun promptTargetSelection(unit: CombatUnit, ability: Ability, candidates: List<CombatUnit>): CombatUnit? {
+            val targetBaseId = "$combatId-target-${System.currentTimeMillis()}"
+            val targetButtonIds = candidates.indices.map { "$targetBaseId:$it" }
+
+            chapterMessage = chapterMessage.edit {
+                embed {
+                    title = "🎯 ${author.username}, escolha o alvo de [${ability.name}]"
+                    description = candidates.joinToString("\n") {
+                        "• **${displayNameOf(it)}** (${it.hp.toInt()} HP) — time ${teamIdOf(it)}"
+                    }
+                    color = COLOR_CHAPTER
+                }
+                components = mutableListOf(ActionRowBuilder().apply {
+                    candidates.forEachIndexed { index, candidate ->
+                        interactionButton(ButtonStyle.Secondary, targetButtonIds[index]) {
+                            label = displayNameOf(candidate).take(80)
+                        }
+                    }
+                })
+            }
+
+            val result = event.kord.awaitFirstButtonInteraction(
+                ids = targetButtonIds,
+                allowedUserId = discordId
+            ) ?: run {
+                state.combatLog += "⏱️ ${unit.card.name} não escolheu alvo a tempo, alvo automático será usado."
+                return null
+            }
+
+            val (chosenId, buttonInteraction) = result
+            val chosenTarget = candidates.getOrNull(targetButtonIds.indexOf(chosenId))
+
+            buttonInteraction.interaction.respondEphemeral {
+                content = if (chosenTarget != null) {
+                    "🎯 Alvo: ${displayNameOf(chosenTarget)}"
+                } else {
+                    "⚠️ Alvo inválido, usando seleção automática."
+                }
+            }
+
+            return chosenTarget
+        }
+
+        suspend fun promptPlayerAction(unit: CombatUnit, availableAbilities: List<Ability>): CombatAction {
+            val actionBaseId = "$combatId-action-${System.currentTimeMillis()}"
+            val attackButtonId = "$actionBaseId:attack"
+            val abilityButtonIds = availableAbilities.indices.map { "$actionBaseId:ability:$it" }
+
+            val maxHp = unit.stats[Stat.HP]?.toInt()
+            val hpText = if (maxHp != null) "${unit.hp.toInt()}/$maxHp HP" else "${unit.hp.toInt()} HP"
+
+            chapterMessage = chapterMessage.edit {
+                embed {
+                    title = "🎮 Sua vez, ${author.username}"
+                    description = buildString {
+                        appendLine("Controlando **${unit.card.name}** — $hpText")
+                        appendLine()
+                        if (availableAbilities.isEmpty()) {
+                            appendLine("Nenhuma habilidade ativa disponível — ataque ou aguarde novas cartas.")
+                        } else {
+                            appendLine("Habilidades disponíveis:")
+                            availableAbilities.forEach { appendLine("• **${it.name}**") }
+                        }
+                    }
+                    color = COLOR_CHAPTER
+                }
+                components = mutableListOf(createActionRow(attackButtonId, availableAbilities, abilityButtonIds))
+            }
+
+            val allIds = listOf(attackButtonId) + abilityButtonIds
+            val result = event.kord.awaitFirstButtonInteraction(ids = allIds, allowedUserId = discordId)
+
+            if (result == null) {
+                state.combatLog += "⏱️ ${unit.card.name} não respondeu a tempo e atacou automaticamente."
+                return CombatAction.BasicAttack()
+            }
+
+            val (chosenId, buttonInteraction) = result
+
+            if (chosenId == attackButtonId) {
+                buttonInteraction.interaction.respondEphemeral { content = "⚔️ Ataque básico escolhido." }
+                return CombatAction.BasicAttack()
+            }
+
+            val ability = availableAbilities.getOrNull(abilityButtonIds.indexOf(chosenId))
+            if (ability == null) {
+                buttonInteraction.interaction.respondEphemeral { content = "⚠️ Ação inválida, atacando." }
+                return CombatAction.BasicAttack()
+            }
+
+            buttonInteraction.interaction.respondEphemeral { content = "🌟 [${ability.name}] escolhida." }
+
+            val manualKind = engine.manualTargetKind(ability)
+            val target = if (manualKind != null) {
+                val candidates = engine.manualTargetCandidates(unit, manualKind)
+                if (candidates.size > 1) promptTargetSelection(unit, ability, candidates) else null
+            } else {
+                null
+            }
+
+            return CombatAction.UseAbility(ability, target)
+        }
+
+        val botController = RandomAiTurnController()
+        val controllersByUnitId: Map<String, TurnController> = buildMap {
+            playerRoster.units.forEach { unit ->
+                put(unit.id, PlayerTurnController { u, abilities -> promptPlayerAction(u, abilities) })
+            }
+            enemyRoster.units.forEach { unit -> put(unit.id, botController) }
+        }
+
+        engine = CombatEngine(state = state, controllersByUnitId = controllersByUnitId)
+
+        chapterMessage = chapterMessage.edit {
+            embed {
+                title = "⚔️ Capítulo $chapterNumber — Batalha"
+                description = buildString {
+                    appendLine("**Seu time:** ${playerRoster.units.joinToString(", ") { it.card.name }}")
+                    appendLine("**${chapter.name}:** ${enemyRoster.units.joinToString(", ") { it.card.name }}")
+                    appendLine()
+                    appendLine("Clique em **Continuar** para avançar o combate.")
+                }
+                color = COLOR_CHAPTER
+            }
+            components = mutableListOf(createContinueRow(continueButtonId))
+        }
+
+        while (!state.isFinished()) {
+            val interaction = event.kord.awaitButtonInteraction(
+                customId = continueButtonId,
+                allowedUserId = discordId
+            ) ?: run {
+                chapterMessage.edit {
+                    components = mutableListOf(createContinueRow(continueButtonId, disabled = true))
+                }
+                return
+            }
+
+            interaction.interaction.respondEphemeral { content = "⚔️ Prosseguindo com a batalha" }
+
+            state.combatLog.clear()
+            // Dentro dessa chamada, promptPlayerAction() edita chapterMessage e
+            // suspende pra cada unidade do jogador — os bots decidem na hora.
+            engine.processNextTurnControlled()
+            fullCombatLog += state.combatLog
+
+            val isFinished = state.isFinished()
+            if (!isFinished) {
+                chapterMessage = chapterMessage.edit {
+                    embed {
+                        title = "⚔️ Turno ${state.turn - 1}"
+                        description = if (state.combatLog.isEmpty()) {
+                            "Nenhum evento foi registrado neste turno."
+                        } else {
+                            state.combatLog.joinToString("\n")
+                        }
+                        color = COLOR_CHAPTER
+                    }
+                    components = mutableListOf(createContinueRow(continueButtonId))
+                }
+            }
+        }
 
         val playerWon = state.teams.first { it.id == "player" }.units.any { it.hp > 0 } &&
                 !state.teams.first { it.id == "enemy" }.units.any { it.hp > 0 }
@@ -317,7 +497,7 @@ class StoryCommand(
             return
         }
 
-        val logPages = buildLogPages(state.combatLog)
+        val logPages = buildLogPages(fullCombatLog)
 
         val logResponse = logClick.interaction.respondEphemeral {
             content = "📜 Diário de batalha"
@@ -337,6 +517,32 @@ class StoryCommand(
                 }
             }
             delay(Duration.ofMillis(250))
+        }
+    }
+
+    private fun createContinueRow(customId: String, disabled: Boolean = false) = ActionRowBuilder().apply {
+        interactionButton(ButtonStyle.Primary, customId) {
+            label = "Continuar"
+            this.disabled = disabled
+        }
+    }
+
+    private fun createActionRow(
+        attackButtonId: String,
+        availableAbilities: List<Ability>,
+        abilityButtonIds: List<String>
+    ) = ActionRowBuilder().apply {
+        interactionButton(ButtonStyle.Primary, attackButtonId) {
+            label = "⚔️ Atacar"
+        }
+
+        // Discord permite no máximo 5 botões por linha (1 já usado pro ataque).
+        // TODO: se algum personagem puder ter mais de 4 habilidades ativas
+        // disponíveis ao mesmo tempo, quebrar em uma segunda ActionRow.
+        availableAbilities.take(4).forEachIndexed { index, ability ->
+            interactionButton(ButtonStyle.Secondary, abilityButtonIds[index]) {
+                label = ability.name.take(80)
+            }
         }
     }
 

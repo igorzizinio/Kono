@@ -136,7 +136,6 @@ val appModule = module {
     factoryOf(::TeamCommand) { bind<BaseCommand>() }
     factoryOf(::CharacterCommand) { bind<BaseCommand>() }
     factoryOf(::WeaponCommand) { bind<BaseCommand>() }
-    factoryOf(::StartFightCommand) { bind<BaseCommand>() }
     factoryOf(::CardCommand) { bind<BaseCommand>() }
     factoryOf(::StoryCommand) { bind<BaseCommand>() }
     factoryOf(::AtmCommand) { bind<BaseCommand>() }
