@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.toList
 import me.igorunderplayer.kono.ai.ConversationBuilder
 import me.igorunderplayer.kono.ai.KONO_SYSTEM_PROMPT
 import me.igorunderplayer.kono.commands.CommandManager
+import me.igorunderplayer.kono.commands.CommandResult
 import me.igorunderplayer.kono.data.dto.ChatMessage
 import me.igorunderplayer.kono.services.ai.AIService
 import kotlin.random.Random
@@ -18,31 +19,36 @@ class MessageCreateHandler(
 
     suspend fun handle(event: MessageCreateEvent) {
         if (event.message.author?.isBot == true) return
-        if (commandManager.handleCommand(event)) return // não responder caso tenha sido um comando
 
-        if (event.message.mentionedUserIds.contains(event.kord.selfId)) {
-            handleConversation(event)
-            return
-        }
+        when (commandManager.handleCommand(event)) {
+            is CommandResult.Success -> {}
+            is CommandResult.Failure -> {}
+            is CommandResult.CommandNotFound -> {
+                if (event.message.mentionedUserIds.contains(event.kord.selfId)) {
+                    handleConversation(event)
+                    return
+                }
 
-        val content = event.message.content.lowercase()
+                val content = event.message.content.lowercase()
 
-        val lastMessages = event.message.channel.messages
-            .take(5)
-            .toList()
+                val lastMessages = event.message.channel.messages
+                    .take(5)
+                    .toList()
 
-        val konoRecentlyTalked = lastMessages.any {
-            it.author?.id == event.kord.selfId
-        }
+                val konoRecentlyTalked = lastMessages.any {
+                    it.author?.id == event.kord.selfId
+                }
 
-        val chance = when {
-            "kono" in content -> 0.25
-            konoRecentlyTalked -> 0.08
-            else -> 0.01
-        }
+                val chance = when {
+                    "kono" in content -> 0.25
+                    konoRecentlyTalked -> 0.08
+                    else -> 0.01
+                }
 
-        if (Random.nextDouble() < chance) {
-            handleConversation(event)
+                if (Random.nextDouble() < chance) {
+                    handleConversation(event)
+                }
+            }
         }
     }
 
