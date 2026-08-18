@@ -3,6 +3,7 @@ package me.igorunderplayer.kono.domain.card.ability
 import me.igorunderplayer.kono.domain.card.Stat
 import me.igorunderplayer.kono.domain.card.StatSource
 import me.igorunderplayer.kono.domain.gameplay.CombatState
+import me.igorunderplayer.kono.domain.team.TeamState
 import me.igorunderplayer.kono.domain.gameplay.Unit as CombatUnit
 
 
@@ -87,6 +88,6 @@ sealed class Effect {
 
     data class Custom(
         val name: String,
-        val action: (self: CombatUnit, target: CombatUnit?, state: CombatState) -> Unit
+        val action: (self: CombatUnit, target: CombatUnit?, state: CombatState, team: TeamState?) -> Unit
     ) : Effect()
 }

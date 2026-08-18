@@ -29,13 +29,6 @@ class CombatEngine(
         processTurn()
     }
 
-    suspend fun runControlled() {
-        processBattleStart()
-        while (!state.isFinished()) {
-            processTurnControlled()
-        }
-    }
-
     suspend fun processNextTurnControlled() {
         if (state.isFinished()) return
         processBattleStart()
@@ -113,7 +106,12 @@ class CombatEngine(
 
     private fun useActiveAbility(unit: Unit, ability: Ability, explicitTarget: Unit?) {
         if (ability.type != AbilityType.ACTIVE) {
-            state.combatLog += "⚠️ ${unitLabel(unit, state)} tentou usar [${ability.name}], que não é uma habilidade ativa."
+            state.combatLog += "⚠️ ${
+                unitLabel(
+                    unit,
+                    state
+                )
+            } tentou usar [${ability.name}], que não é uma habilidade ativa."
             return
         }
 
@@ -476,7 +474,7 @@ class CombatEngine(
             is Effect.Custom -> {
                 val targets = resolveTargets(owner, AbilityTarget.ENEMY, event)
                 val target = targets.firstOrNull()
-                effect.action(owner, target, state)
+                effect.action(owner, target, state, findTeam(owner))
             }
         }
     }
@@ -726,7 +724,7 @@ class CombatEngine(
         state.combatLog += "✨ ${unitLabel(owner, state)} $status ${abilityName ?: effect.stat.name}."
     }
 
-    private fun onceAbilityKey(unit: Unit, ability: me.igorunderplayer.kono.domain.card.ability.Ability): String {
+    private fun onceAbilityKey(unit: Unit, ability: Ability): String {
         return "once:${unit.id}:${unit.card.id}:${ability.name}"
     }
 

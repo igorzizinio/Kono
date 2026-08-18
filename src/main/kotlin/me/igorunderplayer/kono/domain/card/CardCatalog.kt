@@ -214,7 +214,7 @@ object CardCatalog {
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnHit,
                 effects = listOf(
-                    Effect.Custom("VEYN_AIM_MARK") { self, target, state ->
+                    Effect.Custom("VEYN_AIM_MARK") { self, target, state, team ->
                         if (target == null || target.hp <= 0) return@Custom
 
                         val markKey = "veyn:aim:${self.id}:${target.id}"
@@ -242,7 +242,7 @@ object CardCatalog {
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnHit,
                 effects = listOf(
-                    Effect.Custom("VEYN_WEAK_POINT") { self, target, state ->
+                    Effect.Custom("VEYN_WEAK_POINT") { self, target, state, team ->
                         if (target == null || target.hp <= 0) return@Custom
 
                         val markKey = "veyn:aim:${self.id}:${target.id}"
@@ -287,7 +287,7 @@ object CardCatalog {
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnHit,
                 effects = listOf(
-                    Effect.Custom("VEYN_PERFECT_BET") { self, target, state ->
+                    Effect.Custom("VEYN_PERFECT_BET") { self, target, state, team ->
                         if (target == null || target.hp <= 0) return@Custom
 
                         val markKey = "veyn:aim:${self.id}:${target.id}"
@@ -314,7 +314,7 @@ object CardCatalog {
                 type = AbilityType.ACTIVE,
                 trigger = AbilityTrigger.Manual,
                 effects = listOf(
-                    Effect.Custom("VEYN_PERFECT_SHOT") { self, target, state ->
+                    Effect.Custom("VEYN_PERFECT_SHOT") { self, target, state, team ->
                         if (target == null || target.hp <= 0) return@Custom
 
                         val markKey = "veyn:aim:${self.id}:${target.id}"
@@ -475,10 +475,10 @@ object CardCatalog {
                 type = AbilityType.ACTIVE,
                 trigger = AbilityTrigger.Manual,
                 effects = listOf(
-                    Effect.Custom("Heal allies 8% ATK") { self, _, state ->
+                    Effect.Custom("Heal allies 8% ATK") { self, target, state, team ->
                         val healAmount = (self.stats[Stat.ATK] ?: 0.0) * 0.15
                         if (healAmount <= 0) return@Custom
-                        val team = state.teams.firstOrNull { it.units.contains(self) } ?: return@Custom
+                        val team = team ?: return@Custom
                         team.units.filter { it.hp > 0 }.forEach { ally ->
                             val maxHp = ally.stats[Stat.HP] ?: return@forEach
                             val before = ally.hp
@@ -495,12 +495,12 @@ object CardCatalog {
                 type = AbilityType.ACTIVE,
                 trigger = AbilityTrigger.Manual,
                 effects = listOf(
-                    Effect.Custom("Temp buff ATK+DEF 15%") { self, _, state ->
+                    Effect.Custom("Temp buff ATK+DEF 15%") { self, target, state, team ->
                         val atk = self.stats[Stat.ATK] ?: 0.0
                         val def = self.stats[Stat.DEF] ?: 0.0
                         val atkBuff = atk * 0.15
                         val defBuff = def * 0.15
-                        val team = state.teams.firstOrNull { it.units.contains(self) } ?: return@Custom
+                        val team = team ?: return@Custom
                         team.units.filter { it.hp > 0 }.forEach { ally ->
                             ally.stats[Stat.ATK] = (ally.stats[Stat.ATK] ?: 0.0) + atkBuff
                             ally.stats[Stat.DEF] = (ally.stats[Stat.DEF] ?: 0.0) + defBuff
@@ -529,7 +529,7 @@ object CardCatalog {
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnTurnEvery(4),
                 effects = listOf(
-                    Effect.Custom("Self-scale ATK") { self, _, state ->
+                    Effect.Custom("Self-scale ATK") { self, target, state, team ->
                         self.stats[Stat.ATK] = (self.stats[Stat.ATK] ?: 0.0) + 6.0
                         state.combatLog += "🙏 ${self.card.name} fortaleceu sua fé (+6 ATK)."
                     }
@@ -583,8 +583,8 @@ object CardCatalog {
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnTurnStart,
                 effects = listOf(
-                    Effect.Custom("MARKUS_TABLE_MASTER") { self, _, state ->
-                        val team = state.teams.firstOrNull { it.units.contains(self) }
+                    Effect.Custom("MARKUS_TABLE_MASTER") { self, target, state, team ->
+                        val team = team
                             ?: return@Custom
 
                         team.addCoins(3)
@@ -618,8 +618,8 @@ object CardCatalog {
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnTurnStart,
                 effects = listOf(
-                    Effect.Custom("MARKUS_HOUSE_ALWAYS_WINS") { self, _, state ->
-                        val team = state.teams.firstOrNull { it.units.contains(self) }
+                    Effect.Custom("MARKUS_HOUSE_ALWAYS_WINS") { self, target, state, team ->
+                        val team = team
                             ?: return@Custom
 
                         val previousCoins =
@@ -659,8 +659,8 @@ object CardCatalog {
                 type = AbilityType.ACTIVE,
                 trigger = AbilityTrigger.Manual,
                 effects = listOf(
-                    Effect.Custom("MARKUS_LOW_BET") { self, target, state ->
-                        val team = state.teams.firstOrNull { it.units.contains(self) }
+                    Effect.Custom("MARKUS_LOW_BET") { self, target, state, team ->
+                        val team = team
                             ?: return@Custom
 
                         if (team.coins() < 3) {
@@ -816,8 +816,8 @@ object CardCatalog {
                 type = AbilityType.ACTIVE,
                 trigger = AbilityTrigger.Manual,
                 effects = listOf(
-                    Effect.Custom("MARKUS_DOUBLE_OR_NOTHING") { self, _, state ->
-                        val team = state.teams.firstOrNull { it.units.contains(self) }
+                    Effect.Custom("MARKUS_DOUBLE_OR_NOTHING") { self, target, state, team ->
+                        val team = team
                             ?: return@Custom
 
                         val coins = team.coins()
@@ -915,14 +915,14 @@ object CardCatalog {
                 type = AbilityType.ACTIVE,
                 trigger = AbilityTrigger.Manual,
                 effects = listOf(
-                    Effect.Custom("MARKUS_ALL_IN") { self, target, state ->
+                    Effect.Custom("MARKUS_ALL_IN") { self, target, state, team ->
                         if (target == null || target.hp <= 0) {
                             state.combatLog +=
                                 "🎰 ALL-IN cancelado: nenhum alvo válido."
                             return@Custom
                         }
 
-                        val team = state.teams.firstOrNull { it.units.contains(self) }
+                        val team = team
                             ?: return@Custom
 
                         val coins = team.coins()
@@ -1760,9 +1760,9 @@ object CardCatalog {
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnTurnStart,
                 effects = listOf(
-                    Effect.Custom("Faith heal scaling") { self, _, state ->
+                    Effect.Custom("Faith heal scaling") { self, target, state, team ->
                         val atk = self.stats[Stat.ATK] ?: 0.0
-                        val team = state.teams.firstOrNull { it.units.contains(self) } ?: return@Custom
+                        val team = team ?: return@Custom
                         team.units.filter { it.hp > 0 }.forEach { ally ->
                             val isFaith = ally.card.faction == "sol"
                             val healAmount = atk * (if (isFaith) 0.11 else 0.06)
@@ -1781,9 +1781,9 @@ object CardCatalog {
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnTurnEvery(2),
                 effects = listOf(
-                    Effect.Custom("Solar shield") { self, _, state ->
+                    Effect.Custom("Solar shield") { self, target, state, team ->
                         val atk = self.stats[Stat.ATK] ?: 0.0
-                        val team = state.teams.firstOrNull { it.units.contains(self) } ?: return@Custom
+                        val team = team ?: return@Custom
                         team.units.filter { it.hp > 0 }.forEach { ally ->
                             val isFaith = ally.card.faction == "sol"
                             val shieldValue = atk * (if (isFaith) 0.16 else 0.08)
@@ -1859,7 +1859,7 @@ object CardCatalog {
                 trigger = AbilityTrigger.OnBattleStart,
                 once = true,
                 effects = listOf(
-                    Effect.Custom("CRITFISH_LOCK") { self, _, state ->
+                    Effect.Custom("CRITFISH_LOCK") { self, target, state, team ->
                         val currentCritDmg = self.stats[Stat.CRIT_DAMAGE] ?: 1.5
                         self.stats[Stat.CRIT_CHANCE] = 0.08
                         self.stats[Stat.CRIT_DAMAGE] = currentCritDmg * 3.0
@@ -2088,7 +2088,7 @@ object CardCatalog {
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnHit,
                 effects = listOf(
-                    Effect.Custom("Real damage 20% ATK") { self, unit, state ->
+                    Effect.Custom("Real damage 20% ATK") { self, unit, state, _ ->
                         val damage = (self.stats[Stat.ATK] ?: 0.0) * 0.20
                         if (damage <= 0 || unit == null) return@Custom
                         state.combatLog += "🔥 A chama divina penetra em ${unit.card.name} causando ${
@@ -2349,7 +2349,7 @@ object CardCatalog {
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnBattleStart,
                 effects = listOf(
-                    Effect.Custom("SIEGEBREAKER_RUPTURA") { self, _, state ->
+                    Effect.Custom("SIEGEBREAKER_RUPTURA") { self, target, state, team ->
                         val ownerTeam =
                             state.teams.firstOrNull { t -> t.units.any { u -> u.id == self.id } } ?: return@Custom
                         val enemies = state.teams.filter { it != ownerTeam }.flatMap { it.units }
@@ -2369,7 +2369,7 @@ object CardCatalog {
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnHit,
                 effects = listOf(
-                    Effect.Custom("SIEGEBREAKER_CORROSIVE") { _, target, state ->
+                    Effect.Custom("SIEGEBREAKER_CORROSIVE") { _, target, state, _ ->
                         if (target == null) return@Custom
                         val stackKey = "sbc:${target.id}"
                         val currentStacks = (state.globalFlags[stackKey] as? Int) ?: 0
@@ -2412,7 +2412,7 @@ object CardCatalog {
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnCrit,
                 effects = listOf(
-                    Effect.Custom("Double strike 80% ATK") { self, target, state ->
+                    Effect.Custom("Double strike 80% ATK") { self, target, state, team ->
                         if (target == null || target.hp <= 0) return@Custom
                         val damage = (self.stats[Stat.ATK] ?: 0.0) * 0.80
                         state.combatLog += "⚡ ${self.card.name} disparou um segundo corte!"
@@ -2491,10 +2491,10 @@ object CardCatalog {
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnBattleStart,
                 effects = listOf(
-                    Effect.Custom("Speed to crit damage") { self, _, state ->
+                    Effect.Custom("Speed to crit damage") { self, target, state, team ->
                         val speed = self.stats[Stat.SPEED] ?: 0.0
                         val bonus = speed * 0.08
-                        self.stats[Stat.CRIT_DAMAGE] = (self.stats[Stat.CRIT_DAMAGE] ?: 0.0) + bonus
+                        self.stats[Stat.CRIT_DAMAGE] = (self.stats[Stat.CRIT_DAMAGE] ?: 0.0) + (bonus / 100)
                         state.combatLog += "💨 ${self.card.name} converteu velocidade em poder crítico (+${
                             "%.2f".format(
                                 bonus
@@ -2635,7 +2635,7 @@ object CardCatalog {
                 once = true,
                 trigger = AbilityTrigger.OnBattleStart,
                 effects = listOf(
-                    Effect.Custom("Double twin stats") { self, _, state ->
+                    Effect.Custom("Double twin stats") { self, target, state, team ->
                         val twin = self.equipments.find { it.id == "KONO_TWINBLADE_L" }
 
                         if (twin != null) {
@@ -2659,7 +2659,7 @@ object CardCatalog {
                 once = true,
                 trigger = AbilityTrigger.OnBattleStart,
                 effects = listOf(
-                    Effect.Custom("Double twin stats") { self, _, state ->
+                    Effect.Custom("Double twin stats") { self, target, state, team ->
                         val twin = self.equipments.find { it.id == "KONO_TWINBLADE_L" }
 
                         if (twin != null) {
@@ -2683,7 +2683,7 @@ object CardCatalog {
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnAttackEvery(3),
                 effects = listOf(
-                    Effect.Custom("Twin spin attack") { self, target, state ->
+                    Effect.Custom("Twin spin attack") { self, target, state, team ->
                         val twin = self.equipments.find { it.id == "KONO_TWINBLADE_L" }
                         if (twin == null || target == null || target.hp <= 0) return@Custom
 
@@ -2761,7 +2761,7 @@ object CardCatalog {
                 once = true,
                 trigger = AbilityTrigger.OnBattleStart,
                 effects = listOf(
-                    Effect.Custom("Double twin stats") { self, _, _ ->
+                    Effect.Custom("Double twin stats") { self, _, _, _ ->
                         val twin = self.equipments.find { it.id == "KONO_TWINBLADE_R" }
 
                         if (twin != null) {
