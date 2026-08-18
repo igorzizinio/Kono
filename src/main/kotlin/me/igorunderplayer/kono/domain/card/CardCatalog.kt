@@ -174,15 +174,15 @@ object CardCatalog {
         name = "Veyn",
         description = "Besteiro de Markus. Extremamente veloz e frágil — mas cada 2 disparos libera uma rajada devastadora.",
         type = CardType.CHARACTER,
-        rarity = Rarity.EPIC,
+        rarity = Rarity.LEGENDARY,
         faction = "markus_gang",
         baseStats = mapOf(
             Stat.HP to 440.0,
             Stat.ATK to 44.0,
             Stat.DEF to 16.0,
-            Stat.SPEED to 125.0,
-            Stat.CRIT_CHANCE to 0.16,
-            Stat.CRIT_DAMAGE to 1.30
+            Stat.SPEED to 130.0,
+            Stat.CRIT_CHANCE to 0.18,
+            Stat.CRIT_DAMAGE to 1.40
         ),
         statsPerLevel = mapOf(
             Stat.HP to 5.0,
@@ -194,19 +194,35 @@ object CardCatalog {
         abilities = listOf(
             Ability(
                 name = "Rajada Rítmica",
-                description = "A cada 2 ataques, Veyn libera uma rajada precisa que causa 25 de dano extra ao alvo.",
+                description = "A cada 2 ataques, Veyn libera uma rajada precisa que causa 25% do ATK de dano extra ao alvo.",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnAttackEvery(2),
-                effects = listOf(Effect.Damage(value = 25.0, target = AbilityTarget.ENEMY))
+                effects = listOf(
+                    Effect.DamageBasedOnStat(
+                        stat = Stat.ATK,
+                        scaling = 0.25,
+                        statSource = StatSource.SELF
+                    )
+                )
             ),
             Ability(
                 name = "Ritmo de Cassino",
-                description = "A cada turno, Veyn gera 1 moeda de cassino para a equipe e aposta para obter efeitos aleatórios.",
+                description = "A cada turno, Veyn gera fichas de cassino para a equipe com base na sua **${Stat.CRIT_CHANCE.prettyName()}** e **${Stat.SPEED.prettyName()}**",
                 type = AbilityType.PASSIVE,
                 trigger = AbilityTrigger.OnTurnStart,
                 effects = listOf(
-                    Effect.AddCoins(value = 1, scaleWithGangSynergy = false),
-                    Effect.Random(profile = "MARKUS_GAMBLER")
+                    // Effect.AddCoins(value = 1, scaleWithGangSynergy = false)
+                    Effect.Custom("Gerando fichas") { self, _, state ->
+                        if (Random.nextDouble() > (self.stats[Stat.CRIT_CHANCE] ?: 0.0)){
+                            state.combatLog += "${self.card.name} falhou em gerar fichas de cassino para o time!"
+                            return@Custom
+                        }
+
+                        // Cada 80 de speed gerar 1 ficha
+                        val coins = ((self.stats[Stat.SPEED] ?: 0.0) / 80.0).toInt()
+                        state.teams.find { it.units.contains(self) }?.addCoins(coins)
+                        state.combatLog += "${self.card.name} gerou $coins fichas de cassino para a equipe!"
+                    }
                 )
             )
         )
@@ -3094,7 +3110,6 @@ object CardCatalog {
         aureaSoldier,
         // Characters — Epic
         jorge,
-        veyn,
         aurum,
         lumina,
         shadow,
@@ -3102,12 +3117,13 @@ object CardCatalog {
         goldenKnight,
         sunPriestess,
         // Characters — Legendary
-        markus,
+        veyn,
         solarPaladin,
         ironGargoyle,
         voidMage,
         aureKing,
         // Characters — Mythic
+        markus,
         unleashedJuniorKnight,
         // sami,
 
