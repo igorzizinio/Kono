@@ -1,8 +1,5 @@
 package me.igorunderplayer.kono.domain.card
 
-import java.util.*
-import kotlin.math.roundToInt
-
 enum class Stat {
     HP,
     ATK,
@@ -34,13 +31,30 @@ fun Stat.prettyName(): String {
 }
 
 fun prettyValue(stat: Stat, value: Double): String {
-    return when (stat) {
-        Stat.CRIT_CHANCE -> "${(value * 100).roundToInt()}%"
-        Stat.CRIT_DAMAGE -> "+${((value - 1) * 100).roundToInt()}%"
-        Stat.LIFESTEAL -> "${(value * 100).roundToInt()}%"
-        else -> {
-            if (value % 1.0 == 0.0) value.toInt().toString()
-            else "%.1f".format(Locale.US, value)
+    val absValue = kotlin.math.abs(value)
+
+    val formatted = when (stat) {
+        Stat.CRIT_CHANCE,
+        Stat.LIFESTEAL -> {
+            "${"%.1f".format(absValue * 100)}%"
         }
+
+        Stat.CRIT_DAMAGE -> {
+            "${"%.2f".format(absValue)}x"
+        }
+
+        else -> {
+            if (absValue % 1.0 == 0.0) {
+                absValue.toInt().toString()
+            } else {
+                "%.1f".format(absValue)
+            }
+        }
+    }
+
+    return when {
+        value > 0 -> "+$formatted"
+        value < 0 -> "-$formatted"
+        else -> formatted
     }
 }
