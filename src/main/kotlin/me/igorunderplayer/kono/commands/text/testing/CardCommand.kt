@@ -5,13 +5,7 @@ import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.rest.builder.message.embed
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.domain.card.*
-import me.igorunderplayer.kono.domain.card.ability.Ability
-import me.igorunderplayer.kono.domain.card.ability.AbilityTrigger
-import me.igorunderplayer.kono.domain.card.ability.AbilityType
-import me.igorunderplayer.kono.domain.card.ability.DamageType
-import me.igorunderplayer.kono.domain.card.ability.Effect
-import me.igorunderplayer.kono.domain.card.ability.ScalingMode
-import me.igorunderplayer.kono.domain.card.ability.prettyName
+import me.igorunderplayer.kono.domain.card.ability.*
 import me.igorunderplayer.kono.services.CardService
 
 class CardCommand(

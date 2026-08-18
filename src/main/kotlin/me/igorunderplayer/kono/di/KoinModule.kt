@@ -1,7 +1,6 @@
 package me.igorunderplayer.kono.di
 
 import me.igorunderplayer.kono.Kono
-import me.igorunderplayer.kono.services.ai.OpenRouterAIService
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandManager
 import me.igorunderplayer.kono.commands.KonoSlashCommand
@@ -28,6 +27,7 @@ import me.igorunderplayer.kono.events.EventManager
 import me.igorunderplayer.kono.events.MessageCreateHandler
 import me.igorunderplayer.kono.events.handlers.ReadyHandler
 import me.igorunderplayer.kono.services.*
+import me.igorunderplayer.kono.services.ai.OpenRouterAIService
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf

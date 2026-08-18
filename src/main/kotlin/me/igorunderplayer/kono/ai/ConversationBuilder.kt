@@ -108,6 +108,7 @@ Nunca descreva ações ou pensamentos.
 
 Evite usar aspas desnecessariamente.
 """
+
 object ConversationBuilder {
 
     private const val HISTORY_SIZE = 20
