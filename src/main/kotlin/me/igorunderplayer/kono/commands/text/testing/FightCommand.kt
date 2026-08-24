@@ -55,8 +55,10 @@ class FightCommand(
 
         val enemyUser = getMentionedUser(event.message, args)
 
+        val autoBattle = args.contains("auto")
+
         if (enemyUser == null) {
-            fightWithBot(event, args)
+            fightWithBot(event, autoBattle, args)
             return
         }
 
@@ -83,11 +85,12 @@ class FightCommand(
             enemyOwnerName = enemyOwnerName,
             playerDiscordId = discordId,
             enemyDiscordId = enemyUser.id.value.toLong(),
-            isPvp = true
+            isPvp = true,
+            isAuto = true
         )
     }
 
-    private suspend fun fightWithBot(event: MessageCreateEvent, args: Array<String>) {
+    private suspend fun fightWithBot(event: MessageCreateEvent, auto: Boolean, args: Array<String>) {
         val discordId = event.message.author?.id?.value?.toLong() ?: return
         val enemyName = args.getOrNull(0)?.uppercase()
 
@@ -120,7 +123,8 @@ class FightCommand(
             enemyOwnerName = "Bot",
             playerDiscordId = discordId,
             enemyDiscordId = null,
-            isPvp = false
+            isPvp = false,
+            isAuto = auto
         )
     }
 
@@ -194,7 +198,8 @@ class FightCommand(
         enemyOwnerName: String,
         playerDiscordId: Long,
         enemyDiscordId: Long?,
-        isPvp: Boolean
+        isPvp: Boolean,
+        isAuto: Boolean
     ) {
         val (playerDisplayName, enemyDisplayName) = resolveCombatantDisplayNames(
             playerName = player.card.name,
@@ -355,20 +360,32 @@ class FightCommand(
             return CombatAction.UseAbility(ability, target)
         }
 
-        val enemyController: TurnController = if (isPvp) {
+        val playerController: TurnController = if (isAuto) {
+            RandomAiTurnController()
+        } else {
+            PlayerTurnController { u, abilities -> promptPlayerAction(u, abilities) }
+        }
+
+        val enemyController: TurnController = if (!isAuto && isPvp) {
             PlayerTurnController { u, abilities -> promptPlayerAction(u, abilities) }
         } else {
             RandomAiTurnController()
         }
 
         val controllersByUnitId: Map<String, TurnController> = mapOf(
-            player.id to PlayerTurnController { u, abilities -> promptPlayerAction(u, abilities) },
+            player.id to playerController,
             enemy.id to enemyController
         )
 
         engine = CombatEngine(state = state, controllersByUnitId = controllersByUnitId)
 
         while (!state.isFinished()) {
+            if (isAuto) {
+                state.combatLog.clear()
+                engine.processNextTurnControlled()
+                fullCombatLog += state.combatLog
+                continue
+            }
             val buttonInteraction = if (allowedContinueIds.size > 1) {
                 awaitButtonFromAny(event.kord, continueButtonId, allowedContinueIds)
             } else {

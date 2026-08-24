@@ -24,6 +24,7 @@ import me.igorunderplayer.kono.domain.gameplay.Team
 import me.igorunderplayer.kono.engine.combat.CombatAction
 import me.igorunderplayer.kono.engine.combat.CombatEngine
 import me.igorunderplayer.kono.engine.combat.PlayerTurnController
+import me.igorunderplayer.kono.engine.combat.RandomAiTurnController
 import me.igorunderplayer.kono.engine.combat.TurnController
 import me.igorunderplayer.kono.services.TeamBattleService
 import me.igorunderplayer.kono.utils.getMentionedUser
@@ -46,6 +47,8 @@ class StartTeamFightCommand(
 
         val enemyUser = getMentionedUser(event.message, args)
         if (enemyUser == null || enemyUser.id == event.message.author?.id) return
+
+        val isAuto = args.contains("auto")
 
         val playerUnits = resolveTeamOrReply(event, playerUser, isEnemy = false) ?: return
         val enemyUnits = resolveTeamOrReply(event, enemyUser, isEnemy = true) ?: return
@@ -194,10 +197,10 @@ class StartTeamFightCommand(
 
         val controllersByUnitId: Map<String, TurnController> = buildMap {
             playerUnits.forEach { unit ->
-                put(unit.id, PlayerTurnController { u, abilities -> promptPlayerAction(playerUser, u, abilities) })
+                put(unit.id, if (isAuto) RandomAiTurnController() else PlayerTurnController { u, abilities -> promptPlayerAction(playerUser, u, abilities) })
             }
             enemyUnits.forEach { unit ->
-                put(unit.id, PlayerTurnController { u, abilities -> promptPlayerAction(enemyUser, u, abilities) })
+                put(unit.id, if (isAuto) RandomAiTurnController() else PlayerTurnController { u, abilities -> promptPlayerAction(enemyUser, u, abilities) })
             }
         }
 
@@ -329,7 +332,7 @@ class StartTeamFightCommand(
 
             is TeamBattleService.RosterResult.Failure -> {
                 event.message.reply {
-                    content = result.message
+                    content = if (isEnemy) "[Oponente] " else " " + result.message
                 }
                 null
             }
