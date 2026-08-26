@@ -1,20 +1,15 @@
 package me.igorunderplayer.kono.commands.text.testing
 
 import dev.kord.common.entity.ButtonStyle
-import dev.kord.core.Kord
 import dev.kord.core.behavior.edit
 import dev.kord.core.behavior.interaction.respondEphemeral
 import dev.kord.core.behavior.reply
 import dev.kord.core.entity.Message
 import dev.kord.core.entity.User
 import dev.kord.core.entity.effectiveName
-import dev.kord.core.event.interaction.ButtonInteractionCreateEvent
 import dev.kord.core.event.message.MessageCreateEvent
-import dev.kord.core.on
 import dev.kord.rest.builder.component.ActionRowBuilder
 import dev.kord.rest.builder.message.embed
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.withTimeoutOrNull
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandCategory
 import me.igorunderplayer.kono.domain.card.Stat
@@ -27,10 +22,11 @@ import me.igorunderplayer.kono.engine.combat.PlayerTurnController
 import me.igorunderplayer.kono.engine.combat.RandomAiTurnController
 import me.igorunderplayer.kono.engine.combat.TurnController
 import me.igorunderplayer.kono.services.TeamBattleService
+import me.igorunderplayer.kono.utils.combat.createActionRow
+import me.igorunderplayer.kono.utils.combat.createContinueRow
 import me.igorunderplayer.kono.utils.getMentionedUser
+import me.igorunderplayer.kono.utils.interaction.awaitButtonFromAny
 import me.igorunderplayer.kono.utils.interaction.awaitFirstButtonInteraction
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
 import me.igorunderplayer.kono.domain.gameplay.Unit as CombatUnit
 
 
@@ -76,7 +72,7 @@ class StartTeamFightCommand(
                     appendLine("Clique em **Continuar** para começar.")
                 }
             }
-            addComponent(createContinueRow(continueButtonId))
+            addComponent(createContinueRow(continueButtonId, label = "Continuar"))
         }
 
         lateinit var engine: CombatEngine
@@ -205,15 +201,14 @@ class StartTeamFightCommand(
         engine = CombatEngine(state = combatState, controllersByUnitId = controllersByUnitId)
 
         while (!combatState.isFinished()) {
-            val interaction = awaitButtonFromAny(
-                kord = event.kord,
+            val interaction = event.kord.awaitButtonFromAny(
                 customId = continueButtonId,
                 allowedUserIds = allowedUserIds
             )
 
             if (interaction == null) {
                 actionMsg.edit {
-                    components = mutableListOf(createContinueRow(continueButtonId, disabled = true))
+                    components = mutableListOf(createContinueRow(continueButtonId, label = "Continuar", disabled = true))
                 }
                 return
             }
@@ -247,59 +242,7 @@ class StartTeamFightCommand(
                     this.title = title
                     this.description = description
                 }
-                if (!isFinished) addComponent(createContinueRow(continueButtonId))
-            }
-        }
-    }
-
-    /**
-     * Igual ao teu awaitButtonInteraction, mas aceitando clique de qualquer
-     * usuário dentro de [allowedUserIds] — os dois jogadores da luta, no caso
-     * do botão "Continuar". Se quiser, dá pra mover isso pro teu arquivo de
-     * utils de interação como um overload.
-     */
-    private suspend fun awaitButtonFromAny(
-        kord: Kord,
-        customId: String,
-        allowedUserIds: Set<Long>,
-        timeout: Duration = 60.seconds
-    ): ButtonInteractionCreateEvent? {
-        val pressed = CompletableDeferred<ButtonInteractionCreateEvent>()
-        val listener = kord.on<ButtonInteractionCreateEvent> {
-            val interaction = this.interaction
-            if (interaction.component.customId != customId) return@on
-            if (interaction.user.id.value.toLong() !in allowedUserIds) return@on
-            if (!pressed.isCompleted) pressed.complete(this)
-        }
-        return try {
-            withTimeoutOrNull(timeout) { pressed.await() }
-        } finally {
-            listener.cancel()
-        }
-    }
-
-    private fun createContinueRow(customId: String, disabled: Boolean = false) = ActionRowBuilder().apply {
-        interactionButton(ButtonStyle.Primary, customId) {
-            label = "Continuar"
-            this.disabled = disabled
-        }
-    }
-
-    private fun createActionRow(
-        attackButtonId: String,
-        availableAbilities: List<Ability>,
-        abilityButtonIds: List<String>
-    ) = ActionRowBuilder().apply {
-        interactionButton(ButtonStyle.Primary, attackButtonId) {
-            label = "⚔️ Atacar"
-        }
-
-        // Discord permite no máximo 5 botões por linha (1 já usado pro ataque).
-        // TODO: se algum personagem puder ter mais de 4 habilidades ativas
-        // disponíveis ao mesmo tempo, quebrar em uma segunda ActionRow.
-        availableAbilities.take(4).forEachIndexed { index, ability ->
-            interactionButton(ButtonStyle.Secondary, abilityButtonIds[index]) {
-                label = ability.name.take(80)
+                if (!isFinished) addComponent(createContinueRow(continueButtonId, label = "Continuar"))
             }
         }
     }
