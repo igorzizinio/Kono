@@ -5,14 +5,10 @@ import dev.kord.core.behavior.edit
 import dev.kord.core.behavior.interaction.respondEphemeral
 import dev.kord.core.behavior.interaction.response.createEphemeralFollowup
 import dev.kord.core.behavior.reply
-import dev.kord.core.event.interaction.ButtonInteractionCreateEvent
 import dev.kord.core.event.message.MessageCreateEvent
-import dev.kord.core.on
 import dev.kord.rest.builder.component.ActionRowBuilder
 import dev.kord.rest.builder.message.embed
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.time.delay
-import kotlinx.coroutines.withTimeoutOrNull
 import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.commands.CommandCategory
 import me.igorunderplayer.kono.data.repositories.CardRepository
@@ -29,13 +25,18 @@ import me.igorunderplayer.kono.engine.combat.CombatEngine
 import me.igorunderplayer.kono.engine.combat.PlayerTurnController
 import me.igorunderplayer.kono.engine.combat.RandomAiTurnController
 import me.igorunderplayer.kono.engine.combat.TurnController
+import me.igorunderplayer.kono.utils.combat.buildCombatLogEmbeds
+import me.igorunderplayer.kono.utils.combat.buildCombatSummaryEmbed
+import me.igorunderplayer.kono.utils.combat.createActionRow
+import me.igorunderplayer.kono.utils.combat.createContinueRow
+import me.igorunderplayer.kono.utils.combat.createLogButton
+import me.igorunderplayer.kono.utils.combat.resolveCombatantDisplayNames
 import me.igorunderplayer.kono.utils.getMentionedUser
+import me.igorunderplayer.kono.utils.interaction.awaitButtonFromAny
 import me.igorunderplayer.kono.utils.interaction.awaitButtonInteraction
 import me.igorunderplayer.kono.utils.interaction.awaitFirstButtonInteraction
 import java.time.Duration
 import kotlin.random.Random
-import kotlin.time.Duration as KotlinDuration
-import kotlin.time.Duration.Companion.seconds
 
 class FightCommand(
     private val buildUnitHandler: BuildUnitHandler,
@@ -45,10 +46,6 @@ class FightCommand(
     description = "Luta contra um inimigo",
     category = CommandCategory.Game
 ) {
-
-    companion object {
-        private const val EMBED_DESCRIPTION_LIMIT = 3500
-    }
 
     override suspend fun run(event: MessageCreateEvent, args: Array<String>) {
         val discordId = event.message.author?.id?.value?.toLong() ?: return
@@ -387,7 +384,7 @@ class FightCommand(
                 continue
             }
             val buttonInteraction = if (allowedContinueIds.size > 1) {
-                awaitButtonFromAny(event.kord, continueButtonId, allowedContinueIds)
+                event.kord.awaitButtonFromAny(continueButtonId, allowedContinueIds)
             } else {
                 event.kord.awaitButtonInteraction(continueButtonId, allowedContinueIds.first())
             }
@@ -480,152 +477,4 @@ class FightCommand(
         }
     }
 
-    /**
-     * Igual ao awaitButtonInteraction que vocês já têm, mas aceita clique de
-     * qualquer usuário dentro de [allowedUserIds] — usado no botão "Próxima
-     * rodada" em lutas PvP, que os dois jogadores podem apertar.
-     */
-    private suspend fun awaitButtonFromAny(
-        kord: dev.kord.core.Kord,
-        customId: String,
-        allowedUserIds: Set<Long>,
-        timeout: KotlinDuration = 60.seconds
-    ): ButtonInteractionCreateEvent? {
-        val pressed = CompletableDeferred<ButtonInteractionCreateEvent>()
-        val listener = kord.on<ButtonInteractionCreateEvent> {
-            val interaction = this.interaction
-            if (interaction.component.customId != customId) return@on
-            if (interaction.user.id.value.toLong() !in allowedUserIds) return@on
-            if (!pressed.isCompleted) pressed.complete(this)
-        }
-        return try {
-            withTimeoutOrNull(timeout) { pressed.await() }
-        } finally {
-            listener.cancel()
-        }
-    }
-
-    private fun createContinueRow(customId: String, disabled: Boolean = false) = ActionRowBuilder().apply {
-        interactionButton(ButtonStyle.Primary, customId) {
-            label = "Próxima rodada"
-            this.disabled = disabled
-        }
-    }
-
-    private fun createActionRow(
-        attackButtonId: String,
-        availableAbilities: List<Ability>,
-        abilityButtonIds: List<String>
-    ) = ActionRowBuilder().apply {
-        interactionButton(ButtonStyle.Primary, attackButtonId) {
-            label = "⚔️ Atacar"
-        }
-
-        // Discord permite no máximo 5 botões por linha (1 já usado pro ataque).
-        // TODO: se algum personagem puder ter mais de 4 habilidades ativas
-        // disponíveis ao mesmo tempo, quebrar em uma segunda ActionRow.
-        availableAbilities.take(4).forEachIndexed { index, ability ->
-            interactionButton(ButtonStyle.Secondary, abilityButtonIds[index]) {
-                label = ability.name.take(80)
-            }
-        }
-    }
-
-    private fun buildCombatSummaryEmbed(
-        playerDisplayName: String,
-        enemyDisplayName: String,
-        playerStartHp: Double,
-        enemyStartHp: Double,
-        playerFinalHp: Double,
-        enemyFinalHp: Double,
-        playerAlive: Boolean,
-    ): CombatEmbedPage {
-        val summaryDescription = buildString {
-            appendLine("⚔️ **Combate iniciado!**")
-            appendLine("👤 **Jogador:** $playerDisplayName (${playerStartHp.toInt()} HP)")
-            appendLine("👹 **Inimigo:** $enemyDisplayName (${enemyStartHp.toInt()} HP)")
-            appendLine()
-            appendLine(if (playerAlive) "🏆 **Resultado:** Voce venceu!" else "💀 **Resultado:** Voce perdeu...")
-            appendLine("❤️ **HP final Jogador:** ${playerFinalHp.coerceAtLeast(0.0).toInt()}")
-            appendLine("💔 **HP final Inimigo:** ${enemyFinalHp.coerceAtLeast(0.0).toInt()}")
-        }
-
-        return CombatEmbedPage(
-            title = "⚔️ Resultado do Combate",
-            description = summaryDescription.trim(),
-            footer = "Clique no botão abaixo para ver o diário em modo privado"
-        )
-    }
-
-    private fun resolveCombatantDisplayNames(
-        playerName: String,
-        enemyName: String,
-        playerOwnerName: String,
-        enemyOwnerName: String
-    ): Pair<String, String> {
-        if (!playerName.equals(enemyName, ignoreCase = true)) {
-            return playerName to enemyName
-        }
-
-        return "$playerName de ${playerOwnerName.trim()}" to "$enemyName de ${enemyOwnerName.trim()}"
-    }
-
-    private fun buildCombatLogEmbeds(eventLog: List<String>): List<CombatEmbedPage> {
-        val eventPages = paginateEventLog(eventLog)
-        val totalPages = eventPages.size
-
-        return eventPages.mapIndexed { index, page ->
-            CombatEmbedPage(
-                title = "📜 Diario de Batalha",
-                description = page,
-                footer = "Pagina ${index + 1}/$totalPages"
-            )
-        }
-    }
-
-    private fun createLogButton(customButtonId: String, disabled: Boolean = false) = ActionRowBuilder().apply {
-        interactionButton(ButtonStyle.Primary, customButtonId) {
-            label = "Ver diário"
-            this.disabled = disabled
-        }
-    }
-
-    private fun paginateEventLog(eventLog: List<String>): List<String> {
-        val lines = eventLog.ifEmpty {
-            listOf("ℹ️ Nenhum evento foi registrado durante a luta.")
-        }
-
-        val pages = mutableListOf<String>()
-        val current = StringBuilder()
-
-        for (rawLine in lines) {
-            val line = if (rawLine.length > EMBED_DESCRIPTION_LIMIT - 8) {
-                "${rawLine.take(EMBED_DESCRIPTION_LIMIT - 11)}..."
-            } else {
-                rawLine
-            }
-
-            val formattedLine = "• $line"
-
-            if (current.isNotEmpty() && current.length + formattedLine.length + 1 > EMBED_DESCRIPTION_LIMIT) {
-                pages += current.toString()
-                current.clear()
-            }
-
-            if (current.isNotEmpty()) current.append('\n')
-            current.append(formattedLine)
-        }
-
-        if (current.isNotEmpty()) {
-            pages += current.toString()
-        }
-
-        return pages
-    }
-
-    private data class CombatEmbedPage(
-        val title: String,
-        val description: String,
-        val footer: String?
-    )
 }
