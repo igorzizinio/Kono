@@ -141,10 +141,10 @@ class CardCommand(
 
         return buildString {
 
-            append("$${ability.type.prettyName()} • **${ability.name}**")
+            append("${ability.type.prettyName()} • **${ability.name}**")
 
             if (ability.trigger.prettyName().isNotBlank()) {
-                append(" `$ability.trigger.prettyName()`")
+                append(" `${ability.trigger.prettyName()}`")
             }
 
             append("\n")
