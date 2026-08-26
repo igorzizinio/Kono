@@ -182,8 +182,6 @@ class StartTeamFightCommand(
 
             buttonInteraction.interaction.respondEphemeral { content = "🌟 [${ability.name}] escolhida." }
 
-            // Com 3+ unidades por lado isso agora entra em cena de verdade: se a
-            // ability mirar ENEMY/ALLY e houver mais de um candidato, pergunta qual.
             val manualKind = engine.manualTargetKind(ability)
             val target = if (manualKind != null) {
                 val candidates = engine.manualTargetCandidates(unit, manualKind)

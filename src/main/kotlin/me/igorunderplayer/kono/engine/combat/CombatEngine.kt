@@ -641,17 +641,26 @@ class CombatEngine(
                 event is CombatEvent.TurnStart && event.unit == owner && state.turn % trigger.turns.coerceAtLeast(1) == 0
             }
 
-            AbilityTrigger.OnAttack -> event is CombatEvent.Attack && event.attacker == owner
-            AbilityTrigger.OnHit -> event is CombatEvent.BeforeDamage && event.source == owner && !event.isOnHitProc
-            is AbilityTrigger.OnAttackEvery -> {
+            is AbilityTrigger.OnAttack -> {
                 if (event !is CombatEvent.Attack || event.attacker != owner) {
                     false
                 } else {
-                    val interval = trigger.attacks.coerceAtLeast(1)
+                    val interval = trigger.every.coerceAtLeast(1)
                     val key = "attack:${owner.id}:$abilityName"
                     val currentCount = (state.hitCounterByAbilityKey[key] ?: 0) + 1
                     state.hitCounterByAbilityKey[key] = currentCount
                     currentCount % interval == 0
+                }
+            }
+            is AbilityTrigger.OnHit -> {
+                if (event is CombatEvent.BeforeDamage && event.source == owner && !event.isOnHitProc) {
+                    val interval = trigger.every.coerceAtLeast(1)
+                    val key = "onhit:${owner.id}:$abilityName"
+                    val currentCount = (state.hitCounterByAbilityKey[key] ?: 0) + 1
+                    state.hitCounterByAbilityKey[key] = currentCount
+                    currentCount % interval == 0
+                } else {
+                    false
                 }
             }
 
