@@ -5,3 +5,9 @@ enum class DamageType {
     MAGIC,
     TRUE
 }
+
+fun DamageType.prettyName() = when (this) {
+    DamageType.PHYSICAL -> "físico"
+    DamageType.MAGIC -> "mágico"
+    DamageType.TRUE -> "verdadeiro"
+}

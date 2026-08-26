@@ -7,6 +7,7 @@ import me.igorunderplayer.kono.commands.BaseCommand
 import me.igorunderplayer.kono.domain.card.*
 import me.igorunderplayer.kono.domain.card.ability.*
 import me.igorunderplayer.kono.services.CardService
+import me.igorunderplayer.kono.utils.prettyPercent
 
 class CardCommand(
     private val cardService: CardService,
@@ -134,24 +135,16 @@ class CardCommand(
 
     private fun formatAbility(ability: Ability): String {
 
-        val type = when (ability.type) {
-            AbilityType.PASSIVE -> "🟢 PASSIVA"
-            AbilityType.ACTIVE -> "🔵 ATIVA"
-            else -> "⚪ ${ability.type.prettyName()}"
-        }
-
-        val trigger = formatTrigger(ability.trigger)
-
         val description = compactDescription(ability.description)
 
-        val effects = ability.effects.joinToString(" ") { formatEffectCompact(it) }
+        val effects = ability.effects.joinToString(" ") { it.pretty() }
 
         return buildString {
 
-            append("$type • **${ability.name}**")
+            append("$${ability.type.prettyName()} • **${ability.name}**")
 
-            if (trigger.isNotBlank()) {
-                append(" `$trigger`")
+            if (ability.trigger.prettyName().isNotBlank()) {
+                append(" `$ability.trigger.prettyName()`")
             }
 
             append("\n")
@@ -164,94 +157,6 @@ class CardCommand(
         }
     }
 
-    private fun formatTrigger(trigger: AbilityTrigger): String {
-        return when (trigger) {
-            AbilityTrigger.Manual -> "Manual"
-
-            AbilityTrigger.OnTurnStart ->
-                "Início do turno"
-
-            AbilityTrigger.OnBattleStart ->
-                "Início da batalha"
-
-            AbilityTrigger.OnHit ->
-                "Ao acertar"
-
-            AbilityTrigger.OnCrit ->
-                "Ao critar"
-
-            is AbilityTrigger.OnTurnEvery ->
-                "A cada ${trigger.turns} turnos"
-
-            is AbilityTrigger.OnAttackEvery ->
-                "A cada ${trigger.attacks} ataques"
-
-            is AbilityTrigger.OnAttackAgainstTag ->
-                "Contra ${trigger.tag}"
-
-            else -> ""
-        }
-    }
-
-    private fun formatEffectCompact(effect: Effect): String {
-        return when (effect) {
-
-            is Effect.Damage ->
-                "💥 ${effect.value} dano ${damageTypeLabel(effect.damageType)}"
-
-            is Effect.DamageBasedOnStat ->
-                "💥 ${effect.scaling}x ${effect.stat.prettyName()}"
-
-            is Effect.DamageIncreasePercent ->
-                "💥 +${prettyPercent(effect.value)} dano"
-
-            is Effect.Heal ->
-                "💚 Cura ${prettyValue(Stat.HP, effect.value)}"
-
-            is Effect.BuffStat ->
-                "📈 +${effect.value} ${effect.stat.prettyName()}"
-
-            is Effect.StatIncreasePercent ->
-                "📈 +${prettyPercent(effect.percent)} ${effect.stat.prettyName()}"
-
-            is Effect.AddCoins ->
-                "💰 +${effect.value} fichas"
-
-            is Effect.AddCoinsScaling ->
-                "💰 +${effect.base} fichas + bônus por fichas do time"
-
-            is Effect.BuffStatByTeamCoins -> {
-                val mode = when (effect.mode) {
-                    ScalingMode.STACK -> "stack"
-                    ScalingMode.HIGHEST_ONLY -> "maior stack"
-                }
-
-                "🎰 +${effect.valuePerStack} ${effect.stat.prettyName()} / ${effect.coinsPerStack} fichas ($mode)"
-            }
-
-            is Effect.ProtectAlliesDamageShare ->
-                "🛡️ Intercepta ${(effect.sharePercent * 100).toInt()}% do dano aliado"
-
-            Effect.Taunt ->
-                "🎯 Provoca inimigos"
-
-            is Effect.Random ->
-                "🎲 Efeito aleatório: ${effect.profile}"
-
-            is Effect.StatIncreaseWhileBelowHealth ->
-                "⚠️ +${effect.value} ${effect.stat.prettyName()} abaixo de ${(effect.threshold * 100).toInt()}% HP"
-
-            else -> ""
-        }
-    }
-
-    private fun prettyPercent(value: Double): String {
-        return if (value % 1.0 == 0.0) {
-            "${(value * 100).toInt()}%"
-        } else {
-            "${"%.1f".format(value * 100)}%"
-        }
-    }
 
     private fun compactDescription(description: String?): String {
         return description
@@ -293,12 +198,4 @@ class CardCommand(
         return chunks
     }
 
-
-    private fun damageTypeLabel(damageType: DamageType): String {
-        return when (damageType) {
-            DamageType.PHYSICAL -> "físico"
-            DamageType.MAGIC -> "mágico"
-            DamageType.TRUE -> "verdadeiro"
-        }
-    }
 }
