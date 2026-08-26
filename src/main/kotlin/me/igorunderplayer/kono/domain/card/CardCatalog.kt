@@ -49,7 +49,7 @@ object CardCatalog {
                 name = "Gelatina Instável",
                 description = "Ao atacar, o Slime perde massa e sofre 12 de dano em si mesmo.",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnAttack,
+                trigger = AbilityTrigger.OnAttack(),
                 effects = listOf(Effect.Damage(value = 12.0, target = AbilityTarget.SELF))
             )
         )
@@ -107,7 +107,7 @@ object CardCatalog {
                 name = "Injusto",
                 description = "A cada 2 ataques, o Bandido explora uma brecha na defesa do inimigo e causa 18 de dano extra.",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnAttackEvery(2),
+                trigger = AbilityTrigger.OnAttack(every = 2),
                 effects = listOf(Effect.Damage(value = 18.0, target = AbilityTarget.ENEMY))
             )
         )
@@ -212,7 +212,7 @@ object CardCatalog {
                 name = "Olho de Águia",
                 description = "A cada ataque contra um inimigo, Veyn acumula uma Marca de Mira nesse alvo. Cada marca aumenta em 5% o dano de Veyn contra ele. Máximo de 3 marcas.",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnHit,
+                trigger = AbilityTrigger.OnHit(),
                 effects = listOf(
                     Effect.Custom("VEYN_AIM_MARK") { self, target, state, team ->
                         if (target == null || target.hp <= 0) return@Custom
@@ -240,7 +240,7 @@ object CardCatalog {
                 name = "Ponto Fraco",
                 description = "Inimigos com 3 Marcas de Mira revelam seu ponto fraco. Contra eles, os ataques de Veyn ganham 20% de CRIT_CHANCE e ignoram 25% da DEF.",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnHit,
+                trigger = AbilityTrigger.OnHit(),
                 effects = listOf(
                     Effect.Custom("VEYN_WEAK_POINT") { self, target, state, team ->
                         if (target == null || target.hp <= 0) return@Custom
@@ -285,7 +285,7 @@ object CardCatalog {
                 name = "Aposta Certa",
                 description = "Veyn é especialista em esperar o momento certo. Ao atingir um inimigo com 3 Marcas de Mira, seu próximo ataque contra ele recebe +30% de CRIT_DAMAGE.",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnHit,
+                trigger = AbilityTrigger.OnHit(),
                 effects = listOf(
                     Effect.Custom("VEYN_PERFECT_BET") { self, target, state, team ->
                         if (target == null || target.hp <= 0) return@Custom
@@ -1264,7 +1264,7 @@ object CardCatalog {
                 name = "Presença Inabalável",
                 description = "Ao cair abaixo de 40% de vida, a determinação do Cavaleirinho o fortalece: +150% DEF e +40% ATK.",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnBellowHealth(0.40),
+                trigger = AbilityTrigger.OnBellowHealth(threshold = 0.40, target = AbilityTarget.SELF),
                 effects = listOf(
                     Effect.StatIncreasePercent(stat = Stat.DEF, percent = 1.5),
                     Effect.StatIncreasePercent(stat = Stat.ATK, percent = 0.4)
@@ -1343,7 +1343,7 @@ object CardCatalog {
                 name = "Ruptura de Realidade",
                 description = "Ao cair abaixo de 15% de vida, Kono libera energia caótica devastadora nos inimigos. Ocorre uma única vez.",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnBellowHealth(0.15),
+                trigger = AbilityTrigger.OnBellowHealth(threshold = 0.15, target = AbilityTarget.SELF),
                 once = true,
                 effects = listOf(
                     Effect.Damage(value = 1000.0, target = AbilityTarget.ALL_ENEMIES),
@@ -1538,7 +1538,7 @@ object CardCatalog {
                 name = "Corte Rápido",
                 description = "Cada ataque com a katana causa 5 de dano adicional ao alvo.",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnHit,
+                trigger = AbilityTrigger.OnHit(),
                 effects = listOf(Effect.Damage(value = 5.0, target = AbilityTarget.ENEMY))
             )
         )
@@ -1628,7 +1628,7 @@ object CardCatalog {
                 name = "Corte Rápido",
                 description = "Cada ataque com a katana polida causa 10 de dano adicional ao alvo.",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnHit,
+                trigger = AbilityTrigger.OnHit(),
                 effects = listOf(Effect.Damage(value = 10.0, target = AbilityTarget.ENEMY))
             )
         )
@@ -1779,7 +1779,7 @@ object CardCatalog {
                 name = "Última Barreira",
                 description = "Ao cair abaixo de 50% de vida, o escudo se fortalece: +30% DEF permanente. Ocorre uma única vez.",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnBellowHealth(0.50),
+                trigger = AbilityTrigger.OnBellowHealth(threshold = 0.50, target = AbilityTarget.SELF),
                 once = true,
                 effects = listOf(Effect.StatIncreasePercent(stat = Stat.DEF, percent = 0.30))
             )
@@ -1851,7 +1851,7 @@ object CardCatalog {
                 name = "Flecha de Prata",
                 description = "A cada 3 ataques, dispara uma flecha que causa 7% do HP máximo do alvo como dano real.",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnAttackEvery(3),
+                trigger = AbilityTrigger.OnHit(every = 3),
                 effects = listOf(
                     Effect.DamageBasedOnStat(
                         stat = Stat.HP,
@@ -1887,7 +1887,7 @@ object CardCatalog {
                 name = "Rajada All-In",
                 description = "Cada ataque causa 18 de dano extra pela ousadia do portador.",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnHit,
+                trigger = AbilityTrigger.OnHit(),
                 effects = listOf(Effect.Damage(value = 18.0, target = AbilityTarget.ENEMY))
             ),
             Ability(
@@ -1911,12 +1911,12 @@ object CardCatalog {
         rarity = Rarity.LEGENDARY,
         slot = EquipmentSlot.BOOTS,
         baseStats = mapOf(
-            Stat.SPEED to 44.0,
+            Stat.SPEED to 36.0,
             Stat.CRIT_CHANCE to 0.10,
             Stat.ATK to 14.0
         ),
         statsPerLevel = mapOf(
-            Stat.SPEED to 4.5,
+            Stat.SPEED to 6.0,
             Stat.CRIT_CHANCE to 0.01
         ),
         tags = setOf("speed", "lightning", "crit"),
@@ -1925,7 +1925,7 @@ object CardCatalog {
                 name = "Carga Relâmpago",
                 description = "A cada ataque, libera uma descarga elétrica que causa 18% da SPEED atual como dano mágico.",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnHit,
+                trigger = AbilityTrigger.OnHit(),
                 effects = listOf(
                     Effect.DamageBasedOnStat(
                         stat = Stat.SPEED,
@@ -2036,7 +2036,7 @@ object CardCatalog {
                 name = "Fé Ardente",
                 description = "Cada ataque fortalece a fé permanentemente: +3.5 ATK fixo.",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnHit,
+                trigger = AbilityTrigger.OnHit(),
                 effects = listOf(
                     Effect.BuffStat(stat = Stat.ATK, value = 3.5)
                 )
@@ -2045,18 +2045,13 @@ object CardCatalog {
                 name = "Chama Divina",
                 description = "Cada ataque aplica a chama divina ao alvo, causando 20% do ATK atual como dano real adicional.",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnHit,
+                trigger = AbilityTrigger.OnAttack(),
                 effects = listOf(
-                    Effect.Custom("Real damage 20% ATK") { self, unit, state, _ ->
-                        val damage = (self.stats[Stat.ATK] ?: 0.0) * 0.20
-                        if (damage <= 0 || unit == null) return@Custom
-                        state.combatLog += "🔥 A chama divina penetra em ${unit.card.name} causando ${
-                            "%.1f".format(
-                                damage
-                            )
-                        } de dano real!"
-                        unit.hp -= damage
-                    }
+                    Effect.DamageBasedOnStat(
+                        stat = Stat.ATK,
+                        scaling = 0.20,
+                        damageType = DamageType.TRUE
+                    )
                 )
             ),
             Ability(
@@ -2070,7 +2065,7 @@ object CardCatalog {
                 name = "Chama do Escolhido",
                 description = "Abaixo de 40% de vida, o poder do deus sol explode: +65% ATK e +22% roubo de vida.",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnBellowHealth(0.40),
+                trigger = AbilityTrigger.OnBellowHealth(threshold = 0.40, target = AbilityTarget.SELF),
                 effects = listOf(
                     Effect.StatIncreasePercent(stat = Stat.ATK, percent = 0.65),
                     Effect.BuffStat(stat = Stat.LIFESTEAL, value = 0.22)
@@ -2111,7 +2106,7 @@ object CardCatalog {
                 name = "Garra Desesperada",
                 description = "A cada golpe desferido, o Goblin fica mais agressivo e ganha +3 de ATK permanente.",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnHit,
+                trigger = AbilityTrigger.OnHit(),
                 effects = listOf(Effect.BuffStat(stat = Stat.ATK, value = 3.0, target = AbilityTarget.SELF))
             )
         )
@@ -2326,7 +2321,7 @@ object CardCatalog {
                 name = "Golpe Corrosivo",
                 description = "Cada ataque corrói 5% da DEF atual do alvo. Máximo de 3 acumulações por inimigo (~14% adicional).",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnHit,
+                trigger = AbilityTrigger.OnHit(),
                 effects = listOf(
                     Effect.Custom("SIEGEBREAKER_CORROSIVE") { _, target, state, _ ->
                         if (target == null) return@Custom
@@ -2416,7 +2411,7 @@ object CardCatalog {
                 name = "Flecha Perfurante",
                 description = "A cada 3 ataques, dispara uma flecha carregada que causa 20 de dano extra e reduz permanentemente a DEF do alvo em 6.",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnAttackEvery(3),
+                trigger = AbilityTrigger.OnAttack(every = 3),
                 effects = listOf(
                     Effect.Damage(value = 20.0, target = AbilityTarget.ENEMY),
                     Effect.BuffStat(stat = Stat.DEF, value = -6.0, target = AbilityTarget.ENEMY)
@@ -2529,7 +2524,7 @@ object CardCatalog {
                 name = "Corte Gêmeo Espectral",
                 description = "Um espectro replica os ataques da lâmina esquerda causando dano mágico adicional.",
                 type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnHit,
+                trigger = AbilityTrigger.OnHit(),
                 effects = listOf(
                     Effect.DamageBasedOnStat(Stat.INT, 0.8, damageType = DamageType.MAGIC)
                 )
@@ -2638,9 +2633,9 @@ object CardCatalog {
             ),
             Ability(
                 name = "Redemoinho das Lâminas Gêmeas",
-                description = "Quando ambas as lâminas estão presentes, a cada 3 ataques desencadeia um giro devastador — 4 golpes alternados: físico (INT), mágico (ATK), físico (INT), mágico (ATK) — causando 45% por golpe.",
-                type = AbilityType.PASSIVE,
-                trigger = AbilityTrigger.OnAttackEvery(3),
+                description = "Quando ambas as lâminas estão presentes, um golpe divino é desbloqueado, um giro com 4 golpes alternados: físico (INT), mágico (ATK), físico (INT), mágico (ATK) — causando 45% por golpe.",
+                type = AbilityType.ACTIVE,
+                trigger = AbilityTrigger.Manual,
                 effects = listOf(
                     Effect.Custom("Twin spin attack") { self, target, state, team ->
                         val twin = self.equipments.find { it.id == "KONO_TWINBLADE_L" }
