@@ -2,8 +2,11 @@ package me.igorunderplayer.kono.domain.card.ability
 
 import me.igorunderplayer.kono.domain.card.Stat
 import me.igorunderplayer.kono.domain.card.StatSource
+import me.igorunderplayer.kono.domain.card.prettyName
+import me.igorunderplayer.kono.domain.card.prettyValue
 import me.igorunderplayer.kono.domain.gameplay.CombatState
 import me.igorunderplayer.kono.domain.team.TeamState
+import me.igorunderplayer.kono.utils.prettyPercent
 import me.igorunderplayer.kono.domain.gameplay.Unit as CombatUnit
 
 
@@ -90,4 +93,57 @@ sealed class Effect {
         val name: String,
         val action: (self: CombatUnit, target: CombatUnit?, state: CombatState, team: TeamState?) -> Unit
     ) : Effect()
+}
+
+
+fun Effect.pretty(): String {
+    return when (this) {
+
+        is Effect.Damage ->
+            "💥 ${this.value} dano ${this.damageType.prettyName()}"
+
+        is Effect.DamageBasedOnStat ->
+            "💥 ${this.scaling}x ${this.stat.prettyName()}"
+
+        is Effect.DamageIncreasePercent ->
+            "💥 +${prettyPercent(this.value)} dano"
+
+        is Effect.Heal ->
+            "💚 Cura ${prettyValue(Stat.HP, this.value)}"
+
+        is Effect.BuffStat ->
+            "📈 +${this.value} ${this.stat.prettyName()}"
+
+        is Effect.StatIncreasePercent ->
+            "📈 +${prettyPercent(this.percent)} ${this.stat.prettyName()}"
+
+        is Effect.AddCoins ->
+            "💰 +${this.value} fichas"
+
+        is Effect.AddCoinsScaling ->
+            "💰 +${this.base} fichas + bônus por fichas do time"
+
+        is Effect.BuffStatByTeamCoins -> {
+            val mode = when (this.mode) {
+                ScalingMode.STACK -> "stack"
+                ScalingMode.HIGHEST_ONLY -> "maior stack"
+            }
+
+            "🎰 +${this.valuePerStack} ${this.stat.prettyName()} / ${this.coinsPerStack} fichas ($mode)"
+        }
+
+        is Effect.ProtectAlliesDamageShare ->
+            "🛡️ Intercepta ${(this.sharePercent * 100).toInt()}% do dano aliado"
+
+        Effect.Taunt ->
+            "🎯 Provoca inimigos"
+
+        is Effect.Random ->
+            "🎲 Efeito aleatório: ${this.profile}"
+
+        is Effect.StatIncreaseWhileBelowHealth ->
+            "⚠️ +${this.value} ${this.stat.prettyName()} abaixo de ${(this.threshold * 100).toInt()}% HP"
+
+        else -> ""
+    }
 }

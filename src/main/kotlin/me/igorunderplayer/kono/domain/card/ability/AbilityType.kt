@@ -8,7 +8,7 @@ enum class AbilityType {
 
 fun AbilityType.prettyName(): String {
     return when (this) {
-        AbilityType.ACTIVE -> "Ativo"
-        AbilityType.PASSIVE -> "Passivo"
+        AbilityType.ACTIVE -> "🔵 ATIVA"
+        AbilityType.PASSIVE -> "🟢 PASSIVA"
     }
 }
