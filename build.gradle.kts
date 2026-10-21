@@ -25,17 +25,17 @@ dependencies {
     testImplementation(kotlin("test"))
 
     // Dependency Injection
-    implementation("io.insert-koin:koin-core:4.2.0")
+    implementation("io.insert-koin:koin-core:4.2.2")
 
     // Ktor
-    implementation("io.ktor:ktor-client-core:3.5.1")
-    implementation("io.ktor:ktor-client-cio:3.5.1")
-    implementation("io.ktor:ktor-client-content-negotiation:3.5.1")
-    implementation("io.ktor:ktor-serialization-kotlinx-json:3.5.1")
+    implementation("io.ktor:ktor-client-core:3.6.0")
+    implementation("io.ktor:ktor-client-cio:3.6.0")
+    implementation("io.ktor:ktor-client-content-negotiation:3.6.0")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:3.6.0")
 
-    implementation("io.ktor:ktor-server-core-jvm:3.5.1")
-    implementation("io.ktor:ktor-server-netty-jvm:3.5.1")
-    implementation("io.ktor:ktor-server-content-negotiation:3.5.1")
+    implementation("io.ktor:ktor-server-core-jvm:3.6.0")
+    implementation("io.ktor:ktor-server-netty-jvm:3.6.0")
+    implementation("io.ktor:ktor-server-content-negotiation:3.6.0")
 
     // Logging
     implementation("ch.qos.logback:logback-classic:1.5.32")
@@ -44,12 +44,12 @@ dependencies {
     implementation("dev.kord:kord-core:0.18.1")
 
     // Riot
-    implementation("com.github.stelar7:R4J:2.7.0")
+    implementation("com.github.stelar7:R4J:2.8.1")
 
     // Database
-    implementation("org.ktorm:ktorm-core:4.1.1")
-    implementation("org.ktorm:ktorm-support-postgresql:4.1.1")
-    implementation("org.postgresql:postgresql:42.7.10")
+    implementation("org.ktorm:ktorm-core:4.2.1")
+    implementation("org.ktorm:ktorm-support-postgresql:4.2.1")
+    implementation("org.postgresql:postgresql:42.7.14")
 }
 
 tasks {

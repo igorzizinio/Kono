@@ -17,8 +17,9 @@ import me.igorunderplayer.kono.services.RandomMessageService
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-class Server : KoinComponent {
-    val randomMessageService: RandomMessageService by inject()
+class Server(
+    val randomMessageService: RandomMessageService
+) {
     suspend fun start() {
         embeddedServer(Netty, 8080, "0.0.0.0") {
             install(ContentNegotiation) {

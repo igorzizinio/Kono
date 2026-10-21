@@ -59,7 +59,7 @@ object Launcher {
         }
 
         val serverJob = launch {
-            Server().start()
+            koin.get<Server>().start()
         }
 
         joinAll(botJob, serverJob)
