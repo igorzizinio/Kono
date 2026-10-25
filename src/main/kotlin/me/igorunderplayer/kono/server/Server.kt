@@ -1,4 +1,4 @@
-package me.igorunderplayer.kono
+package me.igorunderplayer.kono.server
 
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
@@ -13,9 +13,8 @@ import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
 import me.igorunderplayer.kono.data.dto.CreateMessageRequest
 import me.igorunderplayer.kono.data.dto.MessageResponse
+import me.igorunderplayer.kono.server.routes.konoRoutes
 import me.igorunderplayer.kono.services.RandomMessageService
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 class Server(
     val randomMessageService: RandomMessageService
@@ -41,6 +40,8 @@ class Server(
                     basePackage = "views",
                     index = "index.html"
                 )
+
+                konoRoutes()
 
                 get("/random-messages/api") {
                     val msg = randomMessageService.getRandomMessage()
