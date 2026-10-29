@@ -19,6 +19,7 @@ sealed class DailyResult {
 
     data class Success(
         val reward: Int,
+        val konosReward: Long,
         val streak: Int,
         val balance: Int,
         val bonusApplied: Boolean,
@@ -32,6 +33,8 @@ class DailyService(
 
     private val RESET_HOUR = 3
     private val ZONE = ZoneId.of("UTC")
+
+    private val DAILY_KONOS = 800L
 
     suspend fun claimDaily(discordId: Long): DailyResult {
         val user = userRepository.getUserByDiscordId(discordId)
@@ -49,13 +52,16 @@ class DailyService(
 
         val newStreak = calculateStreak(lastClaim, currentReset, user.dailyStreak)
         val (reward, bonusApplied) = calculateReward(newStreak)
+        val konosReward = DAILY_KONOS
 
+        val newKonos = user.konos + konosReward
         val newEssence = user.essence + reward
 
         val success = userRepository.updateDaily(
             userId = user.id,
-            money = newEssence,
+            essences = newEssence,
             streak = newStreak,
+            konos = newKonos,
             claimedAt = now.toInstant(),
             currentReset = currentReset.toInstant()
         )
@@ -64,6 +70,7 @@ class DailyService(
 
         return DailyResult.Success(
             reward = reward,
+            konosReward = konosReward,
             streak = newStreak,
             balance = newEssence,
             bonusApplied = bonusApplied,

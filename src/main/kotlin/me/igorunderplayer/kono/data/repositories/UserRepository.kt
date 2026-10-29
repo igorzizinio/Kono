@@ -22,12 +22,6 @@ class UserRepository(private val databaseManager: DatabaseManager) {
             .map { row -> Users.createEntity(row) }
     }
 
-    suspend fun getUsers(count: Int): List<User> = withContext(Dispatchers.IO) {
-        database.from(Users).select()
-            .limit(count)
-            .map { row -> Users.createEntity(row) }
-    }
-
     suspend fun getUsers(count: Int, orderBy: OrderByExpression, startAt: Int): List<User> =
         withContext(Dispatchers.IO) {
             database.from(Users).select()
@@ -65,13 +59,15 @@ class UserRepository(private val databaseManager: DatabaseManager) {
 
     suspend fun updateDaily(
         userId: Int,
-        money: Int,
+        essences: Int,
         streak: Int,
+        konos: Long,
         claimedAt: Instant,
-        currentReset: Instant
+        currentReset: Instant,
     ): Boolean = withContext(Dispatchers.IO) {
         val rowsUpdated = database.update(Users) {
-            set(it.essence, money)
+            set(it.essence, essences)
+            set(it.konos, konos)
             set(it.dailyStreak, streak)
             set(it.dailyRewardClaimedAt, claimedAt)
 

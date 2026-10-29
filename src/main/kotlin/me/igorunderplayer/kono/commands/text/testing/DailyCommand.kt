@@ -33,7 +33,7 @@ class DailyCommand(
 
                 event.message.channel.createMessage(
                     """
-                💰 Você recebeu **${result.reward}** essences!
+                💰 Você recebeu **${result.reward}** essences e **${result.konosReward}**!
                 
                 📊 Streak: **${result.streak}/7**
                 💳 Essences: **${result.balance}**$weeklyText
