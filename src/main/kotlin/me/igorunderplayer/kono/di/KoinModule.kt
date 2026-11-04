@@ -65,6 +65,7 @@ val appModule = module {
     singleOf(::RandomMessageRepository)
     singleOf(::CardRepository)
     singleOf(::CardInstanceRepository)
+    singleOf(::DeckRepository)
     singleOf(::BattleTeamRepository)
     singleOf(::BattleVictoryRepository)
     singleOf(::EquippedCardsRepository)
@@ -79,6 +80,8 @@ val appModule = module {
     singleOf(::DailyService)
     singleOf(::WorkService)
     singleOf(::CardService)
+    singleOf(::CardMatchManager)
+    singleOf(::DeckService)
     singleOf(::GachaService)
     singleOf(::TeamBattleService)
     singleOf(::OpenRouterAIService)
@@ -130,18 +133,11 @@ val appModule = module {
     factoryOf(::WorkCommand) { bind<BaseCommand>() }
     factoryOf(::PullCommand) { bind<BaseCommand>() }
     factoryOf(::InventoryCommand) { bind<BaseCommand>() }
-    factoryOf(::EquipItemCommand) { bind<BaseCommand>() }
-    factoryOf(::EquipListCommand) { bind<BaseCommand>() }
-    factoryOf(::UnequipCommand) { bind<BaseCommand>() }
+    factoryOf(::DeckCommand) { bind<BaseCommand>() }
     factoryOf(::TopCommand) { bind<BaseCommand>() }
-    factoryOf(::FightCommand) { bind<BaseCommand>() }
-    factoryOf(::TeamCommand) { bind<BaseCommand>() }
-    factoryOf(::CharacterCommand) { bind<BaseCommand>() }
-    factoryOf(::WeaponCommand) { bind<BaseCommand>() }
     factoryOf(::CardCommand) { bind<BaseCommand>() }
     factoryOf(::StoryCommand) { bind<BaseCommand>() }
     factoryOf(::AtmCommand) { bind<BaseCommand>() }
-    factoryOf(::StartTeamFightCommand) { bind<BaseCommand>() }
 
     // ========================
     // SLASH COMMANDS
@@ -153,14 +149,12 @@ val appModule = module {
     factoryOf(::DestinoSlashCommand) { bind<KonoSlashCommand>() }
     factoryOf(::LoLSlashCommands) { bind<KonoSlashCommand>() }
     factoryOf(::ImageSlashCommands) { bind<KonoSlashCommand>() }
-    factoryOf(::EquipamentosSlashCommand) { bind<KonoSlashCommand>() }
     factoryOf(::PullSlashCommand) { bind<KonoSlashCommand>() }
     factoryOf(::DailySlashCommand) { bind<KonoSlashCommand>() }
     factoryOf(::WorkSlashCommand) { bind<KonoSlashCommand>() }
     factoryOf(::InventarioSlashCommand) { bind<KonoSlashCommand>() }
-    factoryOf(::BatalhaSlashCommand) { bind<KonoSlashCommand>() }
-    factoryOf(::PersonagemSlashCommand) { bind<KonoSlashCommand>() }
-    factoryOf(::TimeSlashCommand) { bind<KonoSlashCommand>() }
+    factoryOf(::DeckSlashCommand) { bind<KonoSlashCommand>() }
+    factoryOf(::DueloSlashCommand) { bind<KonoSlashCommand>() }
 
 
     // ========================

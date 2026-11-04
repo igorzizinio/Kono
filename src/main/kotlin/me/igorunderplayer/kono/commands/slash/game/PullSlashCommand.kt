@@ -78,5 +78,6 @@ class PullSlashCommand(
     private fun cardTypeLabel(type: CardType) = when (type) {
         CardType.CHARACTER -> "👤 Personagem"
         CardType.EQUIPMENT -> "🎒 Equipamento"
+        CardType.ACTION -> "🃏 Ação"
     }
 }

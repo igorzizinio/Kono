@@ -32,7 +32,7 @@ class InventarioSlashCommand(
             name = "tipo",
             description = "Tipo de carta a exibir",
             type = ApplicationCommandOptionType.String,
-            required = OptionalBoolean.Value(true),
+            required = OptionalBoolean.Value(false),
             choices = Optional(
                 listOf(
                     Choice.StringChoice(name = "👤 Personagens", nameLocalizations = Optional(), value = "personagens"),
@@ -41,6 +41,7 @@ class InventarioSlashCommand(
                         nameLocalizations = Optional(),
                         value = "equipamentos"
                     ),
+                    Choice.StringChoice(name = "🃏 Ações", nameLocalizations = Optional(), value = "acoes"),
                 )
             )
         ),
@@ -60,11 +61,21 @@ class InventarioSlashCommand(
     override suspend fun run(event: ChatInputCommandInteractionCreateEvent) {
         val deferred = event.interaction.deferEphemeralResponse()
         val discordId = event.interaction.user.id.value.toLong()
-        val tipoToken = event.interaction.command.strings["tipo"] ?: "personagens"
+        val tipoToken = event.interaction.command.strings["tipo"]
         val page = (event.interaction.command.integers["pagina"] ?: 1L).toInt().coerceAtLeast(1)
 
-        val cardType = if (tipoToken == "personagens") CardType.CHARACTER else CardType.EQUIPMENT
-        val tipoLabel = if (cardType == CardType.CHARACTER) "👤 Personagens" else "🎒 Equipamentos"
+        val cardType = when (tipoToken) {
+            "personagens" -> CardType.CHARACTER
+            "equipamentos" -> CardType.EQUIPMENT
+            "acoes" -> CardType.ACTION
+            else -> null
+        }
+        val tipoLabel = when (cardType) {
+            CardType.CHARACTER -> "👤 Personagens"
+            CardType.EQUIPMENT -> "🎒 Equipamentos"
+            CardType.ACTION -> "🃏 Ações"
+            null -> "Todas as cartas"
+        }
 
         val user = userService.getUserByDiscordId(discordId)
         if (user == null) {
@@ -87,7 +98,7 @@ class InventarioSlashCommand(
                 val def = cardRepository.getDefinition(defId) ?: return@mapNotNull null
                 InventoryEntry(def, list.size, list)
             }
-            .filter { it.definition.type == cardType }
+            .filter { cardType == null || it.definition.type == cardType }
             .sortedWith(compareByDescending<InventoryEntry> { it.definition.rarity.ordinal }.thenBy { it.definition.name })
 
         if (entries.isEmpty()) {

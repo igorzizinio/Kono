@@ -3,6 +3,8 @@
 -- =========================
 
 DROP TABLE IF EXISTS tb_equipped_cards CASCADE;
+DROP TABLE IF EXISTS tb_deck_cards CASCADE;
+DROP TABLE IF EXISTS tb_decks CASCADE;
 DROP TABLE IF EXISTS tb_card_instances CASCADE;
 DROP TABLE IF EXISTS tb_battle_victories CASCADE;
 DROP TABLE IF EXISTS tb_battle_team_slots CASCADE;
@@ -106,6 +108,34 @@ CREATE INDEX idx_card_instances_user
 
 CREATE INDEX idx_card_instances_definition
     ON tb_card_instances(definition_id);
+
+-- =========================
+-- PLAYER DECKS
+-- =========================
+
+CREATE TABLE tb_decks (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL REFERENCES tb_users(id) ON DELETE CASCADE,
+    name VARCHAR(32) NOT NULL,
+    active BOOLEAN NOT NULL DEFAULT FALSE,
+    CONSTRAINT unique_user_deck_name UNIQUE (user_id, name)
+);
+
+CREATE TABLE tb_deck_cards (
+    id SERIAL PRIMARY KEY,
+    deck_id INT NOT NULL REFERENCES tb_decks(id) ON DELETE CASCADE,
+    slot INT NOT NULL,
+    definition_id TEXT NOT NULL,
+    CONSTRAINT unique_deck_slot UNIQUE (deck_id, slot),
+    CONSTRAINT valid_deck_slot CHECK (slot >= 0 AND slot < 20),
+    CONSTRAINT non_empty_definition CHECK (length(trim(definition_id)) > 0)
+);
+
+CREATE INDEX idx_decks_user ON tb_decks(user_id);
+CREATE INDEX idx_deck_cards_deck ON tb_deck_cards(deck_id);
+CREATE UNIQUE INDEX unique_active_deck_per_user
+    ON tb_decks(user_id)
+    WHERE active = TRUE;
 
 CREATE INDEX idx_equipped_character
     ON tb_equipped_cards(character_instance_id);

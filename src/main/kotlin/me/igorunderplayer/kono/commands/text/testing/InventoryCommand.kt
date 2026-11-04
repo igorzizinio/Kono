@@ -22,8 +22,8 @@ class InventoryCommand(
     private val equippedCardsRepository: EquippedCardsRepository,
     private val userService: UserService,
 ) : BaseCommand(
-    name = "inventory",
-    description = "Use inventory item|perso <pagina>",
+    name = "inventario",
+    description = "Exibe suas cartas: inventario [personagens|equipamentos|acoes] [pagina]",
     category = CommandCategory.Game,
     aliases = listOf("inv")
 ) {
@@ -45,14 +45,9 @@ class InventoryCommand(
     override suspend fun run(event: MessageCreateEvent, args: Array<String>) {
         val discordId = event.message.author?.id?.value?.toLong() ?: return
         val filterToken = args.getOrNull(0)?.lowercase()
-        if (filterToken == null) {
-            event.message.reply { content = "Use: `inventory item <pagina>` ou `inventory char <pagina>`." }
-            return
-        }
-
         val filter = parseFilter(filterToken)
-        if (filter == null) {
-            event.message.reply { content = "Filtro inválido. Use `item` ou `char`." }
+        if (filterToken != null && filter == null) {
+            event.message.reply { content = "Filtro inválido. Use `personagens`, `equipamentos` ou `acoes`." }
             return
         }
 
@@ -79,7 +74,7 @@ class InventoryCommand(
             }
             .sortedWith(compareByDescending<InventoryEntry> { it.definition.rarity.ordinal }.thenBy { it.definition.name })
 
-        val filteredEntries = entries.filter { it.definition.type == filter.type }
+        val filteredEntries = filter?.let { selected -> entries.filter { it.definition.type == selected.type } } ?: entries
 
         val section = buildSection(
             entries = filteredEntries,
@@ -89,19 +84,20 @@ class InventoryCommand(
 
         event.message.reply {
             embed {
-                title = "📦 Seu Inventário - ${filter.title}"
+                title = "📦 Seu Inventário - ${filter?.title ?: "Todas as cartas"}"
                 description = section.body.ifBlank { "Nenhuma carta nesta página." }
                 footer {
-                    text = "Página ${section.safePage}/${section.totalPages} • Use inventory $filterToken <pagina>"
+                    text = "Página ${section.safePage}/${section.totalPages} • Use inventario [tipo] <pagina>"
                 }
             }
         }
     }
 
-    private fun parseFilter(token: String): InventoryFilter? {
+    private fun parseFilter(token: String?): InventoryFilter? {
         return when (token) {
             "perso", "personagem", "char", "character" -> InventoryFilter(CardType.CHARACTER, "👤 Personagens")
             "item", "itens", "equip", "equipment" -> InventoryFilter(CardType.EQUIPMENT, "🎒 Equipamentos")
+            "action", "actions", "acao", "acoes" -> InventoryFilter(CardType.ACTION, "🃏 Ações")
             else -> null
         }
     }

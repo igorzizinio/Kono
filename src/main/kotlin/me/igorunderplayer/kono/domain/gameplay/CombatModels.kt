@@ -12,13 +12,12 @@ data class Unit(
     var hp: Double,
     val stats: MutableMap<Stat, Double>,
 
-    val abilities: List<Ability>,
+    val abilities: MutableList<Ability>,
     val tags: Set<String>,
 
     var slot: Int = 0,
 
-    val equipments: List<CardDefinition> = emptyList(),
+    val equipments: MutableList<CardDefinition> = mutableListOf(),
 )
 
 typealias Team = TeamState
-

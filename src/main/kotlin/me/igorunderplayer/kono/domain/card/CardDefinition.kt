@@ -10,11 +10,12 @@ data class CardDefinition(
     val type: CardType,
     val rarity: Rarity,
     val slot: EquipmentSlot? = null,
+    val attackCost: Int = 1,
+    val apCost: Int = 0,
 
     val faction: String? = null,
 
     val baseStats: Map<Stat, Double>,
-    val statsPerLevel: Map<Stat, Double>,
 
     val tags: Set<String> = emptySet(),
 

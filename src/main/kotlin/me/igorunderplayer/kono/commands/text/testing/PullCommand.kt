@@ -73,6 +73,6 @@ class PullCommand(
     private fun resolveCardType(cardType: CardType): String = when (cardType) {
         CardType.CHARACTER -> "👤"
         CardType.EQUIPMENT -> "🎒"
+        CardType.ACTION -> "🃏"
     }
 }
-

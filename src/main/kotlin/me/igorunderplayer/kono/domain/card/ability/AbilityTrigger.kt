@@ -15,6 +15,7 @@ sealed class AbilityTrigger {
     data class OnBellowHealth(val threshold: Double, val target: AbilityTarget) : AbilityTrigger()
     data object OnDeath : AbilityTrigger()
 
+    @Deprecated("Critical hits were removed in the duel rules.")
     data object OnCrit : AbilityTrigger()
 
     data object Manual : AbilityTrigger()

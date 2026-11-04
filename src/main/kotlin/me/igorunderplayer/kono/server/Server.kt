@@ -14,10 +14,14 @@ import kotlinx.serialization.json.Json
 import me.igorunderplayer.kono.data.dto.CreateMessageRequest
 import me.igorunderplayer.kono.data.dto.MessageResponse
 import me.igorunderplayer.kono.server.routes.konoRoutes
+import me.igorunderplayer.kono.services.CardMatchManager
+import me.igorunderplayer.kono.services.CardService
 import me.igorunderplayer.kono.services.RandomMessageService
 
 class Server(
-    val randomMessageService: RandomMessageService
+    val randomMessageService: RandomMessageService,
+    val cardService: CardService,
+    val cardMatchManager: CardMatchManager
 ) {
     suspend fun start() {
         embeddedServer(Netty, 8080, "0.0.0.0") {
@@ -41,7 +45,7 @@ class Server(
                     index = "index.html"
                 )
 
-                konoRoutes()
+                konoRoutes(cardService, cardMatchManager)
 
                 get("/random-messages/api") {
                     val msg = randomMessageService.getRandomMessage()

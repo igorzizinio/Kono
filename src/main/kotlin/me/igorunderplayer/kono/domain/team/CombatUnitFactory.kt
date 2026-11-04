@@ -15,11 +15,6 @@ object CombatUnitFactory {
     ): Unit {
         val stats = definition.baseStats.toMutableMap()
 
-        val safeLevel = level.coerceAtLeast(1)
-        definition.statsPerLevel.forEach { (stat, perLevel) ->
-            stats[stat] = (stats[stat] ?: 0.0) + (perLevel * (safeLevel - 1))
-        }
-
         equips.forEach { equip ->
             equip.baseStats.forEach { (stat, value) ->
                 stats[stat] = (stats[stat] ?: 0.0) + value
@@ -39,10 +34,9 @@ object CombatUnitFactory {
             card = definition,
             hp = stats[Stat.HP] ?: 100.0,
             stats = stats,
-            abilities = abilities,
+            abilities = abilities.toMutableList(),
             tags = tags,
-            equipments = equips
+            equipments = equips.toMutableList()
         )
     }
 }
-

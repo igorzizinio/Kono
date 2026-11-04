@@ -84,17 +84,6 @@ class CardCommand(
                     }
                 }
 
-                // 📈 Scaling
-                if (card.statsPerLevel.isNotEmpty()) {
-                    field {
-                        name = "📈 Stats por nível"
-                        value = card.statsPerLevel.entries.joinToString("\n") { (stat, value) ->
-                            "${stat.prettyName()}: ${prettyValue(stat, value)}"
-                        }
-                        inline = true
-                    }
-                }
-
                 // 🏷️ Tags
                 if (card.tags.isNotEmpty()) {
                     field {

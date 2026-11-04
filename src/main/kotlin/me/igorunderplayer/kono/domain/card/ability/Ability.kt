@@ -7,7 +7,8 @@ data class Ability(
     val type: AbilityType,
     val trigger: AbilityTrigger,
     val effects: List<Effect>,
+    val apCost: Int = 0,
+    val usesPerTurn: Int? = null,
     val once: Boolean = false
 )
-
 

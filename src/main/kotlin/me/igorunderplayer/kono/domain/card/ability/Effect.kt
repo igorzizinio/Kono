@@ -17,6 +17,7 @@ sealed class Effect {
         val damageType: DamageType = DamageType.PHYSICAL
     ) : Effect()
 
+    @Deprecated("Use fixed damage modifiers in the duel rules.")
     data class DamageIncreasePercent(
         val value: Double,
         val target: AbilityTarget = AbilityTarget.ENEMY
@@ -36,6 +37,7 @@ sealed class Effect {
         val threshold: Double
     ) : Effect()
 
+    @Deprecated("Use timed fixed-value buffs in the duel rules.")
     data class StatIncreasePercent(
         val stat: Stat,
         val percent: Double,
@@ -47,11 +49,20 @@ sealed class Effect {
         val target: AbilityTarget = AbilityTarget.SELF
     ) : Effect()
 
+    data class GainAp(val value: Int) : Effect()
+
     data class BuffStat(
         val stat: Stat,
         val value: Double,
-        val target: AbilityTarget = AbilityTarget.SELF
+        val target: AbilityTarget = AbilityTarget.SELF,
+        val durationRounds: Int = 1
     ) : Effect()
+
+    data class DrawCards(val amount: Int = 1) : Effect()
+
+    data object RemoveBuff : Effect()
+
+    data object FreeSwap : Effect()
 
     data class AddCoins(
         val value: Int,
@@ -112,7 +123,16 @@ fun Effect.pretty(): String {
             "💚 Cura ${prettyValue(Stat.HP, this.value)}"
 
         is Effect.BuffStat ->
-            "📈 +${this.value} ${this.stat.prettyName()}"
+            "📈 +${this.value} ${this.stat.prettyName()} por ${this.durationRounds} rodada(s)"
+
+        is Effect.DrawCards ->
+            "🃏 Compra ${this.amount} carta(s)"
+
+        Effect.RemoveBuff ->
+            "🧹 Remove buffs temporários"
+
+        Effect.FreeSwap ->
+            "🔄 Próxima troca é gratuita"
 
         is Effect.StatIncreasePercent ->
             "📈 +${prettyPercent(this.percent)} ${this.stat.prettyName()}"

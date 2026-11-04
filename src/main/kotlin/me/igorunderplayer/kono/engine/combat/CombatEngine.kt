@@ -2,6 +2,7 @@ package me.igorunderplayer.kono.engine.combat
 
 import me.igorunderplayer.kono.domain.card.Stat
 import me.igorunderplayer.kono.domain.card.StatSource
+import me.igorunderplayer.kono.domain.card.CardCatalog
 import me.igorunderplayer.kono.domain.card.ability.*
 import me.igorunderplayer.kono.domain.gameplay.CombatEvent
 import me.igorunderplayer.kono.domain.gameplay.CombatState
@@ -15,6 +16,116 @@ class CombatEngine(
 ) {
 
     private var battleStartProcessed = false
+
+    fun executeTurnAction(unit: Unit, action: me.igorunderplayer.kono.domain.gameplay.TurnAction): ActionValidation {
+        val validation = TurnActionValidator(state, unit).validate(action)
+        if (validation !is ActionValidation.Valid) return validation
+
+        when (action) {
+            is me.igorunderplayer.kono.domain.gameplay.TurnAction.Attack -> {
+                state.spendAp(unit.card.attackCost)
+                enqueue(CombatEvent.Attack(unit, action.target))
+                drainQueue()
+            }
+
+            is me.igorunderplayer.kono.domain.gameplay.TurnAction.UseAbility -> {
+                state.spendAp(action.ability.apCost)
+                state.usesThisTurn[abilityKey(unit, action.ability.name)] =
+                    (state.usesThisTurn[abilityKey(unit, action.ability.name)] ?: 0) + 1
+                val target = action.target ?: unit
+                val event = CombatEvent.Attack(unit, target)
+                action.ability.effects.forEach { applyEffect(it, unit, event, action.ability.name) }
+                drainQueue()
+            }
+
+            is me.igorunderplayer.kono.domain.gameplay.TurnAction.PlayCard -> {
+                val card = CardCatalog.getById(action.cardId)
+                    ?: return ActionValidation.Invalid("Unknown card: ${action.cardId}")
+                val ability = card.abilities.firstOrNull()
+                    ?: return ActionValidation.Invalid("Card has no effect.")
+                if (!state.currentHand().remove(card.id)) return ActionValidation.Invalid("Card is not in hand.")
+                state.spendAp(card.apCost)
+                state.currentDiscard() += card.id
+                val target = action.target ?: unit
+                ability.effects.forEach { applyEffect(it, unit, CombatEvent.Attack(unit, target), ability.name) }
+                drainQueue()
+            }
+
+            is me.igorunderplayer.kono.domain.gameplay.TurnAction.Equip -> {
+                val card = CardCatalog.getById(action.cardId)
+                    ?: return ActionValidation.Invalid("Unknown equipment: ${action.cardId}")
+                if (card.slot == null) return ActionValidation.Invalid("Equipment has no slot.")
+                if (unit.equipments.any { it.slot == card.slot }) {
+                    return ActionValidation.Invalid("Equipment slot is occupied.")
+                }
+                if (!state.currentHand().remove(card.id)) return ActionValidation.Invalid("Equipment is not in hand.")
+                state.spendAp(card.apCost)
+                unit.equipments += card
+                card.baseStats.forEach { (stat, value) ->
+                    unit.stats[stat] = (unit.stats[stat] ?: 0.0) + value
+                }
+                unit.abilities += card.abilities
+                state.currentDiscard() += card.id
+            }
+
+            is me.igorunderplayer.kono.domain.gameplay.TurnAction.Swap -> {
+                val cost = if (state.freeSwapCount > 0) 0 else me.igorunderplayer.kono.domain.gameplay.DuelRulesConfig.SWAP_AP_COST
+                state.spendAp(cost)
+                if (cost == 0) state.freeSwapCount--
+                state.swapCount++
+                state.activeCharacter = action.character
+            }
+
+            me.igorunderplayer.kono.domain.gameplay.TurnAction.Surrender -> {
+                val team = state.teams.firstOrNull { it.units.contains(unit) }
+                state.winnerTeamId = state.teams.firstOrNull { it !== team }?.id
+                state.combatLog += "🏳️ ${unitLabel(unit, state)} se rendeu."
+            }
+
+            me.igorunderplayer.kono.domain.gameplay.TurnAction.EndTurn -> {
+                finishTurn()
+            }
+        }
+        return ActionValidation.Valid
+    }
+
+    fun registerTimeout(teamId: String): ActionValidation {
+        if (state.recordTimeout(teamId)) {
+            state.winnerTeamId = state.teams.firstOrNull { it.id != teamId }?.id
+            state.combatLog += "⏱️ O time $teamId perdeu por três timeouts."
+        } else {
+            state.combatLog += "⏱️ Timeout do time $teamId (${state.timeoutCountsByTeamId[teamId]}/3)."
+        }
+        return ActionValidation.Valid
+    }
+
+    fun startInteractiveMatch() {
+        processBattleStart()
+        state.activeCharacter?.let {
+            enqueue(CombatEvent.TurnStart(it))
+            drainQueue()
+        }
+    }
+
+    private fun abilityKey(unit: Unit, abilityName: String): String = "${unit.id}:$abilityName"
+
+    private fun finishTurn() {
+        processTemporaryModifiersEndOfRound()
+        state.discardExcessHand()
+        if (state.turnOwnerTeamId != null) {
+            val currentIndex = state.teams.indexOfFirst { it.id == state.turnOwnerTeamId }
+            val nextTeam = state.teams.drop(currentIndex + 1).firstOrNull { it.aliveUnits().isNotEmpty() }
+                ?: state.teams.take(currentIndex).firstOrNull { it.aliveUnits().isNotEmpty() }
+            state.turnOwnerTeamId = nextTeam?.id
+            state.activeCharacter = nextTeam?.aliveUnits()?.firstOrNull()
+        }
+        state.turn++
+        state.beginTurn()
+        state.activeCharacter?.let {
+            enqueue(CombatEvent.TurnStart(it))
+            drainQueue()
+        }
+    }
 
     fun run() {
         processBattleStart()
@@ -42,7 +153,7 @@ class CombatEngine(
         val units = state.teams
             .flatMap { it.units }
             .filter { it.hp > 0 }
-            .sortedByDescending { it.stats[Stat.SPEED] ?: 0.0 }
+            .sortedBy { it.slot }
 
         for (unit in units) {
 
@@ -139,7 +250,7 @@ class CombatEngine(
                 unit,
                 state
             )
-        } vai atacar $attackCount vezes este turno! (SPEED: ${unit.stats[Stat.SPEED]?.toInt() ?: 0})"
+        } vai atacar $attackCount vezes neste turno!"
     }
 
     fun aliveEnemiesOf(unit: Unit): List<Unit> {
@@ -185,7 +296,7 @@ class CombatEngine(
         val units = state.teams
             .flatMap { it.units }
             .filter { it.hp > 0 }
-            .sortedByDescending { it.stats[Stat.SPEED] ?: 0.0 }
+            .sortedBy { it.slot }
 
         for (unit in units) {
 
@@ -202,7 +313,7 @@ class CombatEngine(
                         unit,
                         state
                     )
-                } vai atacar $attackCount vezes este turno! (SPEED: ${unit.stats[Stat.SPEED]?.toInt() ?: 0})"
+                } vai atacar $attackCount vezes neste turno!"
             }
 
             repeat(attackCount) {
@@ -242,6 +353,8 @@ class CombatEngine(
 
             processAbilities(event)
             resolveCoreEvent(event)
+            state.checkVictory()
+            if (state.isFinished()) state.queue.clear()
         }
     }
 
@@ -355,20 +468,41 @@ class CombatEngine(
                 }
             }
 
+            is Effect.GainAp -> {
+                state.ap += effect.value.coerceAtLeast(0)
+                state.combatLog += "⚡ ${unitLabel(owner, state)} ganhou ${effect.value} PA."
+            }
+
+            is Effect.DrawCards -> repeat(effect.amount.coerceAtLeast(0)) { state.drawCard() }
+
+            Effect.RemoveBuff -> {
+                state.temporaryStatModifiers
+                    .filter { it.unitId == owner.id }
+                    .forEach { modifier ->
+                        owner.stats[modifier.stat] = (owner.stats[modifier.stat] ?: 0.0) - modifier.delta
+                    }
+                state.temporaryStatModifiers.removeAll { it.unitId == owner.id }
+            }
+
+            Effect.FreeSwap -> state.freeSwapCount++
+
             is Effect.BuffStat -> {
                 val targets = resolveTargets(owner, effect.target, event)
                 for (target in targets) {
-                    val before = target.stats[effect.stat] ?: 0.0
-                    val after = before + effect.value
-
-                    target.stats[effect.stat] = after
+                    applyTemporaryStatModifier(
+                        target = target,
+                        stat = effect.stat,
+                        delta = effect.value,
+                        durationRounds = effect.durationRounds,
+                        source = abilityName ?: "effect"
+                    )
 
                     state.combatLog += "📈 ${
                         unitLabel(
                             target,
                             state
                         )
-                    } ganhou +${effect.value} ${effect.stat} (${"%.1f".format(after)})"
+                    } ganhou +${effect.value} ${effect.stat} por ${effect.durationRounds} rodada(s)."
                 }
             }
 
@@ -493,25 +627,12 @@ class CombatEngine(
                 state.combatLog += "⚔️ ${unitLabel(event.attacker, state)} atacando ${unitLabel(event.target, state)}"
 
                 val baseDamage = calculateDamage(event.attacker)
-                val critChance = (event.attacker.stats[Stat.CRIT_CHANCE] ?: 0.0).coerceIn(0.0, 1.0)
-                val critDmgMult = (event.attacker.stats[Stat.CRIT_DAMAGE] ?: 1.5).coerceAtLeast(1.0)
-                val isCrit = state.rng.nextDouble() < critChance
-                val finalDamage = if (isCrit) baseDamage * critDmgMult else baseDamage
-
-                if (isCrit) state.combatLog += "✨ Crítico! ${
-                    unitLabel(
-                        event.attacker,
-                        state
-                    )
-                } acertou um golpe certeiro!"
-
                 enqueue(
                     CombatEvent.BeforeDamage(
                         source = event.attacker,
                         target = event.target,
-                        damage = finalDamage,
-                        damageType = DamageType.PHYSICAL,
-                        wasCritical = isCrit
+                        damage = baseDamage,
+                        damageType = DamageType.PHYSICAL
                     )
                 )
             }
@@ -549,20 +670,6 @@ class CombatEngine(
             is CombatEvent.AfterDamage -> {
                 val damage = event.damage.coerceAtLeast(0.0)
 
-                if (event.damageType == DamageType.PHYSICAL) {
-                    event.source.stats[Stat.LIFESTEAL]?.let {
-                        if (it > 0.0) {
-                            val healAmount = damage * it
-                            state.combatLog += "🩸 ${
-                                unitLabel(
-                                    event.source,
-                                    state
-                                )
-                            } roubou ${"%.1f".format(healAmount)} HP com lifesteal."
-                            heal(event.source, healAmount)
-                        }
-                    }
-                }
             }
 
             is CombatEvent.Death -> {
@@ -571,6 +678,11 @@ class CombatEngine(
                 state.protectorShareByUnitId.remove(event.unit.id)
                 state.tauntByUnitId.remove(event.unit.id)
                 state.combatLog += "☠️ ${unitLabel(event.unit, state)} foi derrotado!"
+                if (state.activeCharacter == event.unit) {
+                    val replacement = findTeam(event.unit)?.aliveUnits()?.firstOrNull { it !== event.unit }
+                    state.freeSwapCount = 1
+                    state.activeCharacter = replacement
+                }
             }
         }
     }
@@ -1117,9 +1229,9 @@ class CombatEngine(
             }
 
             state.rng.nextDouble() < 0.8 -> {
-                val speedBuff = 4.0 + (coins * 0.1)
-                owner.stats[Stat.SPEED] = (owner.stats[Stat.SPEED] ?: 0.0) + speedBuff
-                state.combatLog += "🎰 ${owner.card.name} ganhou +${speedBuff.toInt()} SPEED com a banca do time."
+                val attackBuff = 4.0 + (coins * 0.1)
+                owner.stats[Stat.ATK] = (owner.stats[Stat.ATK] ?: 0.0) + attackBuff
+                state.combatLog += "🎰 ${owner.card.name} ganhou +${attackBuff.toInt()} ATK com a banca do time."
             }
 
             else -> {
@@ -1183,23 +1295,11 @@ class CombatEngine(
     }
 
     private fun resolveAttackCount(unit: Unit): Int {
-        val speed = unit.stats[Stat.SPEED] ?: 0.0
-        val extra = ((speed - 120.0) / 100.0).coerceAtLeast(0.0)
-
-        val guaranteed = extra.toInt()
-        val chance = extra - guaranteed
-
-        var result = 1 + guaranteed
-
-        if (chance > 0 && state.rng.nextDouble() < chance) {
-            result++
-        }
-
-        return result.coerceIn(1, 4)
+        return 1
     }
 
     private fun calculateDamage(unit: Unit): Double {
-        return (unit.stats[Stat.ATK] ?: 0.0).coerceAtLeast(0.0)
+        return unit.stats[Stat.ATK] ?: 0.0
     }
 
     private fun resolveMitigatedDamage(
@@ -1208,24 +1308,19 @@ class CombatEngine(
         target: Unit,
         damageType: DamageType
     ): Double {
-        val damage = rawDamage.coerceAtLeast(0.0)
-        if (damage <= 0.0) return 0.0
+        if (rawDamage <= 0.0) return 0.0
 
         return when (damageType) {
             DamageType.PHYSICAL -> {
-                val defense = (target.stats[Stat.DEF] ?: 0.0).coerceAtLeast(-90.0)
-                damage * (100.0 / (100.0 + defense))
+                basicDamage(rawDamage, target.stats[Stat.DEF] ?: 0.0)
             }
 
             // TODO: update magic damage resistances
             DamageType.MAGIC -> {
-                val defContrib = (target.stats[Stat.DEF] ?: 0.0) * 0.25
-                val intDiff = (target.stats[Stat.INT] ?: 0.0) - (source.stats[Stat.INT] ?: 0.0)
-                val totalResist = (defContrib + intDiff).coerceAtLeast(-90.0)
-                damage * (100.0 / (100.0 + totalResist))
+                basicDamage(rawDamage, target.stats[Stat.DEF] ?: 0.0)
             }
 
-            DamageType.TRUE -> damage
+            DamageType.TRUE -> rawDamage
         }
     }
 }

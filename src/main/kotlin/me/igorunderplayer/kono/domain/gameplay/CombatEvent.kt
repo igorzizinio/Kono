@@ -19,9 +19,11 @@ sealed class CombatEvent {
         val target: Unit,
         var damage: Double,
         val damageType: DamageType = DamageType.PHYSICAL,
-        val canCrit: Boolean = true,
+        @Deprecated("Critical hits were removed in the duel rules.")
+        val canCrit: Boolean = false,
         val canBeDodged: Boolean = true,
         val sourceAbilityType: AbilityType? = null,
+        @Deprecated("Critical hits were removed in the duel rules.")
         val wasCritical: Boolean = false,
         val isOnHitProc: Boolean = false
     ) : CombatEvent()
@@ -31,6 +33,7 @@ sealed class CombatEvent {
         val target: Unit,
         val damage: Double,
         val damageType: DamageType = DamageType.PHYSICAL,
+        @Deprecated("Critical hits were removed in the duel rules.")
         val wasCritical: Boolean = false,
         val sourceAbilityType: AbilityType? = null
     ) : CombatEvent()
